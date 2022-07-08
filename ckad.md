@@ -25,12 +25,18 @@ ls /proccat /proc/[pid]/cmdline
 
 ### Tips
 
-- `docker exec` connects to another shell session  
-- `exit` exits running container
-- `docker run` connects to entrypoint  
-- `exit` exits and stops container  
-- `ctrl-p ctrl-q` exits running container
+Host tips
+
+- `docker exec` connects to running container - a different shell session  
+- `docker run` starts a new container, downloads image if required 
 - `docker ps` STATUS of `Exited (0)` means exit OK, but Exit STATUS otherthan 0 should be investigated `docker logs`
+
+Container tips
+
+- `exit` exits container
+  - container will be stopped if connected to entrypoint
+  - container will keep running if connected to a different shell session
+- `ctrl-p ctrl-q` exits container without stopping the container
 
 ### Managing containers
 
