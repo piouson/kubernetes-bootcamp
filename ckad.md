@@ -75,3 +75,60 @@ docker logs [containerName]
 4. Explore the `/etc/os-release` file and the kernel version `uname -r`
 
 ## 2. Managing Container Images
+
+## Basic commands
+
+```sh
+# to view image layers/history
+docker image history [imageId]
+# tagging images
+docker tag myimage myimage:1.0
+# tags can also be used to add repository location
+docker tag myimage domain.com/myimage:1.0
+```
+
+## Custom images with Dockerfile
+
+```Dockerfile
+FROM ubuntu
+MAINTAINER Piouson
+RUN apt-get update && \
+    apt-get install -y bash nmap iproute2 && \
+    apt-get clean
+ENTRYPOINT ["/usr/bin/nmap"]
+CMD ["-sn", "172.17.0.0/24"]
+```
+
+> Build Dockerfile: `docker build -t nmap /path/to/Dockerfile`
+
+```sh
+# specify base image
+FROM 
+# specify ID - optional
+LABEL
+# specify author(s) - optional
+MAINTAINER
+# execute commands
+RUN
+# specify environment variables used by container
+ENV
+# copy files from project directory to the image
+ADD
+# copy files from local project directory to the image - ADD is recommended
+COPY
+# specify username for RUN, CMD and ENTRYPOINT commands
+USER
+# specify default command, array form is recommended
+# commands can be specified in `shell - space separated` form or `exec - as array` form
+ENTRYPOINT ["command"] # `/bin/sh -c` is used if not specified, args passed cannot be overwritten, so recommended to use CMD for args instead for flexibility
+# specfify arguments to the entrypoint command, array form is recommended
+CMD ["arg1", "arg2"] # if used without ENTRYPOINT, args will be passed to `/bin/sh -c`
+# specify metadata to determine where image should run
+# Each command in Dockerfile creates a new layer in the image
+# You can reduce layers by chaining commands together using `&&`
+RUN sudo apt update && \
+    sudo apt install -y bash nano && \
+    sudo apt clean
+# build an image with a Dockerfile
+docker build -t imageName[:tag] directory # docker build -t myimage .
+```
