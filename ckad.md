@@ -247,4 +247,4 @@ minikube ssh
 
 ### Lab 4.1. Explore Kubernetes API Resources via Minikube
 
-Repeat [Lab 3.2](#lab-3.2.-explore-kubernetes-api-resources-via-gcloud) in Minikube
+Repeat [Lab 3.2](#lab-32-explore-kubernetes-api-resources-via-gcloud) in Minikube
