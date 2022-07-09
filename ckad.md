@@ -25,13 +25,13 @@ ls /proccat /proc/[pid]/cmdline
 
 ### Tips
 
-Host tips
+#### Host tips
 
 - `docker exec` connects to running container - a different shell session  
 - `docker run` starts a new container, downloads image if required 
 - `docker ps` STATUS of `Exited (0)` means exit OK, but Exit STATUS otherthan 0 should be investigated `docker logs`
 
-Container tips
+#### Container tips
 
 - `exit` exits container
   - container will be stopped if connected to entrypoint
@@ -76,7 +76,7 @@ docker logs [containerName]
 
 ## 2. Managing Container Images
 
-## Basic commands
+### Basic commands
 
 ```sh
 # to view image layers/history
@@ -87,7 +87,11 @@ docker tag myimage myimage:1.0
 docker tag myimage domain.com/myimage:1.0
 ```
 
-## Custom images with Dockerfile
+### Custom Images
+
+#### Dockerfile
+
+Build a new image from a base image
 
 ```Dockerfile
 FROM ubuntu
@@ -132,3 +136,115 @@ RUN sudo apt update && \
 # build an image with a Dockerfile
 docker build -t imageName[:tag] directory # docker build -t myimage .
 ```
+
+#### Docker commit
+
+This is a way to save changes made to a running container
+
+```sh
+# commit container changes
+docker commit -m "commit message" -a "author" imageName newImageName
+# verify changes committed
+docker image ls
+# create compressed image file for export
+docker save -o imageName.tar imageName
+```
+
+### Lab 2
+
+Create a `Dockerfile` based on the following:
+
+- Based on `fedora`
+- Contains `ps` and network tools
+- Should run `sshd` process
+
+> In most cases, building an image goes beyond a successful build. Some installed packages require additional steps to run containers successfully
+
+## 3. Understanding Kubernetes
+
+[K8s](kubernetes.io) is an open-source system for automating deployment, scaling and containerized applications management, currently owned by CNCF - Linux Foundation. \
+Release cycle is 3 months and deprecated features are dropped in 2 release cycles.
+
+### Lab 3.1. Kubernetes in Google Cloud
+
+- Signup and Login to [console.cloud.google.com](https://console.cloud.google.com)
+- Use the "Cluster setup guide" to create "My first cluster"
+- Connect to the cluster using the "Cloud Shell"
+- Run the basic commands
+
+```sh
+# help
+kubectl --help | less
+# get an overview of available resources
+kubectl get all
+# create application
+kubectl create -h
+kubectl create deploy myapp --image=nginx --replcias=3
+kubectl get all
+# list essential API resources
+kubectl api-resources
+# delete pod, deployment, service
+kubectl delete {pod | deploy | svc} [podName | deploymentName | serviceName]
+```
+
+### Basic  Kubernetes API resources
+
+- Deployment: represents the application and provides services
+- ReplicaSet: manages scalability - array of pods
+- Pods: manages containers
+
+### Lab 3.2. Explore Kubernetes API Resources via GCloud
+
+- Use `kubectl create deploy` to run any image, e.g. nginx image
+- Get an overview of resources to confirm created resources
+- Delete the pod create and confirm pod is recreated by replicaset
+- Use `kubectl create api-resources` to get a list of available API resources
+- Delete the deployment and confirm deleted resources
+- Delete the service and confirm no resources left
+
+> Remember to delete Google cloud cluster to avoid charges
+
+## 4. Minikube Lab Environment
+
+### Setup Minikube
+
+Setup a local Minikube lab environment using Docker and Ubuntu. Use `minikube-docker-wsl2-setup.sh` script below:
+
+```sh
+#!/bin/bash
+# Windows setup - requires Docker and WSL2
+
+sudo apt-get update
+
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+####
+echo the script is now ready
+echo manually run "minikube start --vm-driver=docker" to start minikube and configure kubectl to use minikube 
+
+sudo usermod -aG docker $USER
+newgrp docker
+
+minikube start --vm-driver=docker --cni=calico
+```
+
+### Manage Minikube
+
+```sh
+# show current status
+minikube status
+# open K8s dashboard in local browser
+minikube dashboard
+# start, stop, delete cluster
+minikube {start | stop | delete}
+# show current IP address
+minikube ip
+# show current version
+minikube version
+# connect to minikube cluster
+minikube ssh
+```
+
+### Lab 4.1. Explore Kubernetes API Resources via Minikube
+
+Repeat [Lab 3.2](#lab-3.2.-explore-kubernetes-api-resources-via-gcloud) in Minikube
