@@ -7,55 +7,50 @@
 ### Basic commands
 
 ```sh
-# test
-docker run hello-world
+# run commands in new container, see `docker run --help`
+docker run hello-world # entrypoint is used when no command specified after image
 # interactive
 docker run -it busybox
 # detached
 docker run -d -p 8080:80 -v /var/www/html:/var/www/html --name myserver -e ENV_VAR=value httpd
-# exec
-docker exec -it busybox sh
+# run commands in running container, see `docker exec --help`
+docker exec -it busybox sh # `sh` runs in a different shell session
 # list running containers
 docker ps
 # list all containers
 docker ps -a
 # view container processes (run within container)
 ls /proccat /proc/[pid]/cmdline
+# exit running container
+exit # container is stopped if connected to entrypoint
+# exit running container without stopping container
+ctrl-p ctrl-q
 ```
 
-### Tips
-
-#### Host tips
-
-- `docker exec` connects to running container - a different shell session  
-- `docker run` starts a new container, downloads image if required 
-- `docker ps` STATUS of `Exited (0)` means exit OK, but Exit STATUS otherthan 0 should be investigated `docker logs`
-
-#### Container tips
-
-- `exit` exits container
-  - container will be stopped if connected to entrypoint
-  - container will keep running if connected to a different shell session
-- `ctrl-p ctrl-q` exits container without stopping the container
+> `docker ps` showing STATUS of `Exited (0)` means exit OK, but Exit STATUS otherthan 0 should be investigated `docker logs`
 
 ### Managing containers
 
 ```sh
-docker {start | stop | restart | kill | rm}
+# start, stop, delete containers, see `docker {start|stop|etc} --help`
+docker {start|stop|restart|kill|rm} [containerName|containerID]
 docker ps [-a] # this command shows container IDs
+# inspect container or image, see `docker inspect --help | docker {image|container} --help`
 docker inspect [id] | less
+docker {container|image} inspect
 docker inspect --format="{{.NetworkSettings.IPAddress}}" containerName
 docker inspect --format="{{.State.Pid}}" containerName
-ps {aux | fax} | less # this command shows container PIDs
+ps {aux|fax} | less # this command shows container PIDs
 ```
 
 ### Container images
 
 ```sh
+# see `docker image --help`
 docker image ls  # or `docker images`
 docker image inspect [imageId]
 docker image rm [imageId] # requires `--force` when containers using the image
-docker {image | containers | network | volumes}
+docker {image|containers|network|volumes}
 ```
 
 > note commands after imageId/imageName are passed to image/container
@@ -64,6 +59,7 @@ docker {image | containers | network | volumes}
 ### Container logging
 
 ```sh
+# see `docker logs --help`
 docker logs [containerName]
 ```
 
@@ -79,9 +75,9 @@ docker logs [containerName]
 ### Basic commands
 
 ```sh
-# to view image layers/history
+# to view image layers/history, see `docker image history --help`
 docker image history [imageId]
-# tagging images
+# tagging images, see `docker tag --help`
 docker tag myimage myimage:1.0
 # tags can also be used to add repository location
 docker tag myimage domain.com/myimage:1.0
@@ -133,7 +129,7 @@ CMD ["arg1", "arg2"] # if used without ENTRYPOINT, args will be passed to `/bin/
 RUN sudo apt update && \
     sudo apt install -y bash nano && \
     sudo apt clean
-# build an image with a Dockerfile
+# build an image with a Dockerfile, see `docker build --help`
 docker build -t imageName[:tag] directory # docker build -t myimage .
 ```
 
@@ -142,11 +138,11 @@ docker build -t imageName[:tag] directory # docker build -t myimage .
 This is a way to save changes made to a running container
 
 ```sh
-# commit container changes
+# commit container changes, see `docker commit --help`
 docker commit -m "commit message" -a "author" imageName newImageName
 # verify changes committed
 docker image ls
-# create compressed image file for export
+# create compressed image file for export, see `docker save --help`
 docker save -o imageName.tar imageName
 ```
 
@@ -176,24 +172,24 @@ Release cycle is 3 months and deprecated features are dropped in 2 release cycle
 # help
 kubectl --help | less
 # get an overview of available resources
-kubectl get all
+kubectl get all, see `kubectl get --help`
 # create application
 kubectl create -h
 kubectl create deploy myapp --image=nginx --replcias=3
 kubectl get all
-# list essential API resources
+# get complete list of supported API resources
 kubectl api-resources
-# delete pod, deployment, service
-kubectl delete {pod | deploy | svc} [podName | deploymentName | serviceName]
+# delete pod, deployment, service, see `kubectl delete --help`
+kubectl delete {pod|deploy|service} [podName|deploymentName|serviceName]
 ```
 
-### Basic  Kubernetes API resources
+### Basic Kubernetes API resources
 
 - Deployment: represents the application and provides services
 - ReplicaSet: manages scalability - array of pods
-- Pods: manages containers
+- Pods: manages containers (**note that one container per pod is the standard**)
 
-### Lab 3.2. Explore Kubernetes API Resources via GCloud
+### Lab 3.2. Explore Kubernetes API resources via GCloud
 
 - Use `kubectl create deploy` to run any image, e.g. nginx image
 - Get an overview of resources to confirm created resources
@@ -204,11 +200,29 @@ kubectl delete {pod | deploy | svc} [podName | deploymentName | serviceName]
 
 > Remember to delete Google cloud cluster to avoid charges
 
-## 4. Minikube Lab Environment
+## 4. Kubernetes Lab Environment
 
-### Setup Minikube
+Methods on Windows below used Docker Desktop with WSL2 (Ubuntu) engine.
 
-Setup a local Minikube lab environment using Docker and Ubuntu. Use `minikube-docker-wsl2-setup.sh` script below:
+### Use Docker Desktop
+
+<details>
+  <summary>Enable Kubernetes in Docker Desktop settings, then apply and restart</summary>
+  
+  ![image](https://user-images.githubusercontent.com/17856665/178120815-357cea98-ecf1-4536-81af-a614b7b4cf5e.png)
+</details>
+
+```sh
+# after docker desktop restarts
+kubectl config get-contexts # this should list docker-desktop as an option
+kubectl config use-context docker-desktop
+```
+
+See Docker's [Deploy on Kubernetes](https://docs.docker.com/desktop/kubernetes/) for more details.
+
+### Use Minikube
+
+See `minikube-docker-wsl2-setup.sh` script file below:
 
 ```sh
 #!/bin/bash
@@ -228,15 +242,15 @@ newgrp docker
 minikube start --vm-driver=docker --cni=calico
 ```
 
-### Manage Minikube
+#### Managing Minikube
 
 ```sh
-# show current status
+# show current status, see `minikube --help`
 minikube status
 # open K8s dashboard in local browser
 minikube dashboard
-# start, stop, delete cluster
-minikube {start | stop | delete}
+# start, stop, delete cluster, see `minikube {start|stop|delete} --help`
+minikube {start|stop|delete}
 # show current IP address
 minikube ip
 # show current version
@@ -245,6 +259,134 @@ minikube version
 minikube ssh
 ```
 
-### Lab 4.1. Explore Kubernetes API Resources via Minikube
+### Lab 4. Explore Kubernetes API resources via Minikube
 
-Repeat [Lab 3.2](#lab-32-explore-kubernetes-api-resources-via-gcloud) in Minikube
+- Repeat [Lab 3.2](#lab-32-explore-kubernetes-api-resources-via-gcloud) in Minikube
+- Add kubectl autocompletion, see `kubectl completion --help`
+- Use the Kubernetes Dashboard to deploy a webserver (nginx) app
+
+## 5. Pods
+
+A Pod is similar to a server, running one or more containers, accessibile by a single IP address. Pods are typically started bia a deployment.
+
+### Naked Pods
+
+Pods started without a deployment are called "naked" Pods, and since they are not managed by a replicaset, therefore, "naked" Pods: are not rescheduled on failure; not eligible for rolling updates; cannot be scaled; cannot be replaced automatically 
+
+###  Managing Pods
+
+```sh
+# run a pod, see `kubectl run --help`
+kubectl run [podName] image=[imageName]
+# run a pod with custom args, NOTE anything after ` -- ` is processed by the pod not kubectl
+kubectl run [podName] --image=[imageName] -- <arg1> <arg2> ... <argN>
+# display running pods, see `kubectl get --help`
+kubectl get pods
+kubectl get pods [podName] -o yaml | less
+# show details of pod, see `kubectl describe --help`
+kubectl describe pods [podName] | less
+```
+
+> When adding commands or arguments to a `kubectl` command, anything after ` -- ` is processed by the pod not by kubectl
+
+### Lab 5.1 Creating Pods
+
+- Create an nginx Pod and confirm creation
+- Display details of the Pod and review the Node, IP, container start date/time and Events
+
+### Pod manifest file
+
+```sh
+# view the essential/top-level fields of a Pod manifest file
+kubectl explain pod
+# view more details of an `<Object>` field
+kubectl explain {pod.metadata|pod.spec|pod.status} | less
+kubectl explain --recursive {pod.metadata|pod.spec|pod.status} | less # recursively view the field
+# create, replace, delete resource with YAML file
+kubectl {create|apply|replace|delete} -f pod.yaml
+# create new or update, if exists, resource from YAML file (update works if resource was created by `kubectl apply`)
+# generate YAML file
+kubectl run mynginx --image=nginx -o yaml --dry-run=client > pod.yaml
+```
+
+> Manifest fields are **case sensitive**, **always generate** manifest files to avoid typos
+> `kubectl apply` creates a new resource, or updates existing resource previously created by `kubectl apply`
+
+### Valid reasons for multi-container Pods
+
+Always create single container Pods. But some scenarios may require a multi-container Pod:
+
+- To initialise primary container (init container)
+- To enhance primary container, e.g. for logging, monitoring, etc. (sidecar container)
+- To prevent direct access to primary container, e.g. proxy (ambassador container)
+- To match the traffic/data pattern in other applications in the cluster (adapter container)
+
+### Lab 5.2 Using YAML file
+
+- Generate a base nginx Pod YAML file
+- Create a Pod using the YAML file, the container should have arguments, see [create Pod with command and args docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#define-a-command-and-arguments-when-you-create-a-pod). Run `kubectl describe` immediately after creation to review container state.
+- Create a multicontainer Pod with 2 containers sharing a volume using a YAML file, see [Pod with two container docs](https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containers-same-pod-shared-volume/#creating-a-pod-that-runs-two-containers). Run `kubectl describe` immediately after creation to review container state.
+- Create a multicontainer Pod with 1 container and 1 init container using a YAML file, see [init container docs](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/#init-containers-in-use). Run `kubectl describe` immediately after creation to review container state.
+
+### Using namespaces
+
+```sh
+# create namespace
+kubectl create namespace [namespaceName]
+# run command in a specific namespace, add `-n [namespaceName]`
+kubectl run mypod --image=imageName -n namespaceName
+# view resources in all namespaces
+kubectl get [resourceType=pods,etc] --all-namespaces
+# view all resources and their namespaces
+kubectl get all -A
+# set a namespace to be used for all subsequent commands
+kubectl config set-context --current --namespace=namespaceName
+# view default namespace
+kubectl config view --minify | grep namespace:
+```
+
+### Lab 5.3 Namespaces
+
+- Create a namespace with a YAML file, see [create namespace docs](https://kubernetes.io/blog/2015/08/using-kubernetes-namespaces-to-manage/#creating-a-new-namespace)
+- Create an nginx Pod in the namespace using the YAML file
+
+> You can save the output of `--dry-run=client -o yaml` in a single file for both namespace and Pod creation
+
+## 6. Exploring Pods
+
+### Troubleshooting a Pod 
+
+```sh
+# get pod information in readable format
+kubectl get pods [podName] -o yaml | less
+# get definition of any field from manifest file
+kubectl explain pods.field[.field] # e.g. pods.apiVersion, pods.spec.containers, etc
+# get detailed information on a pod
+kubectl describe pods [podName]
+# connect to containers in a pod, add `-c [containerName]` if multiple containers
+kubectl exec -it [podName] -- sh
+# within a container, you always have access to `sh` and the `proc` filesystem
+cd /proc
+cat 1/cmdline
+# view cluster logs for a pod
+kubectl logs [podName]
+```
+
+### Lab 6.1 Troubleshoot failing Pod
+
+- Create a Pod with mysql image and confirm Pod is in 'Running' state
+- Get detailed information on the Pod and review Events (any multiple attempts?), 'State', 'Last State' and their Exit codes.
+- Note that States might continue to change for containers in error states due to retries, so review detailed information on the Pod a few times
+- Review cluster logs for the Pod
+- Apply relevant fixes until you have a mysql Pod in 'Running' state
+
+### Port forwarding
+
+Port forwarding in Kubernetes should only be used for testing purposes.
+
+```sh
+# forward port from local host to container, requires `ctrl+c` to exit
+kubectl port-forwarding [podName] [hostPort:containerPort]
+```
+
+### Security context
