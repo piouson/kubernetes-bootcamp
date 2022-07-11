@@ -335,6 +335,8 @@ Always create single container Pods. But some scenarios may require a multi-cont
 kubectl create namespace [namespaceName]
 # run command in a specific namespace, add `-n [namespaceName]`
 kubectl run mypod --image=imageName -n namespaceName
+# view resources in a namespaces
+kubectl get [resourceType=pods,etc] -n namespaceName
 # view resources in all namespaces
 kubectl get [resourceType=pods,etc] --all-namespaces
 # view all resources and their namespaces
@@ -372,6 +374,8 @@ cat 1/cmdline
 kubectl logs [podName]
 ```
 
+> `OOMKilled` is linux term for terminated due to out-of-memory
+
 ### Lab 6.1 Troubleshoot failing Pod
 
 - Create a Pod with mysql image and confirm Pod is in 'Running' state
@@ -389,4 +393,93 @@ Port forwarding in Kubernetes should only be used for testing purposes.
 kubectl port-forwarding [podName] [hostPort:containerPort]
 ```
 
+### Lab 6.2. Expose container port
+
+Create a webserve Pod and access the webpage from host device using port forwarding
+
 ### Security context
+
+See [security context docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod) for sample YAML file.
+
+```sh
+# show details of pod-level security context
+kubectl explain pod.spec.securityContext | less
+# show details of container-level security context
+kubectl explain pod.spec.containers.securityContext | less
+```
+
+### Lab 6.3. RBAC
+runAsUser: 1000
+    runAsGroup: 3000
+    fsGroup: 2000
+
+- Create a Pod that runs busybox as user ID `1000`, group ID `3000` and filesystem group ID `2000`, and disable container privilege escalation. Connect to container and elevate access with `sudo`
+- Create a Pod that runs nginx as Non Root. Connect to the container.
+
+### Jobs
+
+Pods always restarts their containers on failure and maintain a 'Running' status. A Job is a way to run a Pod until certain tasks are complete, a 'Completed' status, without restarting their containers, e.g. backup. Jobs creates Pods for the task. \
+Job types are determined by the `completions` and `parallelism` values:
+
+```sh
+# one pod started per job, unless failure
+completions=1; parallelism=1
+# multiple pods started, until one successfully completes task
+completions=1; parallelism=x
+# multiple pods started, until n successful task completions
+completions=n; parallelism=x
+# clean up jobs automatically
+spec.ttlSecondsAfterFinished
+# explore jobs doc
+kubectl create job -h
+# create a job
+kubectl create job datejob --image=busybox -- date
+```
+
+### CronJobs
+
+CronJobs are used to run recurring tasks for `n` number of times. CronJobs creates Jobs to run the tasks.
+
+```sh
+# cronjob time syntax: * * * * * - minute hour day_of_month month day_of_week
+kubectl create cronjob -h
+# create a cronjob
+kubectl create cronjob cj --image=busybox --schedule="* * * * *" -- date
+# view details on autocleanup of jobs created by cronjobs
+kubectl explain cronjobs.spec.jobTemplate.spec
+```
+
+### Lab 6.4. Working with jobs
+
+- Create a job that uses a busybox image to run the `date` command. Review output of the job.
+- Create a recurring job that uses busybox to run the `date` command every 10s. Cleanup jobs after 1min of completion. Review output of jobs.
+
+### Limits and Requests
+
+Request is the initial/minimum value of resources provided to a Pod, while Limit is the maximum value of resources available to a Pod. See [container resource management](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) for more details.
+
+> A Pod remains in "Pending" status until a Node with sufficient resources becomes available
+
+```sh
+# limit types
+spec.containers[].resources.limits.cpu # in cores and millicores, 500m = 0.5 CPU
+spec.containers[].resources.limits.memory # Ki (1024) | Mi | Gi | Ti | Pi | Ei | m | "" | k (1000) | M | G | T | P | E
+spec.containers[].resources.limits.hugepages-<size>
+# request types
+spec.containers[].resources.requests.cpu
+spec.containers[].resources.requests.memory
+spec.containers[].resources.requests.hugepages-<size>
+```
+
+### Lab 6.5. Resource limitation
+
+- Create a Pod manifest file Pod with the following:
+  - runs in `dev` namespace
+  - assign environment variable `NODE_ENV=development`
+  - uses `busybox` image that runs command `printenv` with arguments `NODE_ENV`
+  - restart only on failure
+  - initial - 0.25 CPU, 64 mebibytes
+  - maximum - 0.5 CPU, 128 mebibytes
+- View created pod details, status and output
+
+## 7. Deployments
