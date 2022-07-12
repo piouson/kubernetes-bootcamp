@@ -257,6 +257,10 @@ minikube ip
 minikube version
 # connect to minikube cluster
 minikube ssh
+# list addons
+minikube addons list
+# enable addons
+minikube addons enable [addonName]
 ```
 
 ### Lab 4. Explore Kubernetes API resources via Minikube
@@ -280,6 +284,8 @@ Pods started without a deployment are called "naked" Pods, and since they are no
 kubectl run [podName] image=[imageName]
 # run a pod with custom args, NOTE anything after ` -- ` is processed by the pod not kubectl
 kubectl run [podName] --image=[imageName] -- <arg1> <arg2> ... <argN>
+# run a pod interactively and delete after task completion
+kubectl run -it mypod --image=busybox --rm --restart=Never -- date
 # display running pods, see `kubectl get --help`
 kubectl get pods
 kubectl get pods [podName] -o yaml | less
@@ -483,3 +489,82 @@ spec.containers[].resources.requests.hugepages-<size>
 - View created pod details, status and output
 
 ## 7. Deployments
+
+[Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) manages Pods with scalability and reliability, this is the standard way to manage Pods in live environments.
+
+> Do not manage replicasets outside of deployments
+
+```sh
+# create a deployment with specific replicas (default replicas=1)
+kubectl create deploy myapp --image=nginx --replicas=3
+# scale deployment
+kubectl scale deployment myapp --replicas=4
+# edit deployment (not all fields are edittable), see `kubectl edit deployment -h`
+kubectl edit deployment myapp -o yaml --save-config
+```
+
+### Update strategy
+
+[Rolling updates](https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/) is the default deployment strategy and can be used to update any of the fields available to the `kubectl set` command. A new ReplicaSet is created for the update, and the old ReplicaSet is scaled to 0 after successful update. By default, 10 old ReplicaSets will be kept, see [`deployment.spec.revisionHistoryLimit`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit)
+
+The other type of update strategy is [Recreate](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#recreate-deployment), where all Pods are killed before nre Pods are created.
+
+Rolling update option [`maxUnavailable`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) is used to control number of Pods upgraded simultaneously, while [`maxSurge`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge) controls the number of Pods in addition to the replicas specified during update.
+
+> Scaling down a deployment to 0 is another way to delete all resources associated while keeping the deployment and ReplicaSet config for a quick scale up when required.
+
+```sh
+# edit some fields by setting directly, see `kubectl set -h`
+kubectl set image deploy myapp nginx=nginx:1.24
+kubectl set env deploy myapp dept=MAN
+# show recent update history
+kubectl rollout history deployment myapp -h
+# show update events
+kubectl describe deployment myapp
+# revert an update
+kubectl rollout undo -h
+# view rolling update options
+kubectl get deploy myapp -o yaml
+```
+
+### Labels and selectors
+
+Labels are used for groupings, filtering and providing metadata. A default label is added to resources but additional labels can be provided manually.
+
+> Labels added after creating a deployment are not inherited by the resources 
+
+```sh
+# add label
+kubectl label deployment myapp state=test
+# show deployment and their labels
+kubectl get deployments --show-labels
+# show deployments filtered by specific label
+kubectl get deployments --selector state=test
+# show all resources filtered by specific label
+kubectl get all --selector app=myapp
+# remove a label by a minus sign after label key
+kubectl label pod [podName] app-
+```
+
+### Lab 7.1 Deploy an app
+
+- Create a deployment manifest file with `nginx:1.2` image and 3 replicas
+- Verify the resources created, their statuses and detailed deployment properties
+- Update the deployment to use a newer version of the image
+- Verify update process and successful completion
+
+## 8. Networking
+
+## 9. Ingress
+
+## 10. Storage
+
+## 11. Variables and Secrets
+
+## 12. K8s API
+
+## 13. DevOps
+
+## 14. Troubleshooting
+
+## 15. Exam
