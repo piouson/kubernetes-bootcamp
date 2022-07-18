@@ -492,24 +492,98 @@ spec.containers[].resources.requests.hugepages-<size>
 
 [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) manages Pods with scalability and reliability, this is the standard way to manage Pods in live environments.
 
-> Do not manage replicasets outside of deployments
-
 ```sh
-# create a deployment with specific replicas (default replicas=1)
+# create a deployment with specific replicas (default replicas=1), see `kubectl create deploy --help`
 kubectl create deploy myapp --image=nginx --replicas=3
+# show details of deployment, see `kubectl describe deploy --help`
+kubectl describe deploy [deploymentName]
 # scale deployment
 kubectl scale deployment myapp --replicas=4
 # edit deployment (not all fields are edittable), see `kubectl edit deployment -h`
 kubectl edit deployment myapp -o yaml --save-config
 ```
 
+### Lab 7.1. Deploy an app
+
+- Create a simple deployment
+- Show more details of the deployment and review the following:
+  - namespace, labels, selector, replicas, update strategy type, pod template, conditions, {old|new}replicaset and events
+- Show all the resources created by the deployment - filter by the default selector
+- Delete a pod and confirm behaviour by reviewing resources left, pods and their statuses
+- Delete a replicaset and confirm behaviour by reviewing resources left, pods, replicasets, etc, and their properties
+
+### Labels, selectors and annotations
+
+Labels are used for groupings, filtering and providing metadata. Selectors are used to group related resources. Annotations are used to provide additional metadata but are not used in queries.
+
+When a deployment is created directly, a default label `app=[appName]` is assigned. When a pod is created directly, a default label `run=[podName]` is assigned
+
+> Labels added after creating a deployment are not inherited by the resources 
+
+```sh
+# add label
+kubectl label deployment myapp state=test
+# show list of created deployments and their labels
+kubectl get deployments --show-labels
+# show list of all created resources and their labels
+kubectl get all --show-labels
+# show deployments filtered by specific label
+kubectl get deployments --selector state=test
+# show all resources filtered by specific label
+kubectl get all --selector app=myapp
+# remove a label by a minus sign after label key
+kubectl label pod [podName] app-
+```
+
+### Lab 7.2. Working with labels
+
+- Create a deployment
+- Add a new label to the deployment
+- Show more details of the deployment and review how labels are assigned
+- Show a list of deployments and their labels
+- Show a list of all resources and their labels, filtered by default label
+- Show a list of all resources and their labels, filtered by new label added, compare with above
+- Remove the default label from pods in the deployment and review behaviour
+  - Show a list of pods and their labels
+
+### Scaling deployments
+
+A deployment creates a ReplicaSet that manages scalability.
+
+> Do not manage replicasets outside of deployments
+
+```sh
+# view api-versions
+kubectl api-versions
+# view api-versions and their resource types
+kubectl api-resources
+# scale deployment manually by specifying number of replicas
+kubectl scale deployment [deploymentName] --replicas=n
+# scale deployment manually by editing YAML file - note not all fields are edittable
+kubectl edit deploy [deploymentName]
+```
+
+### Lab 7.3. Scale an app
+
+- Create a deployment with 3 replicasets
+  - how do you verify the number of replicasets?
+  - show all created resources filtered by default selector
+- Copy a deployment template from [official docs](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+  - what happens when you create a deployment from manifest file with an incorrect version? Use template with `apiVersion: apps/v0.5`
+  - what happens when you create a deployment from manifest file with an old version? Use template with `apiVersion: v1`
+  - how do you confirm you have the correct versions?
+  - create a deployment with the template
+- Scale the deployment manually by editing the YAML file
+  - change an edittable field and save
+  - change a non-edittable field, save and review behaviour
+
 ### Update strategy
 
 [Rolling updates](https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/) is the default deployment strategy and can be used to update any of the fields available to the `kubectl set` command. A new ReplicaSet is created for the update, and the old ReplicaSet is scaled to 0 after successful update. By default, 10 old ReplicaSets will be kept, see [`deployment.spec.revisionHistoryLimit`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit)
 
-The other type of update strategy is [Recreate](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#recreate-deployment), where all Pods are killed before nre Pods are created.
+The other type of update strategy is [Recreate](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#recreate-deployment), where all Pods are killed before nre Pods are created. This is useful when you cannot have different versions of an app running simultaneously, e.g database.
 
-Rolling update option [`maxUnavailable`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) is used to control number of Pods upgraded simultaneously, while [`maxSurge`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge) controls the number of Pods in addition to the replicas specified during update.
+Rolling update option [`maxUnavailable`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) is used to control number of Pods upgraded simultaneously, while [`maxSurge`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge) controls the number of Pods in addition to the replicas specified during update. Aim to have a higher `maxSurge` than `maxUnavailable`.
 
 > Scaling down a deployment to 0 is another way to delete all resources associated while keeping the deployment and ReplicaSet config for a quick scale up when required.
 
@@ -525,33 +599,82 @@ kubectl describe deployment myapp
 kubectl rollout undo -h
 # view rolling update options
 kubectl get deploy myapp -o yaml
+# view all deployments history, see `kubectl rollout -h`
+kubectl rollout history deployment
+# view specific deployment history
+kubectl rollout history deployment [deploymentName]
+# view specific change revision/log for the deployment
+kubectl rollout history deployment [deploymentName] revision=n
+# revert deployment to previous version/revision
+kubectl rollout undo deployment [deploymentName] --to-revision=n
 ```
 
-### Labels and selectors
+### Lab 7.4. Rolling updates
 
-Labels are used for groupings, filtering and providing metadata. A default label is added to resources but additional labels can be provided manually.
+- Create a YAML file for `nginx:1.23` deployment and 3 replicas, with label `lab=updates`, max 2 Pods can be updated simultaneously
+- Create and review details of the deployment
+  - by default, how many pods can be upgraded simultaneously during update?
+  - by default, how many pods can be created in addition to the number of replicas during update?
+  - show a list of deployments and their labels
+  - show only resouces specific to the deployment
+  - view deployment history
+- Downgrade the image by directly setting a new image version, use `kubectl set`
+- Review details of the deployment
+  - review behaviour by showing only resources specific to the deployment
+  - confirm changes applied
+  - view deployment history specific to this deployment
+  - note that `change-cause` is populated by the record-option which isn't used
+- View first and second change revisions for the deployment
+- View deployment history specific to this deployment
+- Show details of the deployment in YAML format
+  - review `spec.strategy.type` and `spec.strategy.rollingupdate` fields
+- Scale the deployment to 8 replicas and review the following:
+  - pods READY and STATUS fields
+  - deployment READY UP-TO-DATE and AVAILABLE fields
+  - replicaset DESIRED CURRENT READY and AGe fields
+  - view deployment history specific to this deployment
+- Add an environment variable to the deployment
+  - show all resources filtered by label=app and review resource states as above
+  - view deployment history specific to this deployment
+- Revert deployment to the second revision, see `kubectl rollout -h`
+  - view deployment history specific to this deployment
+- Scale the replicasets to 0 and review behaviour
+  - why would you scale to 0 instead of delete?
+  - is the scale down captured by rollout history?
 
-> Labels added after creating a deployment are not inherited by the resources 
+### Deployment Types
+
+There are two kinds of deployments, DaemonSet and StatefulSet.
+
+A DaemonSet ensures that all (or some) Nodes run a copy of a particular Pod. This is useful in a multi-node cluster where specific application is required on all nodes, e.g. running a  - cluster storage, logs collection, node monitoring, network agent - daemon on every node. As nodes are added to the cluster, Pods are added to them. As nodes are removed from the cluster, those Pods are garbage collected. Deleting a DaemonSet will clean up the Pods it created. DaemonSets can only be created by YAML file.
 
 ```sh
-# add label
-kubectl label deployment myapp state=test
-# show deployment and their labels
-kubectl get deployments --show-labels
-# show deployments filtered by specific label
-kubectl get deployments --selector state=test
-# show all resources filtered by specific label
-kubectl get all --selector app=myapp
-# remove a label by a minus sign after label key
-kubectl label pod [podName] app-
+# create daemonset via yaml file
+kubectl create -f daemonset.yaml
+# view daemonsets pods
+kubectl get ds,pods
+# view daemonset in kube system namespace
+kubectl get ds,pods -n kube-system
 ```
 
-### Lab 7.1 Deploy an app
+### Lab 7.5. DaemonSet
 
-- Create a deployment manifest file with `nginx:1.2` image and 3 replicas
-- Verify the resources created, their statuses and detailed deployment properties
-- Update the deployment to use a newer version of the image
-- Verify update process and successful completion
+- Create a DaemonSet by using a [template from official docs](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
+
+### Lab 7.6. Autoscaling
+
+Autoscaling is used in real clusters but not covered in CKAD. See [Kubernetes Metrics Server](https://github.com/kubernetes-sigs/metrics-server) for more details and see [HorizontalPodAutoscaler Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#run-and-expose-php-apache-server) for complete lab.
+
+```sh
+# install metrics server
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+# docker-desktop patch
+kubectl patch deployment metrics-server -n kube-system --type 'json' -p '[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
+# if new charts not visible, run below
+kubectl proxy
+# delete metrics server
+kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+```
 
 ## 8. Networking
 
