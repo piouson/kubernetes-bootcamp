@@ -583,7 +583,7 @@ kubectl edit deploy [deploymentName]
 
 The other type of update strategy is [Recreate](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#recreate-deployment), where all Pods are killed before nre Pods are created. This is useful when you cannot have different versions of an app running simultaneously, e.g database.
 
-Rolling update option [`maxUnavailable`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) is used to control number of Pods upgraded simultaneously, while [`maxSurge`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge) controls the number of Pods in addition to the replicas specified during update. Aim to have a higher `maxSurge` than `maxUnavailable`.
+Rolling update option [`maxUnavailable`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) is used to control number of Pods upgraded simultaneously, while [`maxSurge`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge) controls the number of Pods in addition to the replicas specified during update. Aim to have a higher `maxSurge` than `maxUnavailable`. These options can be set directly in YAML file `spec.strategy.rollingUpdate`
 
 > Scaling down a deployment to 0 is another way to delete all resources associated while keeping the deployment and ReplicaSet config for a quick scale up when required.
 
@@ -604,7 +604,7 @@ kubectl rollout history deployment
 # view specific deployment history
 kubectl rollout history deployment [deploymentName]
 # view specific change revision/log for the deployment
-kubectl rollout history deployment [deploymentName] revision=n
+kubectl rollout history deployment [deploymentName] --revision=n
 # revert deployment to previous version/revision
 kubectl rollout undo deployment [deploymentName] --to-revision=n
 ```
@@ -659,7 +659,10 @@ kubectl get ds,pods -n kube-system
 
 ### Lab 7.5. DaemonSet
 
-- Create a DaemonSet by using a [template from official docs](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
+Create a DaemonSet by using a [template from official docs](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
+- Review the `Kind` in the template before creation
+- Review the DaemonSet pods created
+- Review the DaemonSet in kube-system
 
 ### Lab 7.6. Autoscaling
 
@@ -668,10 +671,8 @@ Autoscaling is used in real clusters but not covered in CKAD. See [Kubernetes Me
 ```sh
 # install metrics server
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-# docker-desktop patch
+# docker-desktop disable certificate validation using `--kubelet-insecure-tls`
 kubectl patch deployment metrics-server -n kube-system --type 'json' -p '[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
-# if new charts not visible, run below
-kubectl proxy
 # delete metrics server
 kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 ```
