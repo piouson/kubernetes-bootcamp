@@ -679,6 +679,53 @@ kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/lat
 
 ## 8. Networking
 
+### Service
+
+A service provides access to applications by exposing them. Uses round-robin load balancing. Service targets Pods by selector. Services exists independent from deployment, is not deleted during deployment deletion and can provide access to Pods in multiple deployments.
+
+Kube-proxy agent listens for new Services and Endpoints on a random port and redirects traffic to Pods specified as Endpoints
+
+> Understand the Kubernetes network architecture: Pod Net - Cluster Net - Node Net - Ingress
+> Understand the Kubernetes microservices architecture: Database - Backend - Frontend
+
+#### Service Types
+
+- ClusterIP service type is the default, exposes the service on an internal Cluster IP address
+- NodePort service type provides public access to the application through host port forwarding
+- LoadBalancer for cloud service (not for CKAD)
+- ExternalName for DNS names (not for CKAD)
+  
+```sh
+# view default services/pods
+kubectl get svc,pods -n kube-system
+# create a service by exposing a type, see `kubectl expose -h`
+kubectl expose [type=deploy,svc,rc,rs,etc] [typeName] --port=PORT
+# create a service by expose a deployment on port 80
+kubectl expose deploy [deploymentName] --port=80
+# view more details of the service to confirm properties
+kubectl describe svc [name]
+# view details of service in yaml
+kubectl get svc [name] -o yaml | less
+# edit service
+kubectl edit svc [name]
+```
+
+### Lab 8. Exposing your application internally
+
+- Create an nginx deployment
+- Scale the deployment to 3 replicas
+- Confirm all resources created
+- Create a service for the deployment on port 80
+- Confirm all resources created, note service TYPE, CLUSTER-IP and PORT
+- Run a new Pod to execute the following commands:
+  - confirm DNS server IP `cat /etc/resolv.conf`
+  - confirm Gateway/Domain server IP `nslookup [deploymentName]`
+- View more details of the service, note IPs, Port, TargetPort and Endpoints
+- Compare the details of the service in YAML
+- Get all endpoints and service
+- Access the application via the host
+- Change the service type to NodePort of 32000 and access the application through the node
+
 ## 9. Ingress
 
 ## 10. Storage
