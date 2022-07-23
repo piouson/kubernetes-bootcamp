@@ -694,7 +694,7 @@ Kube-proxy agent listens for new Services and Endpoints on a random port and red
 - NodePort service type provides public access to the application through host port forwarding
 - LoadBalancer for cloud service (not for CKAD)
 - ExternalName for DNS names (not for CKAD)
-  
+
 ```sh
 # view default services/pods
 kubectl get svc,pods -n kube-system
@@ -712,10 +712,11 @@ kubectl edit svc [name]
 
 ### Lab 8. Exposing your application internally
 
-- Create an nginx deployment
+- Create an nginx deployment called `nginx`
 - Scale the deployment to 3 replicas
 - Confirm all resources created
 - Create a service for the deployment on port 80
+  - Access the app from a browser `kubectl port-forward service/nginx LOCAL_PORT:80`
 - Confirm all resources created, note service TYPE, CLUSTER-IP and PORT
 - Run a new Pod to execute the following commands:
   - confirm DNS server IP `cat /etc/resolv.conf`
@@ -724,7 +725,11 @@ kubectl edit svc [name]
 - Compare the details of the service in YAML
 - Get all endpoints and service
 - Access the application via the host
-- Change the service type to NodePort of 32000 and access the application through the node
+- Change the service type to NodePort of 32000
+  - Can you access the app through the NodePort - `$(minikube ip):32000`?
+
+> On WSL2, there are network issues preventing access to the Service NodePort, see [#4199](https://github.com/microsoft/WSL/issues/4199#issuecomment-668270398) [#7879](https://github.com/kubernetes/minikube/issues/7879).
+> Can this be fixed by [enabling **systemd** on WSL2](https://kubernetes.io/blog/2020/05/21/wsl-docker-kubernetes-on-the-windows-desktop/#minikube-kubernetes-from-everywhere) and use `minikube start --driver=none`?
 
 ## 9. Ingress
 
