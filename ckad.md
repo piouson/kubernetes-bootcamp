@@ -53,7 +53,7 @@ docker image rm [imageId] # requires `--force` when containers using the image
 docker {image|containers|network|volumes}
 ```
 
-> note commands after imageId/imageName are passed to image/container
+> note commands after imageId/imageName are passed to image/container \
 > e.g. `docker run -it mysql -e MYSQL_PASSWORD=hello` will not work cos env vars should come before image name
 
 ### Container logging
@@ -218,7 +218,7 @@ kubectl config get-contexts # this should list docker-desktop as an option
 kubectl config use-context docker-desktop
 ```
 
-> See Docker's [Deploy on Kubernetes](https://docs.docker.com/desktop/kubernetes/) for more details
+> See Docker's [Deploy on Kubernetes](https://docs.docker.com/desktop/kubernetes/) for more details \
 > Note that using Docker Desktop will have network limitations when exposing your applications publicly, see alternative Minikube option below
 
 ### Use Minikube
@@ -341,7 +341,7 @@ kubectl {create|apply|replace|delete} -f pod.yaml
 kubectl run mynginx --image=nginx -o yaml --dry-run=client > pod.yaml
 ```
 
-> Manifest fields are **case sensitive**, **always generate** manifest files to avoid typos
+> Manifest fields are **case sensitive**, **always generate** manifest files to avoid typos \
 > `kubectl apply` creates a new resource, or updates existing resource previously created by `kubectl apply`
 
 ### Valid reasons for multi-container Pods
@@ -756,7 +756,7 @@ kubectl edit svc [name]
 - Change the service type to NodePort of 32000
   - Can you access the app through the NodePort - `$(minikube ip):32000`?
 
-> On WSL2, there are network issues preventing access to the Service NodePort, see [#4199](https://github.com/microsoft/WSL/issues/4199#issuecomment-668270398) [#7879](https://github.com/kubernetes/minikube/issues/7879).
+> On WSL2, there are network issues preventing access to the Service NodePort, see [#4199](https://github.com/microsoft/WSL/issues/4199#issuecomment-668270398) [#7879](https://github.com/kubernetes/minikube/issues/7879). \
 > This can be avoided by following the steps in [cp4 - use minikube](#use-minikube)
 
 ## 9. Ingress
