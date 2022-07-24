@@ -212,34 +212,54 @@ Methods on Windows below used Docker Desktop with WSL2 (Ubuntu) engine.
   ![image](https://user-images.githubusercontent.com/17856665/178120815-357cea98-ecf1-4536-81af-a614b7b4cf5e.png)
 </details>
 
+See Docker's [Deploy on Kubernetes](https://docs.docker.com/desktop/kubernetes/) for more details.
+
 ```sh
 # after docker desktop restarts
 kubectl config get-contexts # this should list docker-desktop as an option
 kubectl config use-context docker-desktop
 ```
 
-See Docker's [Deploy on Kubernetes](https://docs.docker.com/desktop/kubernetes/) for more details.
+> Note that using Docker Desktop will have network limitations when exposing your applications publicly, see alternative Minikube option below
 
 ### Use Minikube
 
-See `minikube-docker-wsl2-setup.sh` script file below:
+1. Disable Docker Desktop integration with WSL2 Ubuntu
+2. Install [`docker engine`](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script), [`minikube`](https://minikube.sigs.k8s.io/docs/start/), `conntrack` and [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management)
+3. [Enable **`systemd`** on WSL2 Ubuntu](https://github.com/DamionGans/ubuntu-wsl2-systemd-script)
+3. Start minikube cluster
 
 ```sh
-#!/bin/bash
-# Windows setup - requires Docker and WSL2
-
-sudo apt-get update
-
+# 1. disable docker desktop integration with wsl2 ubuntu
+# 2. install docker engine
+curl -fsSL https://get.docker.com -o get-docker.sh
+DRY_RUN=1 sh ./get-docker.sh
+sudo groupadd docker
+sudo usermod -aG docker $USER
+# logout or start another terminal to update group membership
+# 3. install minikube
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
-####
-echo the script is now ready
-echo manually run "minikube start --vm-driver=docker" to start minikube and configure kubectl to use minikube 
-
-sudo usermod -aG docker $USER
-newgrp docker
-
-minikube start --vm-driver=docker --cni=calico
+# 4. install conntrack
+sudo apt install conntrack
+# 5. install kubectl
+sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubectl
+# 6. start a minikube cluster with driver=none
+sudo minikube start --driver=none
+# 7. change the owner of the .kube and .minikube directories
+sudo chown -R $USER $HOME/.kube $HOME/.minikube
+# 8. confirm running cluster IP - should be within host (wsl2) subnet
+kubectl cluster-info
+# 9. visit the kubernetes dashboard - visit provided url
+minikube dashboard
+# 10. optionally, test external access to apps by exposing the dashboard
+kubectl edit service/kubernetes-dashboard -n kubernetes-dashboard
+# change Type=ClusterIP -> "Type=NodePort or Type=LoadBalancer" and save
+kubectl get service/kubernetes-dashboard -n kubernetes-dashboard
+# visit localhost with the NodePort/LoadBalancer port - e.g. `localhost:31234`
 ```
 
 #### Managing Minikube
@@ -271,7 +291,7 @@ minikube addons enable [addonName]
 
 ## 5. Pods
 
-A Pod is similar to a server, running one or more containers, accessibile by a single IP address. Pods are typically started bia a deployment.
+[Pods](https://kubernetes.io/docs/concepts/workloads/pods/) are the smallest deployable units of computing that you can create and manage in Kubernetes.
 
 ### Naked Pods
 
@@ -679,57 +699,26 @@ kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/lat
 
 ## 8. Networking
 
-### Service
-
-A service provides access to applications by exposing them. Uses round-robin load balancing. Service targets Pods by selector. Services exists independent from deployment, is not deleted during deployment deletion and can provide access to Pods in multiple deployments.
-
-Kube-proxy agent listens for new Services and Endpoints on a random port and redirects traffic to Pods specified as Endpoints
-
-> Understand the Kubernetes network architecture: Pod Net - Cluster Net - Node Net - Ingress
-> Understand the Kubernetes microservices architecture: Database - Backend - Frontend
-
-#### Service Types
-
-- ClusterIP service type is the default, exposes the service on an internal Cluster IP address
-- NodePort service type provides public access to the application through host port forwarding
-- LoadBalancer for cloud service (not for CKAD)
-- ExternalName for DNS names (not for CKAD)
+### Services
 
 ```sh
-# view default services/pods
-kubectl get svc,pods -n kube-system
-# create a service by exposing a type, see `kubectl expose -h`
-kubectl expose [type=deploy,svc,rc,rs,etc] [typeName] --port=PORT
-# create a service by expose a deployment on port 80
-kubectl expose deploy [deploymentName] --port=80
-# view more details of the service to confirm properties
-kubectl describe svc [name]
-# view details of service in yaml
-kubectl get svc [name] -o yaml | less
-# edit service
-kubectl edit svc [name]
+# create service
+kubectl expose [type] [typeName] --port [portNumber] -h
+# create service alt
+kubectl create service --port [portNumber] -h 
+# get more details of service
+kubctl describe svc [typeName]
+# list all endpoints
+kubectl get endpoints
+# list all services
+kubectl get svc
+# get a service
+kubectl get svc [typeName] -o yaml
 ```
 
-### Lab 8. Exposing your application internally
+Lab 8.1. Creating services
 
-- Create an nginx deployment called `nginx`
-- Scale the deployment to 3 replicas
-- Confirm all resources created
-- Create a service for the deployment on port 80
-  - Access the app from a browser `kubectl port-forward service/nginx LOCAL_PORT:80`
-- Confirm all resources created, note service TYPE, CLUSTER-IP and PORT
-- Run a new Pod to execute the following commands:
-  - confirm DNS server IP `cat /etc/resolv.conf`
-  - confirm Gateway/Domain server IP `nslookup [deploymentName]`
-- View more details of the service, note IPs, Port, TargetPort and Endpoints
-- Compare the details of the service in YAML
-- Get all endpoints and service
-- Access the application via the host
-- Change the service type to NodePort of 32000
-  - Can you access the app through the NodePort - `$(minikube ip):32000`?
 
-> On WSL2, there are network issues preventing access to the Service NodePort, see [#4199](https://github.com/microsoft/WSL/issues/4199#issuecomment-668270398) [#7879](https://github.com/kubernetes/minikube/issues/7879).
-> Can this be fixed by [enabling **systemd** on WSL2](https://kubernetes.io/blog/2020/05/21/wsl-docker-kubernetes-on-the-windows-desktop/#minikube-kubernetes-from-everywhere) and use `minikube start --driver=none`?
 
 ## 9. Ingress
 
