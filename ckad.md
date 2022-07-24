@@ -247,15 +247,20 @@ sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://pack
 echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update
 sudo apt-get install -y kubectl
-# 6. start a minikube cluster with driver=none
+# 6. Enable `systemd` on wsl2
+git clone https://github.com/DamionGans/ubuntu-wsl2-systemd-script.git
+cd ubuntu-wsl2-systemd-script/
+bash ubuntu-wsl2-systemd-script.sh
+# open a new terminal and run `systemctl`
+# 7. start a minikube cluster with driver=none
 sudo minikube start --driver=none
-# 7. change the owner of the .kube and .minikube directories
+# 8. change the owner of the .kube and .minikube directories
 sudo chown -R $USER $HOME/.kube $HOME/.minikube
-# 8. confirm running cluster IP - should be within host (wsl2) subnet
+# 9. confirm running cluster IP - should be within host (wsl2) subnet
 kubectl cluster-info
-# 9. visit the kubernetes dashboard - visit provided url
+# 10. visit the kubernetes dashboard - visit provided url
 minikube dashboard
-# 10. optionally, test external access to apps by exposing the dashboard
+# 11. optionally, test external access to apps by exposing the dashboard
 kubectl edit service/kubernetes-dashboard -n kubernetes-dashboard
 # change Type=ClusterIP -> "Type=NodePort or Type=LoadBalancer" and save
 kubectl get service/kubernetes-dashboard -n kubernetes-dashboard
