@@ -54,7 +54,7 @@ docker {image|containers|network|volumes}
 ```
 
 > note commands after imageId/imageName are passed to image/container \
-> e.g. `docker run -it mysql -e MYSQL_PASSWORD=hello` will not work cos env vars should come before image name
+> e.g. `docker run -it mysql -e MYSQL_PASSWORD=hello` will not work cos env vars should come before image name like `docker run -it -e MYSQL_PASSWORD=hello mysql`
 
 ### Container logging
 
