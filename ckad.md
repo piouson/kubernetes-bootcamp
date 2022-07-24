@@ -225,7 +225,7 @@ kubectl config use-context docker-desktop
 ### Use Minikube
 
 1. Disable Docker Desktop integration with WSL2 Ubuntu
-2. Install [`docker engine`](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script), [`minikube`](https://minikube.sigs.k8s.io/docs/start/), `conntrack` and [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management)
+2. Install on WSL2 Ubuntu: [`docker engine`](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script), [`minikube`](https://minikube.sigs.k8s.io/docs/start/), `conntrack` and [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management)
 3. [Enable **`systemd`** on WSL2 Ubuntu](https://github.com/DamionGans/ubuntu-wsl2-systemd-script)
 3. Start minikube cluster
 
