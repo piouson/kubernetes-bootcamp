@@ -212,14 +212,13 @@ Methods on Windows below used Docker Desktop with WSL2 (Ubuntu) engine.
   ![image](https://user-images.githubusercontent.com/17856665/178120815-357cea98-ecf1-4536-81af-a614b7b4cf5e.png)
 </details>
 
-See Docker's [Deploy on Kubernetes](https://docs.docker.com/desktop/kubernetes/) for more details.
-
 ```sh
 # after docker desktop restarts
 kubectl config get-contexts # this should list docker-desktop as an option
 kubectl config use-context docker-desktop
 ```
 
+> See Docker's [Deploy on Kubernetes](https://docs.docker.com/desktop/kubernetes/) for more details
 > Note that using Docker Desktop will have network limitations when exposing your applications publicly, see alternative Minikube option below
 
 ### Use Minikube
@@ -706,26 +705,59 @@ kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/lat
 
 ## 8. Networking
 
-### Services
+### Service
+
+A service provides access to applications by exposing them. Uses round-robin load balancing. Service targets Pods by selector. Services exists independent from deployment, is not deleted during deployment deletion and can provide access to Pods in multiple deployments.
+
+Kube-proxy agent listens for new Services and Endpoints on a random port and redirects traffic to Pods specified as Endpoints
+
+> Understand the Kubernetes network architecture: Pod Net - Cluster Net - Node Net - Ingress
+> Understand the Kubernetes microservices architecture: Database - Backend - Frontend
+
+#### Service Types
+
+- ClusterIP service type is the default, exposes the service on an internal Cluster IP address
+- NodePort service type provides public access to the application through host port forwarding
+- LoadBalancer for cloud service (not for CKAD)
+- ExternalName for DNS names (not for CKAD)
 
 ```sh
-# create service
-kubectl expose [type] [typeName] --port [portNumber] -h
-# create service alt
-kubectl create service --port [portNumber] -h 
-# get more details of service
-kubctl describe svc [typeName]
-# list all endpoints
-kubectl get endpoints
-# list all services
-kubectl get svc
-# get a service
-kubectl get svc [typeName] -o yaml
+# view default services/pods
+kubectl get svc,pods -n kube-system
+# create a service by exposing a type, see `kubectl expose -h`
+kubectl expose [type=deploy,svc,rc,rs,etc] [typeName] --port=PORT
+# create a service by expose a deployment on port 80
+kubectl expose deploy [deploymentName] --port=80
+# view more details of the service to confirm properties
+kubectl describe svc [name]
+# view details of service in yaml
+kubectl get svc [name] -o yaml | less
+				   
+			   
+# edit service
+kubectl edit svc [name]
 ```
 
-Lab 8.1. Creating services
+### Lab 8. Exposing your application internally
 
+- Create an nginx deployment called `nginx`
+- Scale the deployment to 3 replicas
+- Confirm all resources created
+- Create a service for the deployment on port 80
+  - Access the app from a browser `kubectl port-forward service/nginx LOCAL_PORT:80`
+- Confirm all resources created, note service TYPE, CLUSTER-IP and PORT
+- Run a new Pod to execute the following commands:
+  - confirm DNS server IP `cat /etc/resolv.conf`
+  - confirm Gateway/Domain server IP `nslookup [deploymentName]`
+- View more details of the service, note IPs, Port, TargetPort and Endpoints
+- Compare the details of the service in YAML
+- Get all endpoints and service
+- Access the application via the host
+- Change the service type to NodePort of 32000
+  - Can you access the app through the NodePort - `$(minikube ip):32000`?
 
+> On WSL2, there are network issues preventing access to the Service NodePort, see [#4199](https://github.com/microsoft/WSL/issues/4199#issuecomment-668270398) [#7879](https://github.com/kubernetes/minikube/issues/7879).
+> This can be avoided by following the steps in [cp4 - use minikube](#use-minikube)
 
 ## 9. Ingress
 
