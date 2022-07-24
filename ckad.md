@@ -232,16 +232,17 @@ kubectl config use-context docker-desktop
 # 1. disable docker desktop integration with wsl2 ubuntu
 # 2. install docker engine
 curl -fsSL https://get.docker.com -o get-docker.sh
-DRY_RUN=1 sh ./get-docker.sh
+sudo sh get-docker.sh
 sudo groupadd docker
 sudo usermod -aG docker $USER
-# logout or start another terminal to update group membership
+# logout or start another terminal to update group membership before testing docker below
+docker run hello-world
 # 3. install minikube
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
 # 4. install conntrack
 sudo apt install conntrack
-# 5. install kubectl
+# 5. install kubectl if required
 sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update
@@ -250,16 +251,42 @@ sudo apt-get install -y kubectl
 git clone https://github.com/DamionGans/ubuntu-wsl2-systemd-script.git
 cd ubuntu-wsl2-systemd-script/
 bash ubuntu-wsl2-systemd-script.sh
-# open a new terminal and run `systemctl`
+# logout or start another terminal to enable systemd and run `systemctl`
+sudo sysctl fs.protected_regular=0
 # 7. start a minikube cluster with driver=none
 sudo minikube start --driver=none
-# 8. change the owner of the .kube and .minikube directories
+# 8. optional, if minikube install gives `cri-dockerd` error, install and repeat [7]
+git clone https://github.com/Mirantis/cri-dockerd.git
+# Run these commands as root
+###Install GO###
+wget https://storage.googleapis.com/golang/getgo/installer_linux
+chmod +x ./installer_linux
+sudo ./installer_linux
+source ~/.bash_profile
+cd cri-dockerd
+mkdir bin
+go get && go build -o bin/cri-dockerd
+sudo mkdir -p /usr/local/bin
+sudo install -o root -g root -m 0755 bin/cri-dockerd /usr/local/bin/cri-dockerd
+sudo cp -a packaging/systemd/* /etc/systemd/system
+sudo sed -i -e 's,/usr/bin/cri-dockerd,/usr/local/bin/cri-dockerd,' /etc/systemd/system/cri-docker.service
+sudo systemctl daemon-reload
+sudo systemctl enable cri-docker.service
+sudo systemctl enable --now cri-docker.socket
+# 9. optional, if minikube install gives `crictl` error, install and repeat [7]
+VERSION="v1.24.1"
+wget https://github.com/kubernetes-sigs/cri-tools/releases/download/$VERSION/crictl-$VERSION-linux-amd64.tar.gz
+sudo tar zxvf crictl-$VERSION-linux-amd64.tar.gz -C /usr/local/bin
+rm -f crictl-$VERSION-linux-amd64.tar.gz
+# 10. change the owner of the .kube and .minikube directories
 sudo chown -R $USER $HOME/.kube $HOME/.minikube
-# 9. confirm running cluster IP - should be within host (wsl2) subnet
+# 11. confirm running cluster IP - should be within host (wsl2) subnet
 kubectl cluster-info
-# 10. visit the kubernetes dashboard - visit provided url
+# 12. optional, if `kubectl cluster-info` gives permission denied error, edit the path, see https://stackoverflow.com/a/73100683/1235675
+nano ~/.kube/config
+# 13. visit the kubernetes dashboard - visit provided url
 minikube dashboard
-# 11. optionally, test external access to apps by exposing the dashboard
+# 14. optionally, test external access to apps by exposing the dashboard
 kubectl edit service/kubernetes-dashboard -n kubernetes-dashboard
 # change Type=ClusterIP -> "Type=NodePort or Type=LoadBalancer" and save
 kubectl get service/kubernetes-dashboard -n kubernetes-dashboard
