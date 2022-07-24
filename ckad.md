@@ -267,6 +267,8 @@ kubectl get service/kubernetes-dashboard -n kubernetes-dashboard
 # visit localhost with the NodePort/LoadBalancer port - e.g. `localhost:31234`
 ```
 
+> See [outdated WSL+Docker+Kubernetes tutorial](https://kubernetes.io/blog/2020/05/21/wsl-docker-kubernetes-on-the-windows-desktop/) as reference
+
 #### Managing Minikube
 
 ```sh
