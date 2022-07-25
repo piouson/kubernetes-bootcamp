@@ -251,14 +251,13 @@ sudo apt-get install -y kubectl
 git clone https://github.com/DamionGans/ubuntu-wsl2-systemd-script.git
 cd ubuntu-wsl2-systemd-script/
 bash ubuntu-wsl2-systemd-script.sh
-# logout or start another terminal to enable systemd and run `systemctl`
-sudo sysctl fs.protected_regular=0
+# logout or start another terminal to enable systemd
+systemctl # long output confirms systemd up and running
+sudo sysctl fs.protected_regular=0 # required by minikube
 # 7. start a minikube cluster with driver=none
 sudo minikube start --driver=none
-# 8. optional, if minikube install gives `cri-dockerd` error, install and repeat [7]
+# 8. optional, if [7] gives `cri-dockerd` error, install `GO` and build `cri-dockerd`, then repeat [7]
 git clone https://github.com/Mirantis/cri-dockerd.git
-# Run these commands as root
-###Install GO###
 wget https://storage.googleapis.com/golang/getgo/installer_linux
 chmod +x ./installer_linux
 sudo ./installer_linux
@@ -273,7 +272,7 @@ sudo sed -i -e 's,/usr/bin/cri-dockerd,/usr/local/bin/cri-dockerd,' /etc/systemd
 sudo systemctl daemon-reload
 sudo systemctl enable cri-docker.service
 sudo systemctl enable --now cri-docker.socket
-# 9. optional, if minikube install gives `crictl` error, install and repeat [7]
+# 9. optional, if [7] gives `crictl` error, install `crictl` and repeat [7]
 VERSION="v1.24.1"
 wget https://github.com/kubernetes-sigs/cri-tools/releases/download/$VERSION/crictl-$VERSION-linux-amd64.tar.gz
 sudo tar zxvf crictl-$VERSION-linux-amd64.tar.gz -C /usr/local/bin
@@ -283,10 +282,10 @@ sudo chown -R $USER $HOME/.kube $HOME/.minikube
 # 11. confirm running cluster IP - should be within host (wsl2) subnet
 kubectl cluster-info
 # 12. optional, if `kubectl cluster-info` gives permission denied error, edit the path, see https://stackoverflow.com/a/73100683/1235675
-nano ~/.kube/config
-# 13. visit the kubernetes dashboard - visit provided url
+nano ~/.kube/config # change path "/root/.minikube -> /home/username/.minikube"
+# 13. open kubernetes dashboard - visit provided url
 minikube dashboard
-# 14. optionally, test external access to apps by exposing the dashboard
+# 14. test external access to apps by exposing the kubernetes dashboard
 kubectl edit service/kubernetes-dashboard -n kubernetes-dashboard
 # change Type=ClusterIP -> "Type=NodePort or Type=LoadBalancer" and save
 kubectl get service/kubernetes-dashboard -n kubernetes-dashboard
