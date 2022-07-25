@@ -764,6 +764,9 @@ kubectl get svc [name] -o yaml | less
 kubectl edit svc [name]
 ```
 
+> On WSL2, there are network issues preventing access to the Service NodePort, see [#4199](https://github.com/microsoft/WSL/issues/4199#issuecomment-668270398) [#7879](https://github.com/kubernetes/minikube/issues/7879). \
+> This can be avoided by following the steps in [cp4 - use minikube](#use-minikube)
+
 ### Lab 8. Exposing your application internally
 
 - Create an nginx deployment called `nginx`
@@ -781,9 +784,6 @@ kubectl edit svc [name]
 - Access the application via the host
 - Change the service type to NodePort of 32000
   - Can you access the app through the NodePort - `$(minikube ip):32000`?
-
-> On WSL2, there are network issues preventing access to the Service NodePort, see [#4199](https://github.com/microsoft/WSL/issues/4199#issuecomment-668270398) [#7879](https://github.com/kubernetes/minikube/issues/7879). \
-> This can be avoided by following the steps in [cp4 - use minikube](#use-minikube)
 
 ## 9. Ingress
 
