@@ -239,7 +239,8 @@ sudo usermod -aG docker $USER
 docker run hello-world
 # 3. install minikube
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-sudo install minikube-linux-amd64 /usr/local/bin/minikube
+chmod +x ./minikube
+sudo mv ./minikube /usr/local/bin/
 # 4. install conntrack
 sudo apt install conntrack
 # 5. install kubectl if required
