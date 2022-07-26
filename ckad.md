@@ -769,23 +769,56 @@ kubectl edit svc [name]
 
 ### Lab 8. Exposing your application internally
 
-- Create an nginx deployment called `nginx`
+Use Minikube locally
+
+- Create a single replica nginx deployment called `nginx`
 - Scale the deployment to 3 replicas
 - Confirm all resources created
 - Create a service for the deployment on port 80
-  - Access the app from a browser `kubectl port-forward service/nginx LOCAL_PORT:80`
-- Confirm all resources created, note service TYPE, CLUSTER-IP and PORT
-- Run a new Pod to execute the following commands:
-  - confirm DNS server IP `cat /etc/resolv.conf`
-  - confirm Gateway/Domain server IP `nslookup [deploymentName]`
-- View more details of the service, note IPs, Port, TargetPort and Endpoints
-- Compare the details of the service in YAML
-- Get all endpoints and service
-- Access the application via the host
-- Change the service type to NodePort of 32000
-  - Can you access the app through the NodePort - `$(minikube ip):32000`?
+  - Confirm all resources created, note service TYPE, CLUSTER-IP and PORT(S)
+  - View more details of the service, note IPs, Port, TargetPort and Endpoints
+  - Compare with the YAML output of the service
+  - View the endpoints created
+  - Access the app from the container host via `ssh`
+  - Access the app from a browser via `port-forwarding`
+- Change the service type to NodePort of `nodePort=32000`
+  - Can you access the app through the NodePort `$(minikube ip):32000`?
+- Create a naked `busybox` Pod
+  - list the pods created
+  - run command inside the Pod `cat /etc/resolv.conf` to compare DNS server IP
+  - run command inside the Pod `nslookup [deploymentName]` to compare Gateway/Domain server IP
+  - what IP addresses do these match?
 
 ## 9. Ingress
+
+### Overview
+
+Ingress requires an Ingress Controller to work
+
+### Enable Ingress Manually
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.44.0/deploy/static/provider/cloud/deploy.yaml
+```
+
+### Enable Ingress on Minikube
+
+```sh
+# list existing minikube addons
+minikube addons list
+# enable minikube ingress
+minikube addons enable ingress
+# confirm ingress namespace added
+kubectl get ns
+# confirm resources in ingress namespace
+kubectl get all -n ingress-nginx
+```
+
+### Managing Ingress
+
+```sh
+
+```
 
 ## 10. Storage
 
