@@ -792,34 +792,60 @@ Use Minikube locally
 
 ## 9. Ingress
 
-### Overview
+### Ingress rules
 
-Ingress requires an Ingress Controller to work
+This is similar to defining API routes on a backend application, except that each defined route points to an application/deployment.
 
-### Enable Ingress Manually
+> `kubectl create ingress myingress --rule="/=app1:80" --rule="/about=app2:3000" --rule="/contact=app3:8080"`
+
+- if no host is specified, the rule applies to all inbound HTTP traffic
+- routes/paths can be defined with a POSIX regex
+- `pathType` can be `Exact (default)` or `Prefix` based matching
+- each path points to a service or a resource.
+- a default path can be defined for traffic that doesn't match any specified paths, similar to a 404 route
+
+### Ingress Types
+
+- **single-service ingress** defines a single rule to access a single service
+- **simple fanout ingress** defines two or more rules of different routes/paths to access different services
+- **name-based virtual hosting ingress** defines two or more rules with dynamic routes based on host header, requires a DNS entry for each host header
+
+> name-based example: `kubectl create ingress namebased --rule="app.domain.com/*=appservice:80" --rule="api.domain.com/*=apiservice:80" --rule="db.domain.com/*=dbservice:80"`
+
+### Basic commands
 
 ```sh
+# enable ingress manually
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.44.0/deploy/static/provider/cloud/deploy.yaml
-```
-
-### Enable Ingress on Minikube
-
-```sh
 # list existing minikube addons
 minikube addons list
-# enable minikube ingress
+# enable ingress on minikube
 minikube addons enable ingress
 # confirm ingress namespace added
 kubectl get ns
 # confirm resources in ingress namespace
 kubectl get all -n ingress-nginx
+# create ingress, see `kubectl create ingress -h`
+kubectl create ingress [name] --rule="[path]=[deploymentName]:port"
+kubectl create ingress nginx-ingress --rule="/web=nginx-app:80"
 ```
 
-### Managing Ingress
+### Lab 9. Managing Ingress
 
-```sh
-
-```
+- Enable Ingress
+  - confirm new namespace added
+  - confirm all resources in ingress namespace
+- Create a new `nginx` deployment and expose as NodePort port 80, use YAML file
+  - verify access on `$(minikube ip)`
+- Add `[deploymentName.info` to `/etc/hosts` mapped to `minikube ip`
+- Create an ingress for the `nginx` deployment on path `/`, use YAML file
+  - verify access
+- Create two new deployments of any web server images called `cat` and `dog`, use YAML file
+  - expose both deployments as `Cluster-IP` on port 80
+  - add entries in `/etc/hosts` for `cat.domain.com` and `dog.domain.com` both mapped to `$(minikube ip)`
+- Edit existing Ingress, use YAML file
+  - add rules for both deployments using their subdomains on path `/cat` and `/dog` respectively, and `pathType=Prefix` for both
+- Verify access to the new deployments via subdomains
 
 ## 10. Storage
 
