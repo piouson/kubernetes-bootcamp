@@ -346,7 +346,8 @@ kubectl get pods [podName] -o yaml | less
 kubectl describe pods [podName] | less
 ```
 
-> When adding commands or arguments to a `kubectl` command, anything after ` -- ` is processed by the pod not by kubectl
+> When adding commands or arguments to a `kubectl` command, anything after ` -- ` is processed by the pod not by kubectl \
+> Note: prepend `https://k8s.io/examples/` to any example files in the official docs to use the file with `kubectl`
 
 ### Lab 5.1 Creating Pods
 
@@ -830,7 +831,7 @@ kubectl create ingress [name] --rule="[path]=[deploymentName]:port"
 kubectl create ingress nginx-ingress --rule="/web=nginx-app:80"
 ```
 
-### Lab 9. Managing Ingress
+### Lab 9.1. Managing Ingress
 
 - Enable Ingress
   - confirm new namespace added
@@ -846,6 +847,56 @@ kubectl create ingress nginx-ingress --rule="/web=nginx-app:80"
 - Edit existing Ingress, use YAML file
   - add rules for both deployments using their subdomains on path `/cat` and `/dog` respectively, and `pathType=Prefix` for both
 - Verify access to the new deployments via subdomains
+
+### Network policies
+
+In Kubernetes, Pods can always communicate through namespaces. All traffics are allowed until you have a [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/).
+
+Network policies are implemented by the [network plugin](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/). This requires a networking solution which supports NetworkPolicy, otherwise, will have no effect. Network policies are additive.
+
+Minikube needs to be started with the `--cni=calico` flag to use the Calico network plugin.
+
+> The Calico plugin conflicts with Ingress and thus should be disabled after this lab.
+
+```sh
+minikube stop
+minikube delete
+# start minikube with calico plugin
+minikube start --cni=calico
+# verify calico plugin running
+kubectl get pofs -n kube-system
+```
+
+### Network policy identifiers
+
+There are three different identifiers that controls entities that a Pod can communicate with:
+
+- `podSelector`: Pod allows access to other Pods with the matching selector label (note: a Pod cannot block itself)
+- `namespaceSelector`: Pod allows incoming traffic from namespaces with the matching selector label
+- `ipBlock`: specifies a range of cluster-external IPs to allow access (not for CKAD - note: node traffic is always allowed)
+
+```sh
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+# create default deny all ingress/egress traffic
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress # or Egress
+# allow all ingress/egress traffic
+spec:
+  podSelector: {}
+  ingress: # or egress
+  - {}
+  policyTypes:
+  - Ingress # or Egress
+```
+
+### Lab 9.2. Declare network policy
+
+> Note: prepend `https://k8s.io/examples/` to any example files in the official docs to use the file with `kubectl`
+
+Follow the [official declare network policy walkthrough](https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/)
 
 ## 10. Storage
 
