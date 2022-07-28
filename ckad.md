@@ -224,69 +224,74 @@ kubectl config use-context docker-desktop
 ### Use Minikube
 
 1. Disable Docker Desktop integration with WSL2 Ubuntu
-2. Install on WSL2 Ubuntu: [`docker engine`](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script), [`minikube`](https://minikube.sigs.k8s.io/docs/start/), `conntrack` and [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management)
+2. Install on WSL2 Ubuntu (only tested 18.04 bionic): [`docker engine`](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script), [`minikube`](https://minikube.sigs.k8s.io/docs/start/), `conntrack` and [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management)
 3. [Enable **`systemd`** on WSL2 Ubuntu](https://github.com/DamionGans/ubuntu-wsl2-systemd-script)
 3. Start minikube cluster
 
 ```sh
 # 1. disable docker desktop integration with wsl2 ubuntu
-# 2. install docker engine
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
+# 2a. enable `systemd` on wsl2
+git clone https://github.com/DamionGans/ubuntu-wsl2-systemd-script.git
+cd ubuntu-wsl2-systemd-script/
+sudo bash ubuntu-wsl2-systemd-script.sh
+cd ../ && rm -rf ubuntu-wsl2-systemd-script/
+# 2b. logout or start another terminal to enable systemd
+systemctl # long output confirms systemd up and running
+sudo sysctl fs.protected_regular=0 # required by minikube
+# 3a. uninstall old docker versions
+sudo apt-get remove docker docker-engine docker.io containerd runc
+# 3b. setup docker repo
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg lsb-release
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+# 3c. install docker engine
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+# 3d. manage docker as non-root user
 sudo groupadd docker
 sudo usermod -aG docker $USER
-# logout or start another terminal to update group membership before testing docker below
+# 3e. logout or start another terminal to update group membership before testing docker below
 docker run hello-world
-# 3. install minikube
-curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-chmod +x ./minikube
-sudo mv ./minikube /usr/local/bin/
-# 4. install conntrack
-sudo apt install conntrack
-# 5. install kubectl if required
+# 4. install kubectl if required
 sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update
 sudo apt-get install -y kubectl
-# 6. Enable `systemd` on wsl2
-git clone https://github.com/DamionGans/ubuntu-wsl2-systemd-script.git
-cd ubuntu-wsl2-systemd-script/
-bash ubuntu-wsl2-systemd-script.sh
-# logout or start another terminal to enable systemd
-systemctl # long output confirms systemd up and running
-sudo sysctl fs.protected_regular=0 # required by minikube
-# 7. start a minikube cluster with driver=none
-sudo minikube start --driver=none
-# 8. optional, if [7] gives `cri-dockerd` error, install `GO` and build `cri-dockerd`, then repeat [7]
-git clone https://github.com/Mirantis/cri-dockerd.git
-wget https://storage.googleapis.com/golang/getgo/installer_linux
-chmod +x ./installer_linux
-sudo ./installer_linux
-source ~/.bash_profile
-cd cri-dockerd
-mkdir bin
-go get && go build -o bin/cri-dockerd
-sudo mkdir -p /usr/local/bin
-sudo install -o root -g root -m 0755 bin/cri-dockerd /usr/local/bin/cri-dockerd
-sudo cp -a packaging/systemd/* /etc/systemd/system
-sudo sed -i -e 's,/usr/bin/cri-dockerd,/usr/local/bin/cri-dockerd,' /etc/systemd/system/cri-docker.service
+# 5. install minikube
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+chmod +x ./minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+# 6. change the owner of the .kube and .minikube directories
+sudo chown -R $USER $HOME/.kube $HOME/.minikube
+# 7a. install minikube deps - conntrack
+sudo apt install conntrack
+# 7b. install minikube deps - `cri-dockerd`
+VER=$(curl -s https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest|grep tag_name | cut -d '"' -f 4|sed 's/v//g')
+echo $VER
+wget https://github.com/Mirantis/cri-dockerd/releases/download/v${VER}/cri-dockerd-${VER}.amd64.tgz
+tar xvf cri-dockerd-${VER}.amd64.tgz
+sudo mv cri-dockerd/cri-dockerd /usr/local/bin/
+rm -rf cri-dockerd
 sudo systemctl daemon-reload
 sudo systemctl enable cri-docker.service
 sudo systemctl enable --now cri-docker.socket
-# 9. optional, if [7] gives `crictl` error, install `crictl` and repeat [7]
+# cri-docker running shows: "Created symlink /etc/systemd/system/sockets.target.wants/cri-docker.socket → /etc/systemd/system/cri-docker.socket."
+# 7c. install minikube deps - `crictl`
 VERSION="v1.24.1"
 wget https://github.com/kubernetes-sigs/cri-tools/releases/download/$VERSION/crictl-$VERSION-linux-amd64.tar.gz
 sudo tar zxvf crictl-$VERSION-linux-amd64.tar.gz -C /usr/local/bin
 rm -f crictl-$VERSION-linux-amd64.tar.gz
-# 10. change the owner of the .kube and .minikube directories
-sudo chown -R $USER $HOME/.kube $HOME/.minikube
-# 11. confirm running cluster IP - should be within host (wsl2) subnet
+# 8. start a minikube cluster with driver=none
+sudo minikube start --driver=none
+# 9. confirm running cluster IP - should be within host (wsl2) subnet
 kubectl cluster-info
-# 12. optional, if `kubectl cluster-info` gives permission denied error, edit the path, see https://stackoverflow.com/a/73100683/1235675
+# 9b. optional, if `kubectl cluster-info` gives permission denied error, edit the path, see https://stackoverflow.com/a/73100683/1235675
 nano ~/.kube/config # change path "/root/.minikube -> /home/username/.minikube"
-# 13. open kubernetes dashboard - visit provided url
+# 10. open kubernetes dashboard - visit provided url
 minikube dashboard
-# 14. test external access to apps by exposing the kubernetes dashboard
+# 10bkubectl get all. test external access to apps by exposing the kubernetes dashboard
 kubectl edit service/kubernetes-dashboard -n kubernetes-dashboard
 # change Type=ClusterIP -> "Type=NodePort or Type=LoadBalancer" and save
 kubectl get service/kubernetes-dashboard -n kubernetes-dashboard
@@ -346,8 +351,7 @@ kubectl get pods [podName] -o yaml | less
 kubectl describe pods [podName] | less
 ```
 
-> When adding commands or arguments to a `kubectl` command, anything after ` -- ` is processed by the pod not by kubectl \
-> Note: prepend `https://k8s.io/examples/` to any example files in the official docs to use the file with `kubectl`
+> When adding commands or arguments to a `kubectl` command, anything after ` -- ` is processed by the pod not by kubectl
 
 ### Lab 5.1 Creating Pods
 
@@ -781,11 +785,11 @@ Use Minikube locally
   - View more details of the service, note IPs, Port, TargetPort and Endpoints
   - Compare with the YAML output of the service
   - View the endpoints created
-  - Access the app from the container host via `ssh`
+  - Access the app from the container host via `minikube ssh`
   - Access the app from a browser via `port-forwarding`
 - Change the service type to NodePort of `nodePort=32000`
   - Can you access the app through the NodePort `$(minikube ip):32000`?
-- Create a naked `busybox` Pod
+- Create a naked Pod, e.g. `busybox`
   - list the pods created
   - run command inside the Pod `cat /etc/resolv.conf` to compare DNS server IP
   - run command inside the Pod `nslookup [deploymentName]` to compare Gateway/Domain server IP
@@ -793,110 +797,34 @@ Use Minikube locally
 
 ## 9. Ingress
 
-### Ingress rules
+### Overview
 
-This is similar to defining API routes on a backend application, except that each defined route points to an application/deployment.
+Ingress requires an Ingress Controller to work
 
-> `kubectl create ingress myingress --rule="/=app1:80" --rule="/about=app2:3000" --rule="/contact=app3:8080"`
-
-- if no host is specified, the rule applies to all inbound HTTP traffic
-- routes/paths can be defined with a POSIX regex
-- `pathType` can be `Exact (default)` or `Prefix` based matching
-- each path points to a service or a resource.
-- a default path can be defined for traffic that doesn't match any specified paths, similar to a 404 route
-
-### Ingress Types
-
-- **single-service ingress** defines a single rule to access a single service
-- **simple fanout ingress** defines two or more rules of different routes/paths to access different services
-- **name-based virtual hosting ingress** defines two or more rules with dynamic routes based on host header, requires a DNS entry for each host header
-
-> name-based example: `kubectl create ingress namebased --rule="app.domain.com/*=appservice:80" --rule="api.domain.com/*=apiservice:80" --rule="db.domain.com/*=dbservice:80"`
-
-### Basic commands
+### Enable Ingress Manually
 
 ```sh
-# enable ingress manually
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.44.0/deploy/static/provider/cloud/deploy.yaml
+```
+
+### Enable Ingress on Minikube
+
+```sh
 # list existing minikube addons
 minikube addons list
-# enable ingress on minikube
+# enable minikube ingress
 minikube addons enable ingress
 # confirm ingress namespace added
 kubectl get ns
 # confirm resources in ingress namespace
 kubectl get all -n ingress-nginx
-# create ingress, see `kubectl create ingress -h`
-kubectl create ingress [name] --rule="[path]=[deploymentName]:port"
-kubectl create ingress nginx-ingress --rule="/web=nginx-app:80"
 ```
 
-### Lab 9.1. Managing Ingress
-
-- Enable Ingress
-  - confirm new namespace added
-  - confirm all resources in ingress namespace
-- Create a new `nginx` deployment and expose as NodePort port 80, use YAML file
-  - verify access on `$(minikube ip)`
-- Add `[deploymentName.info` to `/etc/hosts` mapped to `minikube ip`
-- Create an ingress for the `nginx` deployment on path `/`, use YAML file
-  - verify access
-- Create two new deployments of any web server images called `cat` and `dog`, use YAML file
-  - expose both deployments as `Cluster-IP` on port 80
-  - add entries in `/etc/hosts` for `cat.domain.com` and `dog.domain.com` both mapped to `$(minikube ip)`
-- Edit existing Ingress, use YAML file
-  - add rules for both deployments using their subdomains on path `/cat` and `/dog` respectively, and `pathType=Prefix` for both
-- Verify access to the new deployments via subdomains
-
-### Network policies
-
-In Kubernetes, Pods can always communicate through namespaces. All traffics are allowed until you have a [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/).
-
-Network policies are implemented by the [network plugin](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/). This requires a networking solution which supports NetworkPolicy, otherwise, will have no effect. Network policies are additive.
-
-Minikube needs to be started with the `--cni=calico` flag to use the Calico network plugin.
-
-> The Calico plugin conflicts with Ingress and thus should be disabled after this lab.
+### Managing Ingress
 
 ```sh
-minikube stop
-minikube delete
-# start minikube with calico plugin
-minikube start --cni=calico
-# verify calico plugin running
-kubectl get pofs -n kube-system
+
 ```
-
-### Network policy identifiers
-
-There are three different identifiers that controls entities that a Pod can communicate with:
-
-- `podSelector`: Pod allows access to other Pods with the matching selector label (note: a Pod cannot block itself)
-- `namespaceSelector`: Pod allows incoming traffic from namespaces with the matching selector label
-- `ipBlock`: specifies a range of cluster-external IPs to allow access (not for CKAD - note: node traffic is always allowed)
-
-```sh
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-# create default deny all ingress/egress traffic
-spec:
-  podSelector: {}
-  policyTypes:
-  - Ingress # or Egress
-# allow all ingress/egress traffic
-spec:
-  podSelector: {}
-  ingress: # or egress
-  - {}
-  policyTypes:
-  - Ingress # or Egress
-```
-
-### Lab 9.2. Declare network policy
-
-> Note: prepend `https://k8s.io/examples/` to any example files in the official docs to use the file with `kubectl`
-
-Follow the [official declare network policy walkthrough](https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/)
 
 ## 10. Storage
 
