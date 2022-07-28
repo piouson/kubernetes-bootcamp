@@ -237,7 +237,6 @@ sudo bash ubuntu-wsl2-systemd-script.sh
 cd ../ && rm -rf ubuntu-wsl2-systemd-script/
 # 2b. logout or start another terminal to enable systemd
 systemctl # long output confirms systemd up and running
-sudo sysctl fs.protected_regular=0 # required by minikube
 # 3a. uninstall old docker versions
 sudo apt-get remove docker docker-engine docker.io containerd runc
 # 3b. setup docker repo
@@ -254,7 +253,7 @@ sudo groupadd docker
 sudo usermod -aG docker $USER
 # 3e. logout or start another terminal to update group membership before testing docker below
 docker run hello-world
-# 4. install kubectl if required
+# 4. install kubectl
 sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update
@@ -265,40 +264,19 @@ chmod +x ./minikube-linux-amd64
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
 # 6. change the owner of the .kube and .minikube directories
 sudo chown -R $USER $HOME/.kube $HOME/.minikube
-# 7a. install minikube deps - conntrack
-sudo apt install conntrack
-# 7b. install minikube deps - `cri-dockerd`
-VER=$(curl -s https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest|grep tag_name | cut -d '"' -f 4|sed 's/v//g')
-echo $VER
-wget https://github.com/Mirantis/cri-dockerd/releases/download/v${VER}/cri-dockerd-${VER}.amd64.tgz
-tar xvf cri-dockerd-${VER}.amd64.tgz
-sudo mv cri-dockerd/cri-dockerd /usr/local/bin/
-rm -rf cri-dockerd
-sudo systemctl daemon-reload
-sudo systemctl enable cri-docker.service
-sudo systemctl enable --now cri-docker.socket
-# cri-docker running shows: "Created symlink /etc/systemd/system/sockets.target.wants/cri-docker.socket → /etc/systemd/system/cri-docker.socket."
-# 7c. install minikube deps - `crictl`
-VERSION="v1.24.1"
-wget https://github.com/kubernetes-sigs/cri-tools/releases/download/$VERSION/crictl-$VERSION-linux-amd64.tar.gz
-sudo tar zxvf crictl-$VERSION-linux-amd64.tar.gz -C /usr/local/bin
-rm -f crictl-$VERSION-linux-amd64.tar.gz
-# 8. start a minikube cluster with driver=none
-sudo minikube start --driver=none
-# 9. confirm running cluster IP - should be within host (wsl2) subnet
+# 7. start a minikube cluster
+sudo minikube start --driver=docker
+# 8. confirm running cluster IP - should be within host (wsl2) subnet
 kubectl cluster-info
-# 9b. optional, if `kubectl cluster-info` gives permission denied error, edit the path, see https://stackoverflow.com/a/73100683/1235675
-nano ~/.kube/config # change path "/root/.minikube -> /home/username/.minikube"
-# 10. open kubernetes dashboard - visit provided url
+# 9. test external access to apps by exposing the kubernetes dashboard
 minikube dashboard
-# 10bkubectl get all. test external access to apps by exposing the kubernetes dashboard
 kubectl edit service/kubernetes-dashboard -n kubernetes-dashboard
 # change Type=ClusterIP -> "Type=NodePort or Type=LoadBalancer" and save
 kubectl get service/kubernetes-dashboard -n kubernetes-dashboard
 # visit localhost with the NodePort/LoadBalancer port - e.g. `localhost:31234`
 ```
 
-> See [outdated WSL+Docker+Kubernetes tutorial](https://kubernetes.io/blog/2020/05/21/wsl-docker-kubernetes-on-the-windows-desktop/) as reference
+> Ref [WSL+Docker+Kubernetes tutorial](https://kubernetes.io/blog/2020/05/21/wsl-docker-kubernetes-on-the-windows-desktop/)
 
 #### Managing Minikube
 
@@ -351,7 +329,8 @@ kubectl get pods [podName] -o yaml | less
 kubectl describe pods [podName] | less
 ```
 
-> When adding commands or arguments to a `kubectl` command, anything after ` -- ` is processed by the pod not by kubectl
+> When adding commands or arguments to a `kubectl` command, anything after ` -- ` is processed by the pod not by kubectl \
+> Note: prepend `https://k8s.io/examples/` to any example files in the official docs to use the file with `kubectl`
 
 ### Lab 5.1 Creating Pods
 
