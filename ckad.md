@@ -235,23 +235,23 @@ git clone https://github.com/DamionGans/ubuntu-wsl2-systemd-script.git
 cd ubuntu-wsl2-systemd-script/
 sudo bash ubuntu-wsl2-systemd-script.sh
 cd ../ && rm -rf ubuntu-wsl2-systemd-script/
-# 2b. logout or start another terminal to enable systemd
+exec bash
 systemctl # long output confirms systemd up and running
 # 3a. uninstall old docker versions
 sudo apt-get remove docker docker-engine docker.io containerd runc
 # 3b. setup docker repo
 sudo apt-get update
-sudo apt-get install ca-certificates curl gnupg lsb-release
+sudo apt-get -y install ca-certificates curl gnupg lsb-release
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 # 3c. install docker engine
 sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 # 3d. manage docker as non-root user
 sudo groupadd docker
 sudo usermod -aG docker $USER
-# 3e. logout or start another terminal to update group membership before testing docker below
+# 3e. start another terminal to update group membership before testing docker
 docker run hello-world
 # 4. install kubectl
 sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
@@ -262,10 +262,11 @@ sudo apt-get install -y kubectl
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
 chmod +x ./minikube-linux-amd64
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
+rm -rf minikube-linux-amd64 $HOME/.minikube
 # 6. change the owner of the .kube and .minikube directories
 sudo chown -R $USER $HOME/.kube $HOME/.minikube
 # 7. start a minikube cluster
-sudo minikube start --driver=docker
+minikube start --driver=docker
 # 8. confirm running cluster IP - should be within host (wsl2) subnet
 kubectl cluster-info
 # 9. test external access to apps by exposing the kubernetes dashboard
