@@ -237,6 +237,7 @@ sudo bash ubuntu-wsl2-systemd-script.sh
 cd ../ && rm -rf ubuntu-wsl2-systemd-script/
 exec bash
 systemctl # long output confirms systemd up and running
+sudo sysctl fs.protected_regular=0 # required by minikube
 # 3a. uninstall old docker versions
 sudo apt-get remove docker docker-engine docker.io containerd runc
 # 3b. setup docker repo
@@ -263,12 +264,35 @@ curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-
 chmod +x ./minikube-linux-amd64
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
 rm -rf minikube-linux-amd64 $HOME/.minikube
-# 6. change the owner of the .kube and .minikube directories
-sudo chown -R $USER $HOME/.kube $HOME/.minikube
+# 6a. install minikube deps - conntrack
+sudo apt install conntrack
+# 6b. install minikube deps - `cri-dockerd`
+VER=$(curl -s https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest|grep tag_name | cut -d '"' -f 4|sed 's/v//g')	
+echo $VER	
+wget https://github.com/Mirantis/cri-dockerd/releases/download/v${VER}/cri-dockerd-${VER}.amd64.tgz	
+tar xvf cri-dockerd-${VER}.amd64.tgz	
+# sudo mv cri-dockerd/cri-dockerd /usr/local/bin/
+sudo install -o root -g root -m 0755 cri-dockerd/cri-dockerd /usr/local/bin/cri-dockerd
+rm -rf cri-dockerd
+git clone https://github.com/Mirantis/cri-dockerd.git
+cp -a cri-dockerd/packaging/systemd/* /etc/systemd/system
+sed -i -e 's,/usr/bin/cri-dockerd,/usr/local/bin/cri-dockerd,' /etc/systemd/system/cri-docker.service
+sudo systemctl daemon-reload	
+sudo systemctl enable cri-docker.service	
+sudo systemctl enable --now cri-docker.socket	
+# cri-docker running shows: "Created symlink ..."	
+rm -rf cri-dockerd
+# 6c. install minikube deps - `crictl`	
+VER=v$(curl -s https://api.github.com/repos/kubernetes-sigs/cri-tools/releases/latest|grep tag_name | cut -d '"' -f 4|sed 's/v//g')
+wget https://github.com/kubernetes-sigs/cri-tools/releases/download/$VER/crictl-$VER-linux-amd64.tar.gz	
+sudo tar zxvf crictl-$VER-linux-amd64.tar.gz -C /usr/local/bin	
+rm -f crictl-$VER-linux-amd64.tar.gz
 # 7. start a minikube cluster
 minikube start --driver=docker
-# 8. confirm running cluster IP - should be within host (wsl2) subnet
+# 8a. confirm running cluster IP - should be within host (wsl2) subnet
 kubectl cluster-info
+# 8b. if `sudo` required for [8a], change the owner of the .kube and .minikube directories
+sudo chown -R $USER $HOME/.kube $HOME/.minikube
 # 9. test external access to apps by exposing the kubernetes dashboard
 minikube dashboard
 kubectl edit service/kubernetes-dashboard -n kubernetes-dashboard
