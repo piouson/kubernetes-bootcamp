@@ -265,11 +265,10 @@ sudo apt install conntrack
 sudo minikube start --driver=none --kubernetes-version=1.23.9
 # 6b. change the owner of the .kube and .minikube directories
 sudo chown -R $USER $HOME/.kube $HOME/.minikube
-# 6c. create alias for `kubectl`
+# 6c. create alias for `kubectl` in `.bashrc` or your preferred profile file
 printf "
 # minikube kubectl
 alias kubectl='minikube kubectl --'
-source <(kubectl completion bash)
 " >> ~/.bashrc
 exec bash
 # 6d. confirm running
@@ -750,9 +749,6 @@ kubectl get svc [name] -o yaml | less
 kubectl edit svc [name]
 ```
 
-> On WSL2, there are network issues preventing access to the Service NodePort, see [#4199](https://github.com/microsoft/WSL/issues/4199#issuecomment-668270398) [#7879](https://github.com/kubernetes/minikube/issues/7879). \
-> This can be avoided by following the steps in [cp4 - use minikube](#use-minikube)
-
 ### Lab 8. Exposing your application internally
 
 Use Minikube locally
@@ -846,10 +842,13 @@ Minikube needs to be started with the `--cni=calico` flag to use the Calico netw
 minikube stop
 minikube delete
 # start minikube with calico plugin
-minikube start --cni=calico
+minikube start --kubernetes-version=1.23.9 --cni=calico
 # verify calico plugin running
-kubectl get pofs -n kube-system
+kubectl get pods -n kube-system
+# allow plenty of time (+5mins) for kubedns and calico to enter `running` status
 ```
+
+> Allow plenty of time (+5mins) for kubedns and calico to enter `Running` status
 
 ### Network policy identifiers
 
