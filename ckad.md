@@ -883,7 +883,120 @@ Follow the [official declare network policy walkthrough](https://kubernetes.io/d
 
 ## 10. Storage
 
-## 11. Variables and Secrets
+[PersistentVolume (PV)](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#introduction) is a piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using Storage Classes, with a lifecycle independent of any individual Pod that uses the PV.
+
+PersistentVolumeClaim (PVC) is a request for storage by a user. It is similar to a Pod. Pods consume node resources and PVCs consume PV resources. Claims can request specific size and [access modes (ReadWriteOnce, ReadOnlyMany, ReadWriteMany, or ReadWriteOncePod)](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes).
+
+- Pods connect to the PVC, and a PVC connects to the PV, both in a 1-1 relationship (only one PVC can connect to a PV)
+- PVC can be created from an existing PVC
+- PVC will remain in `STATUS=Pending` until it finds and connects to a matching PV and thus **`STATUS=Bound`** 
+- PV supports a number of [raw block volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#raw-block-volume-support)
+
+### Access modes
+
+- ReadWriteOnce: volume can be mounted as read-write by a single node - allows multiple pods running on the node access the volume
+- ReadOnlyMany: volume can be mounted as read-only by many nodes
+- ReadWriteMany: volume can be mounted as read-write by many nodes
+- ReadWriteOncePod: volume can be mounted as read-write by a single Pod
+
+### PV and PVC attributes
+
+| PV attributes    | PVC attributes   |
+|------------------|------------------|
+| capacity         | resources        |
+| volume modes     | volume modes     |
+| access modes     | access modes     |
+| storageClassName | storageClassName |
+| mount options    | selector         |
+| reclaim policy   |                  |
+| node affinity    |                  |
+| phase            |                  |
+
+### Storage Class
+
+A [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/) provides a way for administrators to describe the "classes" of storage they offer. It enables automatic PV provisioning to meet PVC requests, thus removing the need to manually create PVs. StorageClass must have a specified **provisioner** that determines what volume plugin is used for provisioning PVs.
+
+- A PV with a specified `storageClassName` can only be bound to PVCs that request that `storageClassName`
+- A PV with `storageClassName` attribute not set is intepreted as _a PV with no class_, and can only be bound to PVCs that request a PV with no class.
+- A PVC with `storageClassName=""` (empty string) is intepreted as _a PVC requesting a PV with no class_.
+- A PVC with `storageClassName` attribute not set is not quite the same and behaves different whether [the `DefaultStorageClass` admission plugin is enabled](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#defaultstorageclass)
+  - if the admission plugin is enabled, and a default StorageClass specified, all PVCs with no `storageClassName` can be bound to PVs of that default
+  - if a default StorageClass is not specified, PVC creation is treated as if the admission plugin is disabled
+  - if the admission plugin is disabled, all PVCs that have no `storageClassName` can only be bound to PVs with no class
+
+> If a PVC doesn't find a PV with matching access modes and storage, StorageClass may dynamically create a matching PV
+
+### Basic commands
+
+```sh
+# list PVCs, PVs
+kubectl get {pvc|pv|storageclass}
+# view more details of a PVC
+kubectl decribe {pvc|pv|storageclass} [name]
+# hostPath PersistentVolume
+https://k8s.io/examples/pods/storage/pv-volume.yaml
+# hostPath PersistentVolumeClaim
+https://k8s.io/examples/pods/storage/pv-claim.yaml
+```
+
+> `hostPath` volumes is created on the host, in minikube use the `minikube ssh` command to access the host (requires starting the cluster with `--driver=docker`)
+
+### Lab 10.1. PVs and PVCs
+
+Use the `hostPath` PV and PVC above as base.
+
+- Create a PV from a YAML file with 3Gi capacity
+- Create a PVC from a YAML file requesting 1Gi capacity
+  - What `STATUS` does the PVC have?
+  - Does the PVC use the existing PV and why or why not?
+- What happens when a PVC is created without specifying a `StorageClass` in the YAML file?
+
+### Lab 10.2. Configuring Pods storage with PVs and PVCs
+
+The benefit of configuring Pods with PVCs is to decouple site-specific details.
+
+You can follow the [official "configure a Pod to use a PersistentVolume for storage" docs walkthrough](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/#create-a-persistentvolume) to complete this lab.
+
+1. Create a `/mnt/data/index.html` file on cluster host `minikube ssh` with some message, e.g. "Hello, World!"
+2. Create a PV with the following parameters, see `https://k8s.io/examples/pods/storage/pv-volume.yaml`
+   - uses `hostPath` storage
+   - allows multiple pods access the storage
+3. Create a Pod running a webserver to consume the storage, see `https://k8s.io/examples/pods/storage/pv-pod.yaml`
+  - uses PVC, see `https://k8s.io/examples/pods/storage/pv-claim.yaml`
+  - image is `httpd` and default documentroot is `/var/www/html`
+4. Verify all resources created `pod,pv,pvc,storageclass`, and also review each detailed information
+   - review `STATUS` for PV and PVC
+   - did the PVC in [3] bind to the PV in [2], why or why not?
+5. Connect to the Pod via an interactive shell and confirm you can view the contents of cluster host file `curl localhost`
+6. Clean up all resources created
+
+<details>
+  <summary><b>spoiler: lab steps</b></summary>
+
+```sh
+minikube ssh
+sudo mkdir /mnt/data
+sudo sh -c "echo 'Hello from Kubernetes storage' > /mnt/data/index.html"
+cat /mnt/data/index.html
+echo --- > lab10-2.yaml
+wget https://k8s.io/examples/pods/storage/pv-volume.yaml -O- >> lab10-2.yaml
+echo --- >> lab10-2.yaml
+wget https://k8s.io/examples/pods/storage/pv-claim.yaml -O- >> lab10-2.yaml
+echo --- >> lab10-2.yaml
+wget https://k8s.io/examples/pods/storage/pv-pod.yaml -O- >> lab10-2.yaml
+echo --- >> lab10-2.yaml
+nano lab10-2.yaml # edit the final file accordingly
+kubectl apply -f lab10-2.yaml
+kubectl get pod,pv,pvc,storageclass
+kubectl describe pod,pv,pvc,storageclass | less
+kubectl exec -it task-pv-pod -- /bin/bash
+kubectl delete -f lab10-2.yaml
+```
+</details>
+
+For further learning, see [mounting the same persistentVolume in two places](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/#mounting-the-same-persistentvolume-in-two-places) and [access control](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/#access-control)
+
+## 11. ConfigMaps and Secrets
 
 ## 12. K8s API
 
