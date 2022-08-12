@@ -999,6 +999,66 @@ For further learning, see [mounting the same persistentVolume in two places](htt
 
 ## 11. ConfigMaps and Secrets
 
+### Variables
+
+Variables can be specified via the command-line when creating a _naked_ Pod with `kubectl run mypod --image=nginx --env="MY_VARIABLE=myvalue"`. However _naked_ Pods are not recommended in live environments, so our main focus is creating variables for deployments.
+
+The `kubectl create deploy` command does not currently support the `--env` option, thus the easiest way to add variables to a deployment is to use `kubectl set env deploy` command after the deployment is created.
+
+> Note that doing `kubectl set env deploy --dry-run=client` will only work if the deployment is already created \
+> To generate a YAML file with variables via command-line, first `kubectl create deploy`, then `kubectl set env deploy --dry-run=client -o yaml` and edit to remove unnecessary metadata and statuses
+
+### Lab 11.1. Deployment variables
+
+1. Create a databse deployment using `MYSQL` image
+2. Troubleshoot and fix any deployment issues to get a running `STATUS`
+
+### ConfigMaps
+
+ConfigMaps are used to decouple configuration data from application code. The configuration data may be variables, files or command-line args.
+
+- ConfigMaps should be created before creating an application that relies on it
+- A ConfigMap created from a directory includes all the files in that directory and the default behaviour is to use the filenames as keys
+
+```sh
+# create configmap from file or directory (`--from-file` can be used multiple times), see `kubectl create cm -h`
+kubectl create {cm|configmap} [cmName] --from-file=path/to/file/or/directory
+# create configmap from file with specified key
+kubectl create {cm|configmap} [cmName] --from-file=key=path/to/file
+# create configmap from env-file
+kubectl create {cm|configmap} [cmName] --from-env-file=path/to/file.env
+# create configmap from literal values
+kubectl create cm --from-literal=KEY1=value1 --from-literal=KEY2=value2
+# display configmap details
+kubectl get cm [cmName] -o yaml
+kubectl describe cm [cmName]
+# use configmap in deployment (can be used with `--dry-run=client`), see `kubectl set env -h`
+kubectl set env deploy [deploymentName] --from=configmap/[cmName]
+```
+
+### Lab 11.2. ConfigMaps as variables
+
+1. Create a `file.env` file with the variables needed for `MYSQL` from [Lab 11.1](#lab-111-deployment-variables)
+2. Create a ConfigMap from the file
+3. Create a `MYSQL` deployment using the ConfigMap and troubleshoot Pod status
+4. Review the deployment as YAML and note how the variables are created
+
+### Lab 11.3. Mounting ConfigMaps
+
+You may also follow the [offical "add ConfigMap data to a Volume" docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#add-configmap-data-to-a-volume)
+
+1. Create a `index.html` file with some content
+2. Create a ConfigMap from the file and verify resources created
+3. Create a webserver deployment and mount the file to the DocumentRoot via ConfigMap
+   - use `https://k8s.io/examples/pods/pod-configmap-volume.yaml` as base
+   - `nginx` DocumentRoot - /usr/share/nginx/html
+   - `httpd` DocumentRoot - /usr/local/apache2/htdocs
+4. Connect a shell to the container and confirm your file is being served
+
+### Secrets
+
+
+
 ## 12. K8s API
 
 ## 13. DevOps
