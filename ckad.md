@@ -978,6 +978,7 @@ minikube ssh
 sudo mkdir /mnt/data
 sudo sh -c "echo 'Hello from Kubernetes storage' > /mnt/data/index.html"
 cat /mnt/data/index.html
+exit # exit ssh
 echo --- > lab10-2.yaml
 wget https://k8s.io/examples/pods/storage/pv-volume.yaml -O- >> lab10-2.yaml
 echo --- >> lab10-2.yaml
