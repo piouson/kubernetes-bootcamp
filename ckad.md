@@ -1051,13 +1051,30 @@ You may also follow the [offical "add ConfigMap data to a Volume" docs](https://
 2. Create a ConfigMap from the file and verify resources created
 3. Create a webserver deployment and mount the file to the DocumentRoot via ConfigMap
    - use `https://k8s.io/examples/pods/pod-configmap-volume.yaml` as base
-   - `nginx` DocumentRoot - /usr/share/nginx/html
-   - `httpd` DocumentRoot - /usr/local/apache2/htdocs
+   - option `nginx` DocumentRoot - /usr/share/nginx/html
+   - option `httpd` DocumentRoot - /usr/local/apache2/htdocs
 4. Connect a shell to the container and confirm your file is being served
 
 ### Secrets
 
+Secrets are similar to ConfigMaps but specifically intended to hold sensitive data such as passwords, auth tokens, etc. By default, k8s secrets are unencrypted but base64 encoded.
 
+To safely use secrets, ensure to:
+
+1. [Enable Encryption at Rest](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/) for Secrets.
+2. [Enable or configure RBAC rules](https://kubernetes.io/docs/reference/access-authn-authz/authorization/) to
+   - restrict read/write
+   - limit access to create/replace secrets
+   
+Uses of secrets
+
+- as files, e.g. accessing secret data in a Pod, TLS, etc
+- as container environment variable
+- as `imagePullSecrets` e.g. docker image registry creds
+
+```sh
+
+```
 
 ## 12. K8s API
 
