@@ -1068,13 +1068,63 @@ To safely use secrets, ensure to:
    
 Uses of secrets
 
-- [as files](https://kubernetes.io/docs/concepts/configuration/secret/?ref=faun#using-secrets-as-files-from-a-pod), e.g. accessing secret data in a Pod, TLS, etc
-- [as container environment variable](https://kubernetes.io/docs/concepts/configuration/secret/?ref=faun#using-secrets-as-environment-variables)
-- [as `imagePullSecrets`](https://kubernetes.io/docs/concepts/configuration/secret/?ref=faun#using-imagepullsecrets), e.g. docker image registry credentials
+- [as files](https://kubernetes.io/docs/concepts/configuration/secret/?ref=faun#using-secrets-as-files-from-a-pod) which may be mounted in Pods, e.g. accessing secret data in a Pod, TLS, etc
+  - consider using `defaultMode` when mounting secrets to set file permissions to `user:readonly - 0400`
+  - mounted secrets are automatically updated in the Pod when they change
+- [as container environment variable](https://kubernetes.io/docs/concepts/configuration/secret/?ref=faun#using-secrets-as-environment-variables) which may be managed with `kubectl set env`
+- [as `image registry credentials`](https://kubernetes.io/docs/concepts/configuration/secret/?ref=faun#using-imagepullsecrets), e.g. docker image registry creds
+
+> See `kubectl create secret -h` for more details
 
 ```sh
-
+# secret as file for tls keys, see `kubectl create secret tls -h`
+kubectl create secret tls [secretName] --cert=path/to/file.crt --key=path/to/file.key
+# secret as file for ssh private key, , see `kubectl create secret generic -h`
+kubectl create secret generic [secretName] --from-file=ssh-private-key=path/to/id_rsa
+# secret as env-var for passwords
+kubectl create secret generic [secretName] --from-literal=[PASSWORD_KEY]=passwordvalue
+# secrets as image registry creds (the `docker-registry` option works for all registry types)
+kubectl create secret docker-registry [secretName] --docker-username=[username] --docker-password=[password] --docker-email=[email] --docker-server=[image-registry-url]
+# view details of the secret
+kubectl get secret [secretName] -o yaml
+# view the contents of the secret
+kubectl get secret [secretName] -o jsonpath='{.data}'
+# view the contents of a specified key in the secret, e.g.  '{"game":{".config":"yI6eyJkb2NrZXIua"}}'
+kubectl get secret [secretName] -o jsonpath='{.data.game.\.config}'
+# decode the `base64` encoded secret
+kubectl get secret [secretName] -o jsonpath='{.data.game.\.config}' | base --decode
+echo [base64string] | base64 --decode
 ```
+
+### Lab 11.4. Decoding secrets
+
+You may follow the [official "managing secrets using kubectl" docs](https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kubectl/)
+
+1. Review the `coredns` Pod in `kube-system` namespace in YAML and determine the name of the `ServiceAccount`
+2. Review the `ServiceAccount` in YAML and determine the name of the `Secret`
+3. View the contents of the `Secret` and decode the value of its `namespace` key.
+```
+
+### Lab 11.5. Secrets as environment variables
+
+Repeat [lab 11.2](#lab112-configmaps-as-variables) with secrets
+
+> See the [official "secrets as container env-vars" docs](https://kubernetes.io/docs/concepts/configuration/secret/#use-case-as-container-environment-variables)
+
+### Lab 11.6. Secrets as files
+
+Repeat [lab 11.3](#lab113-mounting-configmaps) with secrets.
+
+> See the [official "using secrets as files" docs](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod)
+
+### Lab 11.7. Secrets as docker registry credentials
+
+1. Create a secret with the details of your docker credentials
+2. View more details of the resource created `kubectl describe`
+3. View details of the secret in `yaml`
+4. Decode the contents of the `.dockerconfigjson` key with `jsonpath`
+
+> See the [official "create an `imagePullSecret`" docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#create-an-imagepullsecret)
 
 ## 12. K8s API
 
