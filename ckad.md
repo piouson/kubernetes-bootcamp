@@ -159,7 +159,7 @@ Create a `Dockerfile` based on the following:
 ## 3. Understanding Kubernetes
 
 [K8s](kubernetes.io) is an open-source system for automating deployment, scaling and containerized applications management, currently owned by CNCF - Linux Foundation. \
-Release cycle is 3 months and deprecated features are dropped in 2 release cycles.
+K8s **release cycle is 3 months** and deprecated features are supported for a minimum of 2 release cycles (6 months).
 
 ### Lab 3.1. Kubernetes in Google Cloud
 
@@ -1103,7 +1103,6 @@ You may follow the [official "managing secrets using kubectl" docs](https://kube
 1. Review the `coredns` Pod in `kube-system` namespace in YAML and determine the name of the `ServiceAccount`
 2. Review the `ServiceAccount` in YAML and determine the name of the `Secret`
 3. View the contents of the `Secret` and decode the value of its `namespace` key.
-```
 
 ### Lab 11.5. Secrets as environment variables
 
