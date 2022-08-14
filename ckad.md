@@ -1068,9 +1068,9 @@ To safely use secrets, ensure to:
    
 Uses of secrets
 
-- as files, e.g. accessing secret data in a Pod, TLS, etc
-- as container environment variable
-- as `imagePullSecrets` e.g. docker image registry creds
+- [as files](https://kubernetes.io/docs/concepts/configuration/secret/?ref=faun#using-secrets-as-files-from-a-pod), e.g. accessing secret data in a Pod, TLS, etc
+- [as container environment variable](https://kubernetes.io/docs/concepts/configuration/secret/?ref=faun#using-secrets-as-environment-variables)
+- [as `imagePullSecrets`](https://kubernetes.io/docs/concepts/configuration/secret/?ref=faun#using-imagepullsecrets), e.g. docker image registry credentials
 
 ```sh
 
