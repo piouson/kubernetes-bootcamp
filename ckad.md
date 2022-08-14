@@ -1074,7 +1074,7 @@ Uses of secrets
 - [as container environment variable](https://kubernetes.io/docs/concepts/configuration/secret/?ref=faun#using-secrets-as-environment-variables) which may be managed with `kubectl set env`
 - [as `image registry credentials`](https://kubernetes.io/docs/concepts/configuration/secret/?ref=faun#using-imagepullsecrets), e.g. docker image registry creds
 
-> See `kubectl create secret -h` for more details
+> Secrets are basically encoded [ConfigMaps](#configmaps) and are both managed with `kubectl` in a similar way, see `kubectl create secret -h` for more details
 
 ```sh
 # secret as file for tls keys, see `kubectl create secret tls -h`
