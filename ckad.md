@@ -1129,7 +1129,7 @@ Repeat [lab 11.3](#lab113-mounting-configmaps) with secrets.
 
 ### Understanding the API
 
-Use `kubectl api-resources | less` for an overview of the API. \
+Use `kubectl api-resources | less` for an overview of the API.
 
 - `APIVERSION`
   - `v1` core kubernetes API group
@@ -1137,9 +1137,9 @@ Use `kubectl api-resources | less` for an overview of the API. \
   - during deprecation/transition, multiple versions of the same resource may be available, e.g. `policy/v1` and `policy/v1beta1`
 - `NAMESPACED` controls visibility
 
-> The Kubernetes **release cycle is 3 months** and deprecated features are supported for a minimum of 2 release cycles (6 months). \
-> Respond to deprecation message swiftly, you may use **`kubectl api-versions`** to view a short list of API versions and **`kubectl explain --recursive`** to get more details on affected resources
-> At time of writing, the current API docs is `https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/
+> The Kubernetes **release cycle is 3 months** and deprecated features are supported for a minimum of 2 release cycles (6 months).
+> Respond to deprecation message swiftly, you may use **`kubectl api-versions`** to view a short list of API versions and **`kubectl explain --recursive`** to get more details on affected resources. \
+> The current API docs at time of writing is `https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/
 
 #### kube-apiserver
 
