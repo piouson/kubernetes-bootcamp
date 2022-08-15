@@ -1127,6 +1127,87 @@ Repeat [lab 11.3](#lab113-mounting-configmaps) with secrets.
 
 ## 12. K8s API
 
+### Understanding the API
+
+Use `kubectl api-resources | less` for an overview of the API. \
+
+- `APIVERSION`
+  - `v1` core kubernetes API group
+  - `apps/v1` first extension to the core group
+  - during deprecation/transition, multiple versions of the same resource may be available, e.g. `policy/v1` and `policy/v1beta1`
+- `NAMESPACED` controls visibility
+
+> The Kubernetes **release cycle is 3 months** and deprecated features are supported for a minimum of 2 release cycles (6 months). \
+> Respond to deprecation message swiftly, you may use **`kubectl api-versions`** to view a short list of API versions and **`kubectl explain --recursive`** to get more details on affected resources
+> At time of writing, the current API docs is `https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/
+
+#### kube-apiserver
+
+The [Kubernetes API server `kube-apiserver`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) is the interface to access all Kubernetes features, which include pods, services, replicationcontrollers, and others. It provides the frontend to the cluster's shared state through which all other components interact. All **requests are secured by TLS certificates in `~/.kube/config`**.
+
+#### kube-proxy
+
+Working with direct access to a cluster node, like our minikube lab environment, removes the need for `kube-proxy`. When using the Kubernetes CLI `kubectl`, it uses stored TLS certificates in `~/.kube/config` to make secured requests to the `kube-apiserver`. However, direct access is not always possible with K8s in the cloud. The [Kubernetes network proxy `kube-proxy`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) runs on each node and make it possible to access `kube-apiserver` securely by other applications like `curl` or programmatically.
+
+> See the [official "so many proxies" docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#so-many-proxies) for more details
+
+```sh
+# view a more verbose pod detais
+kubectl --v=10 get pods
+# start kube-proxy
+kubectl proxy --port=PORT
+# explore the k8s API with curl
+curl localhost:PORT/api
+# get k8s version with curl
+curl localhost:PORT/version
+# list pods with curl
+curl localhost:PORT/api/v1/namespaces/default/pods
+# get specific pod with curl
+curl localhost:PORT/api/v1/namespaces/default/pods/[podName]
+# delete specific pod with curl
+curl -XDELETE localhost:PORT/api/v1/namespaces/default/pods/[podName]
+```
+
+### Lab 12.1. Directly accessing the REST API
+
+You may follow the [official "accessing the rest api" docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#directly-accessing-the-rest-api)
+
+1. Expose the API with `kube-proxy`
+2. Confirm k8s version information with `curl`
+3. Create a deployment
+4. List the pods created with `curl`
+5. Get details of a specific pod with `curl`
+6. Delete the pod with `curl`
+7. Confirm pod deletion
+
+### Checking API access
+
+`kubectl` provides the `auth can-i` subcommand for [quickly querying the API authorization layer](https://kubernetes.io/docs/reference/access-authn-authz/authorization/#checking-api-access).
+
+```sh
+# check if deployments can be created in a namespace
+kubectl auth can-i create deployments --namespace dev
+# check if pods can be listed
+kubectl auth can-i get pods
+# check if a specific user can list secrets
+kubectl auth can-i list secrets --namespace dev --as dave
+```
+
+### Service Accounts
+
+A service account provides an identity for processes that run in a Pod
+
+- all actions in a K8s cluster needs to be authenticated and authorized
+- Service Accounts are used for basic authentication from within the k8s cluster
+- RBAC is used to connect a ServiceAccount to a specific Role
+- Every Pod uses the Default ServiceAccount to contact the API server
+- Each ServiceAccount uses a secret to automount API credentials
+- A Pod auto-mounts its ServiceAccount secret to provide API access credentials to the ServiceAccount RBAC
+
+### Lab 12.2. Managing Service Accounts
+
+You may follow the offical [accessing cluster docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/) and [configure service accounts for pods](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/) docs
+
 ## 13. DevOps
 
 ## 14. Troubleshooting
