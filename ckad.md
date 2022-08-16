@@ -357,12 +357,12 @@ kubectl run mynginx --image=nginx -o yaml --dry-run=client > pod.yaml
 
 ### Valid reasons for multi-container Pods
 
-Always create single container Pods. But some scenarios may require a multi-container Pod:
+**Always create single container Pods!** However, some scenarios may require a [multi-container Pod pattern](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/)
 
 - To initialise primary container (init container)
-- To enhance primary container, e.g. for logging, monitoring, etc. (sidecar container)
-- To prevent direct access to primary container, e.g. proxy (ambassador container)
-- To match the traffic/data pattern in other applications in the cluster (adapter container)
+- To enhance primary container, e.g. for logging, monitoring, etc. ([sidecar container](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/#example-1-sidecar-containers))
+- To prevent direct access to primary container, e.g. proxy ([ambassador container](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/#example-2-ambassador-containers))
+- To match the traffic/data pattern in other applications in the cluster ([adapter container](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/#example-3-adapter-containers))
 
 ### Lab 5.2 Using YAML file
 
