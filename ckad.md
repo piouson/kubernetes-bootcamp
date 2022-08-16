@@ -1139,17 +1139,19 @@ Use `kubectl api-resources | less` for an overview of the API.
 
 > The Kubernetes **release cycle is 3 months** and deprecated features are supported for a minimum of 2 release cycles (6 months).
 > Respond to deprecation message swiftly, you may use **`kubectl api-versions`** to view a short list of API versions and **`kubectl explain --recursive`** to get more details on affected resources. \
-> The current API docs at time of writing is `https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/
+> The current API docs at time of writing is `https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/`
 
 #### kube-apiserver
 
 The [Kubernetes API server `kube-apiserver`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) is the interface to access all Kubernetes features, which include pods, services, replicationcontrollers, and others. It provides the frontend to the cluster's shared state through which all other components interact. All **requests are secured by TLS certificates in `~/.kube/config`**.
 
+From within a Pod, the API server is accessible via a Service named `kubernetes` in the `default` namespace. Therefore, Pods can use the **`kubernetes.default.svc`** hostname to query the API server.
+
 #### kube-proxy
 
 Working with direct access to a cluster node, like our minikube lab environment, removes the need for `kube-proxy`. When using the Kubernetes CLI `kubectl`, it uses stored TLS certificates in `~/.kube/config` to make secured requests to the `kube-apiserver`. However, direct access is not always possible with K8s in the cloud. The [Kubernetes network proxy `kube-proxy`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) runs on each node and make it possible to access `kube-apiserver` securely by other applications like `curl` or programmatically.
 
-> See the [official "so many proxies" docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#so-many-proxies) for more details
+> See the [official "so many proxies" docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#so-many-proxies) for the different proxies you may encounter when using Kubernetes.
 
 ```sh
 # view a more verbose pod detais
@@ -1168,17 +1170,32 @@ curl localhost:PORT/api/v1/namespaces/default/pods/[podName]
 curl -XDELETE localhost:PORT/api/v1/namespaces/default/pods/[podName]
 ```
 
-### Lab 12.1. Directly accessing the REST API
+### Directly accessing the REST API
+
+Two things are required to access a cluster - the **location** of the cluster and the **credentials** to access it. Thus far, we have used `kubectl` to access the API by running `kubectl` commands. The location and credentials that `kubectl` uses were automatically configured by Minikube during our [lab environment setup](#4-kubernetes-lab-environment).
+
+Run `kubectl config view` to see the location and credentials configured for `kubectl`.
+
+<details>
+  <summary><code><b>kubectl config view</b></code></summary>
+  
+  ![image](https://user-images.githubusercontent.com/17856665/184899506-47878132-dc9b-4a6a-8491-080fe56c6261.png)
+</details>
+
+### Lab 12.1. Using kubectl proxy to access the API
+
+Rather than run `kubectl` commands directly, we can use `kubectl` as a reverse proxy to provide the location and authenticate requests. See [access the API using kubectl proxy](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#using-kubectl-proxy) for more details.
 
 You may follow the [official "accessing the rest api" docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#directly-accessing-the-rest-api)
 
 1. Expose the API with `kube-proxy`
 2. Confirm k8s version information with `curl`
-3. Create a deployment
-4. List the pods created with `curl`
-5. Get details of a specific pod with `curl`
-6. Delete the pod with `curl`
-7. Confirm pod deletion
+3. Explore the k8s API with curl
+4. Create a deployment
+5. List the pods created with `curl`
+6. Get details of a specific pod with `curl`
+7. Delete the pod with `curl`
+8. Confirm pod deletion
 
 ### Checking API access
 
@@ -1195,18 +1212,72 @@ kubectl auth can-i list secrets --namespace dev --as dave
 
 ### Service Accounts
 
-A service account provides an identity for processes that run in a Pod
+A service account provides an identity for processes that run in a Pod.
 
-- all actions in a K8s cluster needs to be authenticated and authorized
-- Service Accounts are used for basic authentication from within the k8s cluster
-- RBAC is used to connect a ServiceAccount to a specific Role
-- Every Pod uses the Default ServiceAccount to contact the API server
-- Each ServiceAccount uses a secret to automount API credentials
-- A Pod auto-mounts its ServiceAccount secret to provide API access credentials to the ServiceAccount RBAC
+- Service Accounts are the recommended way to authenticate to the API server within the k8s cluster
+- By default, every Pod is associated with the Default ServiceAccount for authentication to the API server
+- A Pod's ServiceAccount credentials are automounted in the filesystem of each container at:
+  - token `/var/run/secrets/kubernetes.io/serviceaccount/token`
+  - certificate (if available) `/var/run/secrets/kubernetes.io/serviceaccount/ca.crt`
+  - default namespace `/var/run/secrets/kubernetes.io/serviceaccount/namespace`
+- Each ServiceAccount uses a Secret to automount API credentials
+- You can opt out of automounting API credentials for a ServiceAccount by setting `automountServiceAccountToken: false` on the ServiceAccount
 
-### Lab 12.2. Managing Service Accounts
+### Lab 12.2. Accessing the API without kubectl proxy
 
-You may follow the offical [accessing cluster docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/) and [configure service accounts for pods](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/) docs
+This requires using the token of the default ServiceAccount. The token can be read directly (see [lab 11.4 - decoding secrets](#lab-114-decoding-secrets)), but the recommended way to get the token is via the [TokenRequest API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-request-v1/).
+
+You may follow the [official "access the API **without** kubectl proxy" docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#without-kubectl-proxy).
+
+1. Request the ServiceAccount token by YAML. You can also request by [`kubectl create token $SERVICE_ACCOUNT_NAME`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#-em-token-em-) on Kubernetes v1.24+.
+2. Wait for the token controller to populate the Secret with a token
+3. Use `curl` to access the API with the generated token as credentials
+
+<details>
+  <summary><b>lab 12.2 steps</b></summary>
+
+```sh
+# request token
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: default-token
+  annotations:
+    kubernetes.io/service-account.name: default
+type: kubernetes.io/service-account-token
+EOF
+# confirm token generated (optional)
+kubectl get secret default-token -o yaml
+# use token
+APISERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+TOKEN=$(kubectl get secret default-token -o jsonpath='{.data.token}' | base64 --decode)
+curl $APISERVER/api --header "Authorization: Bearer $TOKEN" --insecure
+```
+</details>
+
+### Lab 12.3. Accessing the API from a Pod without kubectl
+
+You may follow the [official "access the API from within a Pod" docs](https://kubernetes.io/docs/tasks/run-application/access-api-from-pod/#without-using-a-proxy).
+
+> From within a Pod, the Kubernetes API is accessible via the `kubernetes.default.svc` hostname
+
+1. Connect an interactive shell to a container in a running Pod (create one or use existing)
+2. Use `curl` to access the API at `kubernetes.default.svc` with the `token` and `certificate` as credentials
+
+<details>
+  <summary><b>lab 12.3 steps</b></summary>
+
+```sh
+# connect an interactive shell to a container within the Pod
+kubectl exec -it $POD_NAME -- /bin/sh
+# use token stored within container to access API
+SA=/var/run/secrets/kubernetes.io/serviceaccount
+CERT_FILE=$($SA/ca.crt)
+TOKEN=$(cat $SA/token)
+curl --cacert $CERT_FILE --header "Authorization: Bearer $TOKEN" https://kubernetes.default.svc/api
+```
+</details>
 
 ## 13. DevOps
 
