@@ -1147,6 +1147,8 @@ The [Kubernetes API server `kube-apiserver`](https://kubernetes.io/docs/referenc
 
 From within a Pod, the API server is accessible via a Service named `kubernetes` in the `default` namespace. Therefore, Pods can use the **`kubernetes.default.svc`** hostname to query the API server.
 
+The Kubernetes API server may authorize a request using one of [several authorization modes: Node, ABAC, RBAC or Webhook](https://kubernetes.io/docs/reference/access-authn-authz/authorization/#authorization-modules).
+
 #### kube-proxy
 
 Working with direct access to a cluster node, like our minikube lab environment, removes the need for `kube-proxy`. When using the Kubernetes CLI `kubectl`, it uses stored TLS certificates in `~/.kube/config` to make secured requests to the `kube-apiserver`. However, direct access is not always possible with K8s in the cloud. The [Kubernetes network proxy `kube-proxy`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) runs on each node and make it possible to access `kube-apiserver` securely by other applications like `curl` or programmatically.
@@ -1212,15 +1214,15 @@ kubectl auth can-i list secrets --namespace dev --as dave
 
 ### Service Accounts
 
-A service account provides an identity for processes that run in a Pod.
+Just as user accounts identifies humans, a service account identifies processes running in a Pod.
 
 - Service Accounts are the recommended way to authenticate to the API server within the k8s cluster
-- By default, every Pod is associated with the Default ServiceAccount for authentication to the API server
-- A Pod's ServiceAccount credentials are automounted in the filesystem of each container at:
+- A Pod created without specifying a ServiceAccount is automatically assigned the `default` ServiceAccount
+- When a new ServiceAccount is created, a Secret is auto-created to hold the credentials required to access the API server
+- The ServiceAccount credentials of a Pod are automounted with the Secret in each container within the Pod at:
   - token `/var/run/secrets/kubernetes.io/serviceaccount/token`
   - certificate (if available) `/var/run/secrets/kubernetes.io/serviceaccount/ca.crt`
   - default namespace `/var/run/secrets/kubernetes.io/serviceaccount/namespace`
-- Each ServiceAccount uses a Secret to automount API credentials
 - You can opt out of automounting API credentials for a ServiceAccount by setting `automountServiceAccountToken: false` on the ServiceAccount
 
 ### Lab 12.2. Accessing the API without kubectl proxy
@@ -1263,7 +1265,7 @@ You may follow the [official "access the API from within a Pod" docs](https://ku
 > From within a Pod, the Kubernetes API is accessible via the `kubernetes.default.svc` hostname
 
 1. Connect an interactive shell to a container in a running Pod (create one or use existing)
-2. Use `curl` to access the API at `kubernetes.default.svc` with the `token` and `certificate` as credentials
+2. Use `curl` to access the API at `kubernetes.default.svc` with the automounted ServiceAccount credentials (`token` and `certificate`)
 
 <details>
   <summary><b>lab 12.3 steps</b></summary>
