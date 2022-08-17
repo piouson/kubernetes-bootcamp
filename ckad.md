@@ -1336,9 +1336,9 @@ In [lab 12.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were una
 3. Create a RoleBinding that grants the Role permissions to the ServiceAccount, within the `default` namespace, and verify
 4. Create a `naked` Pod bound to the ServiceAccount
 5. Connect an interactive shell to the Pod and use `curl` to PodList API
-  - are you able to access the API for a specific pod like the one you're running at `kubernetes.default.svc/api/v1/namespaces/default/pods/$POD_NAME`?
-  - create a deployment and repeat steps 5-6. What is the outcome?
-  - what permissions are required for the additional steps, if any?
+   - are you able to access the API for a specific pod like the one you're running at `kubernetes.default.svc/api/v1/namespaces/default/pods/$POD_NAME`?
+   - create a deployment and repeat steps 5-6. What is the outcome?
+   - what permissions are required for the additional steps, if any?
 
 <details>
   <summary><b>lab 12.4 steps</b></summary>
