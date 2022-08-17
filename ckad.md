@@ -1096,6 +1096,8 @@ kubectl get secret [secretName] -o jsonpath='{.data.game.\.config}' | base --dec
 echo [base64string] | base64 --decode
 ```
 
+> See the [Kubernetes JSONPath support docs](https://kubernetes.io/docs/reference/kubectl/jsonpath/) to learn more about using `jsonpath`
+
 ### Lab 11.4. Decoding secrets
 
 You may follow the [official "managing secrets using kubectl" docs](https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kubectl/)
@@ -1223,7 +1225,7 @@ Just as user accounts identifies humans, a service account identifies processes 
   - token `/var/run/secrets/kubernetes.io/serviceaccount/token`
   - certificate (if available) `/var/run/secrets/kubernetes.io/serviceaccount/ca.crt`
   - default namespace `/var/run/secrets/kubernetes.io/serviceaccount/namespace`
-- You can opt out of automounting API credentials for a ServiceAccount by setting `automountServiceAccountToken: false` on the ServiceAccount
+- You can opt out of automounting API credentials for a ServiceAccount by setting `automountServiceAccountToken: false` on the ServiceAccount. Note that the pod spec takes precedence over the service account if both specify a `automountServiceAccountToken` value
 
 ### Lab 12.2. Accessing the API without kubectl proxy
 
@@ -1258,6 +1260,8 @@ curl $APISERVER/api --header "Authorization: Bearer $TOKEN" --insecure
 ```
 </details>
 
+> Using `curl` with the `--insecure` option [skips TLS certificate validation](https://curl.se/docs/sslcerts.html)
+
 ### Lab 12.3. Accessing the API from a Pod without kubectl
 
 You may follow the [official "access the API from within a Pod" docs](https://kubernetes.io/docs/tasks/run-application/access-api-from-pod/#without-using-a-proxy).
@@ -1265,7 +1269,8 @@ You may follow the [official "access the API from within a Pod" docs](https://ku
 > From within a Pod, the Kubernetes API is accessible via the `kubernetes.default.svc` hostname
 
 1. Connect an interactive shell to a container in a running Pod (create one or use existing)
-2. Use `curl` to access the API at `kubernetes.default.svc` with the automounted ServiceAccount credentials (`token` and `certificate`)
+2. Use `curl` to access the API at `kubernetes.default.svc/api` with the automounted ServiceAccount credentials (`token` and `certificate`)
+3. Can you access the Pods list at `kubernetes.default.svc/api/v1/namespaces/default/pods`?
 
 <details>
   <summary><b>lab 12.3 steps</b></summary>
@@ -1278,6 +1283,89 @@ SA=/var/run/secrets/kubernetes.io/serviceaccount
 CERT_FILE=$($SA/ca.crt)
 TOKEN=$(cat $SA/token)
 curl --cacert $CERT_FILE --header "Authorization: Bearer $TOKEN" https://kubernetes.default.svc/api
+```
+</details>
+
+### RBAC
+
+Role-based access control (RBAC) is a method of regulating access to computer or network resources based on the roles of individual users within your organization. RBAC authorization uses the `rbac.authorization.k8s.io` [API group](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups-and-versioning) for dynamic policy configuration through the Kubernetes API. RBAC is beyond CKAD, however, a basic understanding of RBAC can help understand ServiceAccount permissions.
+
+The RBAC API declares four kinds of Kubernetes object: [Role, ClusterRole](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole), [RoleBinding and ClusterRoleBinding](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding).
+
+- Role is a namespaced resource; when you create a Role, you have to specify its namespace
+- ClusterRole, by contrast, is a non-namespaced resource
+- RoleBinding grants the permissions defined in a Role/ClusterRole to a user or set of users within a specific namespace
+- ClusterRoleBinding grants permissions that access cluster-wide.
+
+### ServiceAccount permissions
+
+The Default RBAC policies grant scoped permissions to control-plane components, nodes, and controllers, but grant no permissions to service accounts outside the kube-system namespace (beyond discovery permissions given to all authenticated users).
+
+There are [different ServiceAccount permission approaches](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#service-account-permissions), but we will only mention two:
+
+- Grant a role to an application-specific service account (best practice)
+   requires the `serviceAccountName` specified in the pod spec, and for the ServiceAccount to have been created
+- Grant a role to the `default` service account in a namespace
+   Permissions given to the `default` service account are available to any pod in the namespace that does not specify a `serviceAccountName`. **This is a security concern in live environments without RBAC**
+
+```sh
+# create a service account imperatively
+kubectl create service account $SERVICE_ACCOUNT_NAME
+# assign service account to a deployment
+kubectl set serviceaccount deploy $DEPLOYMENT_NAME $SERVICE_ACCOUNT_NAME
+# create a role that allows users to perform get, watch and list on pods, see `kubectl create role -h`
+kubectl create role $ROLE_NAME --verb=get --verb=list --verb=watch --resource=pods
+# grant permissions in a Role to a user within a namespace
+kubectl create rolebinding $ROLE_BINDING_NAME --role=$ROLE_NAME --user=$USER --namespace=$NAMESPACE
+# grant permissions in a ClusterRole to a user within a namespace
+kubectl create rolebinding $ROLE_BINDING_NAME --clusterrole=$CLUSTERROLE_NAME --user=$USER --namespace=$NAMESPACE
+# grant permissions in a ClusterRole to a user across the entire cluster
+kubectl create clusterrolebinding $CLUSTERROLE_BINDING_NAME --clusterrole=$CLUSTERROLE_NAME --user=$USER
+# grant permissions in a ClusterRole to an application-specific service account within a namespace
+kubectl create rolebinding $ROLE_BINDING_NAME --clusterrole=$CLUSTERROLE_NAME --serviceaccount=$NAMESPACE:$SERVICE_ACCOUNT_NAME --namespace=$NAMESPACE
+# grant permissions in a ClusterRole to the "default" service account within a namespace
+kubectl create rolebinding $ROLE_BINDING_NAME --clusterrole=$CLUSTERROLE_NAME --serviceaccount=$NAMESPACE:default --namespace=$NAMESPACE
+```
+
+### Lab 12.4. Exploring RBAC
+
+In [lab 12.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were unable to access the Podlist API at `kubernetes.default.svc/api/v1/namespaces/default/pods`. Lets apply the required permissions to make this possible.
+
+1. Create a ServiceAccount and verify
+2. Create a Role with permissions to list pods and verify
+3. Create a RoleBinding that grants the Role permissions to the ServiceAccount, within the `default` namespace, and verify
+4. Create a deployment or `naked` Pod bound to the ServiceAccount
+5. Connect an interactive shell to a running Pod and use `curl` to list Pods
+6. Are you able to get details of the pod you're running at `kubernetes.default.svc/api/v1/namespaces/default/pods/$POD_NAME`? What permissions are required for this?
+
+<details>
+  <summary><b>lab 12.4 steps</b></summary>
+
+```sh
+# create service account
+kubectl create serviceaccount test-sa
+kubectl get sa test-sa -o yaml | less
+# create role
+kubectl create role test-role --verb=list --resource=pods
+kubectl get role test-role -o yaml | less
+# create role binding
+kubectl create rolebinding test-rolebinding --role=test-role --serviceaccount=default:test-sa --namespace=default
+kubectl get rolebinding test-rolebinding -o yaml | less
+# create pod manifest file add edit it to include `serviceAccountName: test-sa`
+kubectl run test-pod --image=nginx --env="SA=/var/run/secrets/kubernetes.io/serviceaccount" --dry-run=client -o yaml > pod.yaml
+nano pod.yaml
+kubectl apply -f pod.yaml
+# access k8s API from within the pod
+kubectl exec -it test-pod -- bash
+TOKEN=$(cat $SA/token)
+HEADER="Authorization: Bearer $TOKEN"
+curl -H $HEADER https://kubernetes.default.svc/api --insecure
+curl -H $HEADER https://kubernetes.default.svc/api/v1/namespaces/default/pods --insecure
+curl -H $HEADER https://kubernetes.default.svc/api/v1/namespaces/default/pods/$POD_NAME --insecure
+curl -H $HEADER https://kubernetes.default.svc/api/v1/namespaces/default/deployments --insecure
+exit
+# clean up
+kubectl delete 
 ```
 </details>
 
