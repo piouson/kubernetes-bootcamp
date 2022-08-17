@@ -1301,12 +1301,12 @@ The RBAC API declares four kinds of Kubernetes object: [Role, ClusterRole](https
 
 The Default RBAC policies grant scoped permissions to control-plane components, nodes, and controllers, but grant no permissions to service accounts outside the kube-system namespace (beyond discovery permissions given to all authenticated users).
 
-There are [different ServiceAccount permission approaches](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#service-account-permissions), but we will only mention two:
+There are [different ServiceAccount permission approaches](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#service-account-permissions), but we will only go over two:
 
-- Grant a role to an application-specific service account (best practice)
-   requires the `serviceAccountName` specified in the pod spec, and for the ServiceAccount to have been created
+- Grant a role to an application-specific service account (**best practice**)
+  - requires the `serviceAccountName` specified in the pod spec, and for the ServiceAccount to have been created
 - Grant a role to the `default` service account in a namespace
-   Permissions given to the `default` service account are available to any pod in the namespace that does not specify a `serviceAccountName`. **This is a security concern in live environments without RBAC**
+  - permissions given to the `default` service account are available to any pod in the namespace that does not specify a `serviceAccountName`. **This is a security concern in live environments without RBAC**
 
 ```sh
 # create a service account imperatively
@@ -1329,14 +1329,16 @@ kubectl create rolebinding $ROLE_BINDING_NAME --clusterrole=$CLUSTERROLE_NAME --
 
 ### Lab 12.4. Exploring RBAC
 
-In [lab 12.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were unable to access the Podlist API at `kubernetes.default.svc/api/v1/namespaces/default/pods`. Lets apply the required permissions to make this possible.
+In [lab 12.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were unable to access the Podlist API at `kubernetes.default.svc/api/v1/namespaces/default/pods`. Lets apply the required permissions to make this work.
 
 1. Create a ServiceAccount and verify
 2. Create a Role with permissions to list pods and verify
 3. Create a RoleBinding that grants the Role permissions to the ServiceAccount, within the `default` namespace, and verify
-4. Create a deployment or `naked` Pod bound to the ServiceAccount
-5. Connect an interactive shell to a running Pod and use `curl` to list Pods
-6. Are you able to get details of the pod you're running at `kubernetes.default.svc/api/v1/namespaces/default/pods/$POD_NAME`? What permissions are required for this?
+4. Create a `naked` Pod bound to the ServiceAccount
+5. Connect an interactive shell to the Pod and use `curl` to PodList API
+  - are you able to access the API for a specific pod like the one you're running at `kubernetes.default.svc/api/v1/namespaces/default/pods/$POD_NAME`?
+  - create a deployment and repeat steps 5-6. What is the outcome?
+  - what permissions are required for the additional steps, if any?
 
 <details>
   <summary><b>lab 12.4 steps</b></summary>
@@ -1365,7 +1367,10 @@ curl -H $HEADER https://kubernetes.default.svc/api/v1/namespaces/default/pods/$P
 curl -H $HEADER https://kubernetes.default.svc/api/v1/namespaces/default/deployments --insecure
 exit
 # clean up
-kubectl delete 
+kubectl delete pod test-pod
+kubectl delete rolebinding test-rolebinding
+kubectl delete role test-role
+kubectl delete sa test-sa
 ```
 </details>
 
