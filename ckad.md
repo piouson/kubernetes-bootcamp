@@ -1,51 +1,95 @@
 [[_TOC_]]
 
-# CKAD Guide
+# CKAD Lab Guide
+
+## 0. Requirements
+
+A Linux/Unix environment with Docker installed
+
+- for macOS, install [Homebrew](https://brew.sh/) and [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/)
+- for Windows, install [**`winget`**](https://aka.ms/getwinget) and [WSL2](https://docs.microsoft.com/en-us/windows/wsl/setup/environment), then either [install Docker engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/) or [install Docker Desktop on Windows](https://winget.run/pkg/Docker/DockerDesktop) and [integrate with WSL2](https://code.visualstudio.com/assets/blogs/2020/03/02/docker-resources-wsl-integration.png)
+- in code blocks, curly brackets `{start}` enclose sub-commands and square brackets `[$token]` enclose variables 
 
 ## 1. Understanding and Using Containers
 
-### Basic commands
+A [container](https://www.docker.com/resources/what-container/) is a standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another.. A **container-runtime**, which relies on the host kernel, is required to run a container. Docker is most popular container-runtime, but there are other runtimes like [runc](https://github.com/opencontainers/runc#runc), [cri-o](https://cri-o.io/), [containerd](https://containerd.io/), etc.
+
+A container image is a lightweight, standalone, executable package of software that includes everything needed to run an application: code, runtime, system tools, system libraries and settings. Container images become containers at runtime. 
+
+The [Open Container Initiative (OCI)](https://opencontainers.org/) creates open industry standards around container formats and runtimes.
+
+A container registry is a repository, or collection of repositories, used to store and access container images. Container registries are a big player in cloud-native application development, often as part of DevOps processes.
+
+### Basic container commands
 
 ```sh
 # run commands in new container, see `docker run --help`
 docker run hello-world # entrypoint is used when no command specified after image
-# interactive
-docker run -it busybox
-# detached
-docker run -d -p 8080:80 -v /var/www/html:/var/www/html --name myserver -e ENV_VAR=value httpd
-# run commands in running container, see `docker exec --help`
+# run container with command
+docker run busybox echo "Hello, World!"
+# interactive mode
+docker run -it busybox /bin/sh
+# detached mode with name, port, volume and env-vars
+docker run -d -p $hostPort:$containerPort -v $hostPath:$containerPath --name myserver -e ENV_VAR=value httpd
+# execute commands in running container, see `docker exec --help`
 docker exec -it busybox sh # `sh` runs in a different shell session
 # list running containers
 docker ps
 # list all containers
 docker ps -a
-# view container processes (run within container)
+# view container processes when inside a container
 ls /proccat /proc/[pid]/cmdline
 # exit running container
 exit # container is stopped if connected to entrypoint
 # exit running container without stopping container
 ctrl-p ctrl-q
+# start, stop, delete containers, see `docker {start|stop|etc} --help`
+docker {start|stop|restart|kill|rm} [$containerName|$containerID]
+# view container logs, see `docker logs --help`
+docker logs [containerName]
 ```
 
 > `docker ps` showing STATUS of `Exited (0)` means exit OK, but Exit STATUS otherthan 0 should be investigated `docker logs`
 
-### Managing containers
+### Lab 1.1. Hello docker
+
+1. Open your Terminal and run `docker info` to confirm docker client and server statuses
+2. Run your first container using the `busybox` image with a shell connected in interactive mode
+   - review the Kernel details by running `uname -r`, `cat /proc/version` and `hostnamectl`
+   - review processes running inside the container
+   - exit the container
+   - list running containers
+   - list all containers
+   - delete the container
+3. Run another `busybox` container in detached mode to execute a single `date` command
+   - restart the container a few times
+   - review the container logs
+   - exit the container
+   - list running containers
+   - list all containers
+   - delete the container
+4. Run a `nginx` container in detached mode on port 80
+   - visit http://localhost
+   - list running containers
+   - list all containers
+   - delete the container
+5. Create a `html/index.html` file with some content and mount the file as a web-server container's DocumentRoot
+   - option `nginx` DocumentRoot - `/usr/share/nginx/html`
+   - option `httpd` DocumentRoot - `/usr/local/apache2/htdocs`
+6. Explore [Docker Hub](https://hub.docker.com/) and search for the images you've used so far or application you usually use in application development, like databases, environment tools, etc.
+7. Clean up
+  
+> Container images are created with instructions that determine the default container behaviour at runtime. A familiarity with specific images may be required to understand the defaults specified
+
+### Managing containers and images
 
 ```sh
-# start, stop, delete containers, see `docker {start|stop|etc} --help`
-docker {start|stop|restart|kill|rm} [containerName|containerID]
-docker ps [-a] # this command shows container IDs
 # inspect container or image, see `docker inspect --help | docker {image|container} --help`
 docker inspect [id] | less
 docker {container|image} inspect
 docker inspect --format="{{.NetworkSettings.IPAddress}}" containerName
 docker inspect --format="{{.State.Pid}}" containerName
 ps {aux|fax} | less # this command shows container PIDs
-```
-
-### Container images
-
-```sh
 # see `docker image --help`
 docker image ls  # or `docker images`
 docker image inspect [imageId]
@@ -56,19 +100,12 @@ docker {image|containers|network|volumes}
 > note commands after imageId/imageName are passed to image/container \
 > e.g. `docker run -it mysql -e MYSQL_PASSWORD=hello` will not work cos env vars should come before image name like `docker run -it -e MYSQL_PASSWORD=hello mysql`
 
-### Container logging
+### Lab 1.2. 
 
-```sh
-# see `docker logs --help`
-docker logs [containerName]
-```
-
-### Lab 1
-
-1. Install Docker in your environment
-2. Run the latest version of any linux distros in a container
-3. Start a bash shell connected to the container interactively
-4. Explore the `/etc/os-release` file and the kernel version `uname -r`
+1. Run a `mysql` container
+   - is the container running?
+   - troubleshoot and fix any issues to make the container run 
+2. Start a bash shell connected to the container interactively
 
 ## 2. Managing Container Images
 
@@ -963,7 +1000,7 @@ You can follow the [official "configure a Pod to use a PersistentVolume for stor
    - allows multiple pods access the storage
 3. Create a Pod running a webserver to consume the storage, see `https://k8s.io/examples/pods/storage/pv-pod.yaml`
   - uses PVC, see `https://k8s.io/examples/pods/storage/pv-claim.yaml`
-  - image is `httpd` and default documentroot is `/var/www/html`
+  - image is `httpd` and default documentroot is `/usr/local/apache2/htdocs` or `/var/www/html`
 4. Verify all resources created `pod,pv,pvc,storageclass`, and also review each detailed information
    - review `STATUS` for PV and PVC
    - did the PVC in [3] bind to the PV in [2], why or why not?
