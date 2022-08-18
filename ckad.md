@@ -1329,16 +1329,15 @@ kubectl create rolebinding $ROLE_BINDING_NAME --clusterrole=$CLUSTERROLE_NAME --
 
 ### Lab 12.4. Exploring RBAC
 
-In [lab 12.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were unable to access the Podlist API at `kubernetes.default.svc/api/v1/namespaces/default/pods`. Lets apply the required permissions to make this work.
+In [lab 12.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were unable to access the PodList API at `kubernetes.default.svc/api/v1/namespaces/default/pods`. Lets apply the required permissions to make this work.
 
 1. Create a ServiceAccount and verify
 2. Create a Role with permissions to list pods and verify
 3. Create a RoleBinding that grants the Role permissions to the ServiceAccount, within the `default` namespace, and verify
-4. Create a `naked` Pod bound to the ServiceAccount
+4. Create a "naked" Pod bound to the ServiceAccount
 5. Connect an interactive shell to the Pod and use `curl` to PodList API
-   - are you able to access the API for a specific pod like the one you're running at `kubernetes.default.svc/api/v1/namespaces/default/pods/$POD_NAME`?
-   - create a deployment and repeat steps 5-6. What is the outcome?
-   - what permissions are required for the additional steps, if any?
+6. Can you access the API to get a specific Pod like the one you're running? Hint: Role permissions
+7. Can you use a deployment instead of a "naked" Pod?
 
 <details>
   <summary><b>lab 12.4 steps</b></summary>
