@@ -1344,19 +1344,35 @@ In [lab 12.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were una
   <summary><b>lab 12.4 steps</b></summary>
 
 ```sh
-# create service account
-kubectl create serviceaccount test-sa
-kubectl get sa test-sa -o yaml | less
-# create role
-kubectl create role test-role --verb=list --resource=pods
-kubectl get role test-role -o yaml | less
-# create role binding
-kubectl create rolebinding test-rolebinding --role=test-role --serviceaccount=default:test-sa --namespace=default
-kubectl get rolebinding test-rolebinding -o yaml | less
-# create pod manifest file add edit it to include `serviceAccountName: test-sa`
-kubectl run test-pod --image=nginx --env="SA=/var/run/secrets/kubernetes.io/serviceaccount" --dry-run=client -o yaml > pod.yaml
-nano pod.yaml
-kubectl apply -f pod.yaml
+# create service account yaml
+kubectl create serviceaccount test-sa --dry-run=client -o yaml > lab12.yaml
+echo --- >> lab12.yaml
+# create role yaml
+kubectl create role test-role --resource=pods,deployments --verb=get,list --dry-run=client -o yaml >> lab12.yaml
+echo --- >> lab12.yaml
+# create rolebinding yaml
+kubectl create rolebinding test-rolebinding --role=test-role --serviceaccount=default:test-sa --namespace=default --dry-run=client -o yaml >> lab12.yaml
+echo --- >> lab12.yaml
+# create configmap yaml
+kubectl create configmap test-cm --from-literal="SA=/var/run/secrets/kubernetes.io/serviceaccount" --dry-run=client -o yaml >> lab12.yaml
+echo --- >> lab12.yaml
+# create pod yaml
+kubectl run test-pod --image=nginx --env="SA=/var/run/secrets/kubernetes.io/serviceaccount" --dry-run=client -o yaml >> lab12.yaml 
+# review & edit yaml to add configmap and service account in pod spec, see `https://k8s.io/examples/pods/pod-single-configmap-env-variable.yaml`
+nano lab12.yaml
+# create all resources
+kubectl apply -f lab12.yaml
+# verify resources
+kubectl get sa test-sa
+kubectl describe sa test-sa | less
+kubectl get role test-role
+kubectl describe role test-role | less
+kubectl get rolebinding test-rolebinding
+kubectl describe rolebinding test-rolebinding | less
+kubectl get configmap test-cm
+kubectl describe configmap test-cm | less
+kubectl get pod test-pod
+kubectl describe pod test-pod | less
 # access k8s API from within the pod
 kubectl exec -it test-pod -- bash
 TOKEN=$(cat $SA/token)
@@ -1367,10 +1383,7 @@ curl -H $HEADER https://kubernetes.default.svc/api/v1/namespaces/default/pods/$P
 curl -H $HEADER https://kubernetes.default.svc/api/v1/namespaces/default/deployments --insecure
 exit
 # clean up
-kubectl delete pod test-pod
-kubectl delete rolebinding test-rolebinding
-kubectl delete role test-role
-kubectl delete sa test-sa
+kubectl delete -f lab12.yaml
 ```
 </details>
 
