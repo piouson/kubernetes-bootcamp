@@ -1357,7 +1357,7 @@ echo --- >> lab12.yaml
 kubectl create configmap test-cm --from-literal="SA=/var/run/secrets/kubernetes.io/serviceaccount" --dry-run=client -o yaml >> lab12.yaml
 echo --- >> lab12.yaml
 # create pod yaml
-kubectl run test-pod --image=nginx --env="SA=/var/run/secrets/kubernetes.io/serviceaccount" --dry-run=client -o yaml >> lab12.yaml 
+kubectl run test-pod --image=nginx --dry-run=client -o yaml >> lab12.yaml 
 # review & edit yaml to add configmap and service account in pod spec, see `https://k8s.io/examples/pods/pod-single-configmap-env-variable.yaml`
 nano lab12.yaml
 # create all resources
