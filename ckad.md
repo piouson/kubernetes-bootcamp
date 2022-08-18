@@ -1348,7 +1348,7 @@ In [lab 12.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were una
 kubectl create serviceaccount test-sa --dry-run=client -o yaml > lab12.yaml
 echo --- >> lab12.yaml
 # create role yaml
-kubectl create role test-role --resource=pods,deployments --verb=get,list --dry-run=client -o yaml >> lab12.yaml
+kubectl create role test-role --resource=pods --verb=list --dry-run=client -o yaml >> lab12.yaml
 echo --- >> lab12.yaml
 # create rolebinding yaml
 kubectl create rolebinding test-rolebinding --role=test-role --serviceaccount=default:test-sa --namespace=default --dry-run=client -o yaml >> lab12.yaml
