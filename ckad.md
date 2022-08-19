@@ -173,6 +173,7 @@ docker {image|containers|network|volumes}
 5. List all images
 6. List all volumes
 7. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
+8. Check all resources are deleted, containers, images and volumes.
 
 ### Lab 1.7. Container registries
 
