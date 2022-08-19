@@ -137,7 +137,7 @@ docker {image|containers|network|volumes}
 ### Lab 1.4. Container ports and IP
 
 1. Run a `nginx` container with name `webserver`
-2. Visit http://$CONTAINER_IP_ADDRESS in your browser
+2. Visit `http://$CONTAINER_IP_ADDRESS` in your browser
 3. Run another `nginx` container with name `webserver` and exposed on port 80
 4. Visit http://localhost in your browser
 5. Delete the containers
