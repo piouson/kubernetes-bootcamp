@@ -55,7 +55,9 @@ uname -r
 cat /proc/version
 hostnamectl # linux only
 # view container processes from inside a container
-ls /proc # to find PID
+ps aux # view all user-oriented processes, see `ps --help a`
+# view container processes, alternative to `ps`
+ls /proc # to find PID, then
 cat /proc/$PID/cmdline
 # exit running container
 exit # container is stopped if connected to entrypoint
@@ -63,12 +65,6 @@ exit # container is stopped if connected to entrypoint
 ctrl-p ctrl-q
 # start, stop, delete containers, see `docker {start|stop|etc} --help`
 docker {start|stop|restart|rm} $CONTAINER_NAME_OR_ID
-# view container logs, see `docker logs --help`
-docker logs $CONTAINER_NAME_OR_ID
-# remove all unused data (including dangling images)
-docker system prune
-# remove all unused data (including unused images, dangling or not, and volumes)
-docker system prune --all --volumes
 # see `docker container --help` for complete sub-commands
 ```
 
@@ -93,7 +89,7 @@ docker system prune --all --volumes
 
 > `docker ps` showing STATUS of `Exited (0)` means exit OK, but an Exit STATUS that's not 0 should be investigated `docker logs`
 >
-> `CTRL+P` followed by `CTRL+Q` only works when running a container in interactive mode, see [how to attach/detach containers](https://stackoverflow.com/a/19689048/1235675) for more details
+> `CTRL+P, CTRL+Q` only works when running a container in interactive mode, see [how to attach/detach containers](https://stackoverflow.com/a/19689048/1235675) for more details
 
 ### Lab 1.3. Container arguments
 
@@ -130,12 +126,18 @@ docker run -d -p 8080:80 -v ~/html:/usr/local/apache2/htdocs httpd
 # run container with environment variable
 docker run -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=secret mongo
 # inspect container, see `docker container inspect --help | docker inspect --help`
-docker inspect [id] | less
-docker container inspect [$CONTAINER_NAME|$CONTAINER_ID]
+docker inspect $CONTAINER_NAME_OR_ID | less
+docker container inspect $CONTAINER_NAME_OR_ID
 # format inspect output to view container network information
-docker inspect --format="{{.NetworkSettings.IPAddress}}" $CONTAINER_ID
+docker inspect --format="{{.NetworkSettings.IPAddress}}" $CONTAINER_NAME_OR_ID
 # format inspect output to view container status information
-docker inspect --format="{{.State.Pid}}" $CONTAINER_ID
+docker inspect --format="{{.State.Pid}}" $CONTAINER_NAME_OR_ID
+# view container logs, see `docker logs --help`
+docker logs $CONTAINER_NAME_OR_ID
+# remove all unused data (including dangling images)
+docker system prune
+# remove all unused data (including unused images, dangling or not, and volumes)
+docker system prune --all --volumes
 # manage images, see `docker image --help`
 docker image ls # or `docker images`
 docker image inspect $IMAGE_ID
@@ -146,7 +148,7 @@ docker image rm $IMAGE_ID
 ### Lab 1.4. Container ports and IP
 
 1. Run a `nginx` container with name `webserver`
-2. Inspect the container
+2. Inspect the container with `| less` and review the `State` and `NetworkSettings`, quit with `q`
 3. Visit `http://$CONTAINER_IP_ADDRESS` in your browser # this may not work depending on your envrionment network settings
 4. Run another `nginx` container with name `webserver` and exposed on port 80
 5. Visit http://localhost in your browser
@@ -165,13 +167,14 @@ docker image rm $IMAGE_ID
 
 ### Lab 1.6. Container environment variables
 
-1. Run a `mysql` container and review the last output
-2. Run a `mysql` container again but specify an environment variable to resolve the output message
-3. List running containers
-4. List all containers
-5. List all images
-6. List all volumes
-7. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
+1. Run a `mysql` container in detached mode
+2. Connect to the container
+3. Review the container logs and resolve the output message regarding environment variable
+4. List running containers
+5. List all containers
+6. List all images
+7. List all volumes
+8. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
 8. Check all resources are deleted, containers, images and volumes.
 
 ### Lab 1.7. Container registries
@@ -182,40 +185,53 @@ Explore [Docker Hub](https://hub.docker.com/) and search for images you've used 
 
 ## 2. Managing Container Images
 
+A docker image consist of layers, and each [image layer](https://vsupalov.com/docker-image-layers/) is its own image. An image layer is a change on an image - every command (FROM, RUN, COPY, etc.) in your Dockerfile (aka Containerfile by OCI) causes a change, thus creating a new layer. It is recommended reduce your image layers as best possible, e.g. by chaining commands `apt update && apt upgrade -y`.
+
+A name can be assigned to an image by "tagging" the image. This is often used to identify the image version or registry.
+
 ### Custom Images
 
 ```sh
 # to view image layers/history, see `docker image history --help`
-docker image history [imageId]
+docker image history $IMAGE_ID
 # tagging images, see `docker tag --help`
-docker tag myimage myimage:1.0
+docker tag $IMAGE_NAME $NEW_NAME:$TAG # if tag is omitted, `latest` is used
+docker tag nginx nginx:1.1
 # tags can also be used to add repository location
-docker tag myimage domain.com/myimage:1.0
+docker tag nginx domain.com/nginx:1.1
 ```
 
-#### Dockerfile
+### Lab 2.1. Manage images
 
-Build a new image from a base image
+1. List all images
+2. Inspect one of the images with `| less` and review the `ContainerConfig` and `Config`
+3. View the image history
+4. Tag the image with the repository `localhost` and a version
+5. List all images
+
+### Custom images
+
+Although, we can also [create an image from a running container using `docker commit`](https://docs.docker.com/engine/reference/commandline/commit/), we will only focus on using a Dockerfile, which is the recommended method.
 
 ```Dockerfile
+# Example Dockerfile
 FROM ubuntu
 MAINTAINER Piouson
+# remember to chain commands and clean cache after installs
 RUN apt-get update && \
     apt-get install -y bash nmap iproute2 && \
     apt-get clean
 ENTRYPOINT ["/usr/bin/nmap"]
 CMD ["-sn", "172.17.0.0/24"]
+# build the Dockerfile, see `docker build --help
+docker build -t $IMAGE_NAME:$TAG /path/to/Dockerfile/directory`
 ```
 
-> Build Dockerfile: `docker build -t nmap /path/to/Dockerfile`
+### Dockerfile overview
 
 ```sh
 # specify base image
-FROM 
-# specify ID - optional
-LABEL
-# specify author(s) - optional
-MAINTAINER
+FROM
 # execute commands
 RUN
 # specify environment variables used by container
@@ -224,45 +240,37 @@ ENV
 ADD
 # copy files from local project directory to the image - ADD is recommended
 COPY
+# specify commands in shell form - space separated
+ADD /path/to/local/file /path/to/container/directory
+# specify commands in exec form - as array (recommended)
+ADD ["/path/to/local/file", "/path/to/container/directory"]
 # specify username for RUN, CMD and ENTRYPOINT commands
 USER
-# specify default command, array form is recommended
-# commands can be specified in `shell - space separated` form or `exec - as array` form
-ENTRYPOINT ["command"] # `/bin/sh -c` is used if not specified, args passed cannot be overwritten, so recommended to use CMD for args instead for flexibility
+# specify default command - cannot be overwritten, so CMD is recommended for flexibility
+ENTRYPOINT ["command"] # `/bin/sh -c` is used if not specified
 # specfify arguments to the entrypoint command, array form is recommended
-CMD ["arg1", "arg2"] # if used without ENTRYPOINT, args will be passed to `/bin/sh -c`
-# specify metadata to determine where image should run
-# Each command in Dockerfile creates a new layer in the image
-# You can reduce layers by chaining commands together using `&&`
-RUN sudo apt update && \
-    sudo apt install -y bash nano && \
-    sudo apt clean
-# build an image with a Dockerfile, see `docker build --help`
-docker build -t imageName[:tag] directory # docker build -t myimage .
+CMD ["arg1", "arg2"] # if ENTRYPOINT is not specified, args will be passed to `/bin/sh -c`
 ```
 
-#### Docker commit
+### Lab 2.2. Create image from Dockerfile
 
-This is a way to save changes made to a running container
+> See [best practices for writing Dockerfile](https://docs.docker.com/develop/develop-images/dockerfile_best-practices) for more details.
 
-```sh
-# commit container changes, see `docker commit --help`
-docker commit -m "commit message" -a "author" imageName newImageName
-# verify changes committed
-docker image ls
-# create compressed image file for export, see `docker save --help`
-docker save -o imageName.tar imageName
-```
-
-### Lab 2
-
-Create a `Dockerfile` based on the following:
-
-- Based on `fedora`
-- Contains `ps` and network tools
-- Should run `sshd` process
+1. Create a Dockerfile based on the following:
+   - Based on `fedora`
+   - Contains `ps` and network tools
+   - Should run `sshd` process
+2. Build the Dockerfile
 
 > In most cases, building an image goes beyond a successful build. Some installed packages require additional steps to run containers successfully
+
+### Lab 2.3. Containerise an application
+
+1. Bootstrap a frontend/backend application project, your choice of language
+2. Create a Dockerfile to containerise the project
+3. Build the Dockerfile
+4. Create a container from the image
+5. Test the application
 
 ## 3. Understanding Kubernetes
 
