@@ -93,6 +93,8 @@ docker system prune --all --volumes
 8. Delete the container
 
 > `docker ps` showing STATUS of `Exited (0)` means exit OK, but an Exit STATUS that's not 0 should be investigated `docker logs`
+>
+> `CTRL+P` followed by `CTRL+Q` only works when running a container in interactive mode, see [how to attach/detach containers](https://stackoverflow.com/a/19689048/1235675) for more details
 
 ### Lab 1.3. Container arguments
 
@@ -113,8 +115,11 @@ docker system prune --all --volumes
 15. List all containers
 16. Delete all containers
 
-> `CTRL+P, CTRL+Q` only works when running a container in interactive mode, see [docker attach details](https://docs.docker.com/engine/reference/commandline/attach/#description)
 > The `Entrypoint` of a container allows the container to run as an executable. This is the default command used when no arguments are passed to the container
+>
+> Note that commands after `imageName` are passed to the container as arguments. \
+> ❌ `docker run -it mysql -e MYSQL_PASSWORD=hello` \
+> ✔️ `docker run -it -e MYSQL_PASSWORD=hello mysql`
 
 ### Managing containers and images
 
@@ -135,9 +140,6 @@ docker image rm [imageId] # requires `--force` when containers using the image
 docker {image|containers|network|volumes}
 ```
 
-> note commands after imageId/imageName are passed to image/container \
-> e.g. `docker run -it mysql -e MYSQL_PASSWORD=hello` will not work cos env vars should come before image name like `docker run -it -e MYSQL_PASSWORD=hello mysql`
-
 ### Lab 1.4. Container ports and IP
 
 1. Run a `nginx` container with name `webserver`
@@ -156,7 +158,7 @@ docker {image|containers|network|volumes}
 3. Visit http://localhost
 4. List running containers
 5. List all containers
-6. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
+6. Delete containers
 
 ### Lab 1.6. Container environment variables
 
@@ -165,6 +167,8 @@ docker {image|containers|network|volumes}
 3. Visit http://localhost
 4. List running containers
 5. List all containers
+6. List all images
+7. List all volumes
 6. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
 
 ### Lab 1.7. Container registries
