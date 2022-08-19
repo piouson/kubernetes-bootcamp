@@ -42,8 +42,8 @@ docker run -it busybox
 docker run -d busybox
 # run a command in a new container
 docker run busybox echo "Hello, World!"
-# run container with specified name, port and mounted volume
-docker run -d --name webserver -p 8080:80 -v ~/html:/usr/local/apache2/htdocs httpd
+# run container with specified name
+docker run -d --name webserver httpd
 # execute commands in running container, see `docker exec --help`
 docker exec -it busybox sh # `sh` runs in a different shell session
 # list running containers
@@ -117,10 +117,12 @@ docker system prune --all --volumes
 ### Managing containers and images
 
 ```sh
+# run container with port and mounted volume
+docker run -d -p 8080:80 -v ~/html:/usr/local/apache2/htdocs httpd # visit localhost:8080
 # inspect container or image, see `docker inspect --help | docker {image|container} --help`
 docker inspect [id] | less
 docker {container|image} inspect
-# format inspect output to view container network settings
+# format inspect output to view container network information
 docker inspect --format="{{.NetworkSettings.IPAddress}}" containerName
 # format inspect output to view container status information
 docker inspect --format="{{.State.Pid}}" containerName
@@ -137,10 +139,11 @@ docker {image|containers|network|volumes}
 ### Lab 1.4. Container ports and IP
 
 1. Run a `nginx` container with name `webserver`
-2. Visit `http://$CONTAINER_IP_ADDRESS` in your browser
-3. Run another `nginx` container with name `webserver` and exposed on port 80
-4. Visit http://localhost in your browser
-5. Delete the containers
+2. Inspect the container
+3. Visit `http://$CONTAINER_IP_ADDRESS` in your browser # this may not work depending on your envrionment network settings
+4. Run another `nginx` container with name `webserver` and exposed on port 80
+5. Visit http://localhost in your browser
+6. Delete the containers
 
 ### Lab 1.5. Container volumes
 
