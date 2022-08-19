@@ -15,7 +15,7 @@ This course is a part of my cloud-native application developer bootcamp series.
 A Linux/Unix environment with Docker installed
 
 - macOS install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/)
-- Windows
+- Windows [setup WSL2 development environment](https://docs.microsoft.com/en-us/windows/wsl/setup/environment), then:
   - option 1 [install Docker engine on WSL2](https://docs.docker.com/engine/install/ubuntu/) and complete [post install steps](https://docs.docker.com/engine/install/linux-postinstall/)
   - option 2 [install Docker Desktop with WSL2 backend](https://docs.docker.com/desktop/windows/wsl/)
 
