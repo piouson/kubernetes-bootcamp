@@ -124,8 +124,12 @@ docker system prune --all --volumes
 ### Managing containers and images
 
 ```sh
-# run container with port and mounted volume
-docker run -d -p 8080:80 -v ~/html:/usr/local/apache2/htdocs httpd # visit localhost:8080
+# run container with port
+docker run -d -p 8080:80 httpd # visit localhost:8080
+# run container with mounted volume
+docker run -d -p 8080:80 -v ~/html:/usr/local/apache2/htdocs httpd
+# run container with environment variable
+docker run -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=secret mongo
 # inspect container or image, see `docker inspect --help | docker {image|container} --help`
 docker inspect [id] | less
 docker {container|image} inspect
