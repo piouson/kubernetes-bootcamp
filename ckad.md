@@ -168,12 +168,11 @@ docker {image|containers|network|volumes}
 
 1. Run a `mysql` container and review the last output
 2. Run a `mysql` container again but specify an environment variable to resolve the output message
-3. Visit http://localhost
-4. List running containers
-5. List all containers
-6. List all images
-7. List all volumes
-6. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
+3. List running containers
+4. List all containers
+5. List all images
+6. List all volumes
+7. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
 
 ### Lab 1.7. Container registries
 
