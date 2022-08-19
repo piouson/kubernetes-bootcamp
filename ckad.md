@@ -2,6 +2,8 @@
 
 # CKAD Lab Guide
 
+This course is a part of my cloud-native application developer bootcamp series.
+
 ## What you will learn
 
 - kubernetes
