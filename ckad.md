@@ -6,13 +6,16 @@
 
 A Linux/Unix environment with Docker installed
 
-- for macOS, install [Homebrew](https://brew.sh/) and [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/)
-- for Windows, install [**`winget`**](https://aka.ms/getwinget) and [WSL2](https://docs.microsoft.com/en-us/windows/wsl/setup/environment), then either [install Docker engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/) or [install Docker Desktop on Windows](https://winget.run/pkg/Docker/DockerDesktop) and [integrate with WSL2](https://code.visualstudio.com/assets/blogs/2020/03/02/docker-resources-wsl-integration.png)
-- in code blocks, curly brackets `{start}` enclose sub-commands and square brackets `[$token]` enclose variables 
+- macOS install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/)
+- Windows
+  - option 1 [install Docker engine on WSL2](https://docs.docker.com/engine/install/ubuntu/) and complete [post install steps](https://docs.docker.com/engine/install/linux-postinstall/)
+  - option 2 [install Docker Desktop with WSL2 backend](https://docs.docker.com/desktop/windows/wsl/)
 
 ## 1. Understanding and Using Containers
 
-A [container](https://www.docker.com/resources/what-container/) is a standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another.. A **container-runtime**, which relies on the host kernel, is required to run a container. Docker is most popular container-runtime, but there are other runtimes like [runc](https://github.com/opencontainers/runc#runc), [cri-o](https://cri-o.io/), [containerd](https://containerd.io/), etc.
+A [container](https://www.docker.com/resources/what-container/) is a standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another.. A **container-runtime**, which relies on the host kernel, is required to run a container.
+
+[Docker](https://www.docker.com/) is most popular container-runtime and container-solution, but there are other runtimes like [runc](https://github.com/opencontainers/runc#runc), [cri-o](https://cri-o.io/), [containerd](https://containerd.io/), etc, but the only significant container-solutions today are Docker and [Podman](https://podman.io/)
 
 A container image is a lightweight, standalone, executable package of software that includes everything needed to run an application: code, runtime, system tools, system libraries and settings. Container images become containers at runtime. 
 
@@ -20,66 +23,117 @@ The [Open Container Initiative (OCI)](https://opencontainers.org/) creates open 
 
 A container registry is a repository, or collection of repositories, used to store and access container images. Container registries are a big player in cloud-native application development, often as part of DevOps processes.
 
-### Basic container commands
+### Container commands
+
+Run `docker --help` or visit [docker cli reference](https://docs.docker.com/engine/reference/commandline/docker/) for more details.
 
 ```sh
-# run commands in new container, see `docker run --help`
-docker run hello-world # entrypoint is used when no command specified after image
-# run container with command
+# run busybox container, see `docker run --help`
+docker run busybox
+# run in interactive mode
+docker run -it busybox
+# run in detached mode
+docker run -d busybox
+# run a command in a new container
 docker run busybox echo "Hello, World!"
-# interactive mode
-docker run -it busybox /bin/sh
-# detached mode with name, port, volume and env-vars
-docker run -d -p $hostPort:$containerPort -v $hostPath:$containerPath --name myserver -e ENV_VAR=value httpd
+# run container with specified name, port and mounted volume
+docker run -d --name webserver -p 8080:80 -v ~/html:/usr/local/apache2/htdocs httpd
 # execute commands in running container, see `docker exec --help`
 docker exec -it busybox sh # `sh` runs in a different shell session
 # list running containers
 docker ps
 # list all containers
 docker ps -a
-# view container processes when inside a container
-ls /proccat /proc/[pid]/cmdline
+# view kernel details from inside a container
+uname -r # or `cat /proc/version` or `hostnamectl`
+# view container processes from inside a container
+ls /proccat /proc/$PID/cmdline
 # exit running container
 exit # container is stopped if connected to entrypoint
 # exit running container without stopping container
 ctrl-p ctrl-q
 # start, stop, delete containers, see `docker {start|stop|etc} --help`
-docker {start|stop|restart|kill|rm} [$containerName|$containerID]
+docker {start|stop|restart|kill|rm} $CONTAINER_NAME_OR_ID
 # view container logs, see `docker logs --help`
-docker logs [containerName]
+docker logs $CONTAINER_NAME_OR_ID
+# remove all unused data (including dangling images)
+docker system prune
+# remove all unused data (including unused images, dangling or not, and volumes)
+docker system prune --all --volumes
 ```
-
-> `docker ps` showing STATUS of `Exited (0)` means exit OK, but Exit STATUS otherthan 0 should be investigated `docker logs`
 
 ### Lab 1.1. Hello docker
 
-1. Open your Terminal and run `docker info` to confirm docker client and server statuses
-2. Run your first container using the `busybox` image with a shell connected in interactive mode
-   - review the Kernel details by running `uname -r`, `cat /proc/version` and `hostnamectl`
-   - review processes running inside the container
-   - exit the container
-   - list running containers
-   - list all containers
-   - delete the container
-3. Run another `busybox` container in detached mode to execute a single `date` command
-   - restart the container a few times
-   - review the container logs
-   - exit the container
-   - list running containers
-   - list all containers
-   - delete the container
-4. Run a `nginx` container in detached mode on port 80
-   - visit http://localhost
-   - list running containers
-   - list all containers
-   - delete the container
-5. Create a `html/index.html` file with some content and mount the file as a web-server container's DocumentRoot
+1. Run `docker info` to confirm docker client and server statuses
+2. Run `docker run hello-world`
+3. Run `ps aux` to review running processes on your host device
+
+### Lab 1.2. First container interaction
+
+1. Run a `busybox` container in interactive mode `docker run -it busybox`
+2. Review the container kernel details
+3. Review the running processes in the container and note PID
+4. Exit the container
+5. List running containers
+6. List all containers
+7. Repeat [1-4] but exit the container without stopping it
+8. Delete the container
+
+> `docker ps` showing STATUS of `Exited (0)` means exit OK, but an Exit STATUS that's not 0 should be investigated `docker logs`
+
+### Lab 1.3. Container arguments
+
+1. Run `nginx` container in interactive mode
+2. Connect to the container to execute commands
+3. Review the running processes and note the PID
+4. Exit container
+5. Run a `busybox` container with command `sleep 20` as argument, see `sleep --help`
+6. Exit container
+7. Repeat [4] in detached mode
+8. List running containers
+9. Connect to the `busybox` container to execute commands
+10. Review the running processes
+11. Exit the container
+12. List running containers
+13. List all containers
+14. Delete all containers
+
+> `CTRL+P, CTRL+Q` only works when running a container in interactive mode, see [docker attach details](https://docs.docker.com/engine/reference/commandline/attach/#description)
+> The `Entrypoint` of a container allows the container to run as an executable. This is the default command used when no arguments are passed to the container
+
+### Lab 1.4. Container ports and IP
+
+1. Run a `nginx` container with name `webserver`
+2. Visit http://$CONTAINER_IP_ADDRESS in your browser
+3. Run another `nginx` container with name `webserver` and exposed on port 80
+4. Visit http://localhost in your browser
+5. Delete the containers
+
+### Lab 1.5. Container volumes
+
+1. Create an `html/index.html` file with some content
+2. Run any webserver containers on port 80 and mount the `html` folder to the [DocumentRoot](https://serverfault.com/a/588388)
    - option `nginx` DocumentRoot - `/usr/share/nginx/html`
    - option `httpd` DocumentRoot - `/usr/local/apache2/htdocs`
-6. Explore [Docker Hub](https://hub.docker.com/) and search for the images you've used so far or application you usually use in application development, like databases, environment tools, etc.
-7. Clean up
-  
-> Container images are created with instructions that determine the default container behaviour at runtime. A familiarity with specific images may be required to understand the defaults specified
+3. Visit http://localhost
+4. List running containers
+5. List all containers
+6. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
+
+### Lab 1.5. Container environment variables
+
+1. Run a `mysql` container and review the last output
+2. Run a `mysql` container again but specify an environment variable to resolve the output message
+3. Visit http://localhost
+4. List running containers
+5. List all containers
+6. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
+
+### Lab 1.7. Container registries
+
+1. Explore [Docker Hub](https://hub.docker.com/) and search for images you've used so far or images/applications you use day-to-day, like databases, environment tools, etc.
+
+> Container images are created with instructions that determine the default container behaviour at runtime. A familiarity with specific images/applications may be required to understand their default behaviours
 
 ### Managing containers and images
 
