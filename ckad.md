@@ -33,8 +33,6 @@ A container registry is a repository, or collection of repositories, used to sto
 
 ### Container commands
 
-Run `docker --help` or visit [docker cli reference](https://docs.docker.com/engine/reference/commandline/docker/) for more details.
-
 ```sh
 # run busybox container, see `docker run --help`
 docker run busybox
@@ -71,6 +69,7 @@ docker logs $CONTAINER_NAME_OR_ID
 docker system prune
 # remove all unused data (including unused images, dangling or not, and volumes)
 docker system prune --all --volumes
+# see `docker container --help` for complete sub-commands
 ```
 
 > See [possible container statuses](https://www.baeldung.com/ops/docker-container-states#possible-states-of-a-docker-container) to understand more about container states
@@ -124,24 +123,24 @@ docker system prune --all --volumes
 ### Managing containers and images
 
 ```sh
-# run container with port
+# run container with port, see `docker run --help`
 docker run -d -p 8080:80 httpd # visit localhost:8080
 # run container with mounted volume
 docker run -d -p 8080:80 -v ~/html:/usr/local/apache2/htdocs httpd
 # run container with environment variable
 docker run -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=secret mongo
-# inspect container or image, see `docker inspect --help | docker {image|container} --help`
+# inspect container, see `docker container inspect --help | docker inspect --help`
 docker inspect [id] | less
-docker {container|image} inspect
+docker container inspect [$CONTAINER_NAME|$CONTAINER_ID]
 # format inspect output to view container network information
-docker inspect --format="{{.NetworkSettings.IPAddress}}" containerName
+docker inspect --format="{{.NetworkSettings.IPAddress}}" $CONTAINER_ID
 # format inspect output to view container status information
-docker inspect --format="{{.State.Pid}}" containerName
+docker inspect --format="{{.State.Pid}}" $CONTAINER_ID
 # manage images, see `docker image --help`
-docker image ls  # or `docker images`
-docker image inspect [imageId]
-docker image rm [imageId] # requires `--force` when containers using the image
-docker {image|containers|network|volumes}
+docker image ls # or `docker images`
+docker image inspect $IMAGE_ID
+docker image rm $IMAGE_ID
+# see `docker --help` for complete resources
 ```
 
 ### Lab 1.4. Container ports and IP
@@ -183,7 +182,7 @@ Explore [Docker Hub](https://hub.docker.com/) and search for images you've used 
 
 ## 2. Managing Container Images
 
-### Basic commands
+### Custom Images
 
 ```sh
 # to view image layers/history, see `docker image history --help`
@@ -193,8 +192,6 @@ docker tag myimage myimage:1.0
 # tags can also be used to add repository location
 docker tag myimage domain.com/myimage:1.0
 ```
-
-### Custom Images
 
 #### Dockerfile
 
