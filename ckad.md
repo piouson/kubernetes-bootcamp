@@ -10,7 +10,7 @@ This course is a part of my cloud-native application developer bootcamp series.
 - improve linux understanding
 - containers
 
-## 0. Requirements
+## Requirements
 
 A Linux/Unix environment with Docker installed
 
