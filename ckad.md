@@ -2,6 +2,12 @@
 
 # CKAD Lab Guide
 
+## What you will learn
+
+- kubernetes
+- improve linux understanding
+- containers
+
 ## 0. Requirements
 
 A Linux/Unix environment with Docker installed
@@ -45,15 +51,18 @@ docker ps
 # list all containers
 docker ps -a
 # view kernel details from inside a container
-uname -r # or `cat /proc/version` or `hostnamectl`
+uname -r
+cat /proc/version
+hostnamectl # linux only
 # view container processes from inside a container
-ls /proccat /proc/$PID/cmdline
+ls /proc # to find PID
+cat /proc/$PID/cmdline
 # exit running container
 exit # container is stopped if connected to entrypoint
 # exit running container without stopping container
 ctrl-p ctrl-q
 # start, stop, delete containers, see `docker {start|stop|etc} --help`
-docker {start|stop|restart|kill|rm} $CONTAINER_NAME_OR_ID
+docker {start|stop|restart|rm} $CONTAINER_NAME_OR_ID
 # view container logs, see `docker logs --help`
 docker logs $CONTAINER_NAME_OR_ID
 # remove all unused data (including dangling images)
@@ -61,6 +70,8 @@ docker system prune
 # remove all unused data (including unused images, dangling or not, and volumes)
 docker system prune --all --volumes
 ```
+
+> See [possible container statuses](https://www.baeldung.com/ops/docker-container-states#possible-states-of-a-docker-container) to understand more about container states
 
 ### Lab 1.1. Hello docker
 
@@ -83,23 +94,45 @@ docker system prune --all --volumes
 
 ### Lab 1.3. Container arguments
 
-1. Run `nginx` container in interactive mode
-2. Connect to the container to execute commands
-3. Review the running processes and note the PID
-4. Exit container
-5. Run a `busybox` container with command `sleep 20` as argument, see `sleep --help`
-6. Exit container
-7. Repeat [4] in detached mode
-8. List running containers
-9. Connect to the `busybox` container to execute commands
-10. Review the running processes
-11. Exit the container
-12. List running containers
-13. List all containers
-14. Delete all containers
+1. Run a `nginx` container
+2. List running containers (use another terminal if stuck)
+3. Exit the container
+4. Run another `nginx` container in interactive mode
+5. List running containers (use another terminal if stuck)
+6. Exit the container
+7. Run a `busybox` container with command `sleep 20` as argument, see `sleep --help`
+8. List running containers (use another terminal if stuck)
+9. Exit container
+10. Run another `busybox` container in detached mode
+11. Connect to the container to execute commands
+12. Review the running processes and note the PID
+13. Exit container
+14. List running containers
+15. List all containers
+16. Delete all containers
 
 > `CTRL+P, CTRL+Q` only works when running a container in interactive mode, see [docker attach details](https://docs.docker.com/engine/reference/commandline/attach/#description)
 > The `Entrypoint` of a container allows the container to run as an executable. This is the default command used when no arguments are passed to the container
+
+### Managing containers and images
+
+```sh
+# inspect container or image, see `docker inspect --help | docker {image|container} --help`
+docker inspect [id] | less
+docker {container|image} inspect
+# format inspect output to view container network settings
+docker inspect --format="{{.NetworkSettings.IPAddress}}" containerName
+# format inspect output to view container status information
+docker inspect --format="{{.State.Pid}}" containerName
+# manage images, see `docker image --help`
+docker image ls  # or `docker images`
+docker image inspect [imageId]
+docker image rm [imageId] # requires `--force` when containers using the image
+docker {image|containers|network|volumes}
+```
+
+> note commands after imageId/imageName are passed to image/container \
+> e.g. `docker run -it mysql -e MYSQL_PASSWORD=hello` will not work cos env vars should come before image name like `docker run -it -e MYSQL_PASSWORD=hello mysql`
 
 ### Lab 1.4. Container ports and IP
 
@@ -120,7 +153,7 @@ docker system prune --all --volumes
 5. List all containers
 6. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
 
-### Lab 1.5. Container environment variables
+### Lab 1.6. Container environment variables
 
 1. Run a `mysql` container and review the last output
 2. Run a `mysql` container again but specify an environment variable to resolve the output message
@@ -134,32 +167,6 @@ docker system prune --all --volumes
 1. Explore [Docker Hub](https://hub.docker.com/) and search for images you've used so far or images/applications you use day-to-day, like databases, environment tools, etc.
 
 > Container images are created with instructions that determine the default container behaviour at runtime. A familiarity with specific images/applications may be required to understand their default behaviours
-
-### Managing containers and images
-
-```sh
-# inspect container or image, see `docker inspect --help | docker {image|container} --help`
-docker inspect [id] | less
-docker {container|image} inspect
-docker inspect --format="{{.NetworkSettings.IPAddress}}" containerName
-docker inspect --format="{{.State.Pid}}" containerName
-ps {aux|fax} | less # this command shows container PIDs
-# see `docker image --help`
-docker image ls  # or `docker images`
-docker image inspect [imageId]
-docker image rm [imageId] # requires `--force` when containers using the image
-docker {image|containers|network|volumes}
-```
-
-> note commands after imageId/imageName are passed to image/container \
-> e.g. `docker run -it mysql -e MYSQL_PASSWORD=hello` will not work cos env vars should come before image name like `docker run -it -e MYSQL_PASSWORD=hello mysql`
-
-### Lab 1.2. 
-
-1. Run a `mysql` container
-   - is the container running?
-   - troubleshoot and fix any issues to make the container run 
-2. Start a bash shell connected to the container interactively
 
 ## 2. Managing Container Images
 
