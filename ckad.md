@@ -1577,6 +1577,56 @@ kubectl delete -f lab12.yaml
 
 ## 13. DevOps
 
+### Helm
+
+There are thousands of people and companies packaging their applications for deployment on Kubernetes. A [best practice](https://kubernetes.io/blog/2016/10/helm-charts-making-it-simple-to-package-and-deploy-apps-on-kubernetes/) is to package these applications as [Helm Charts](https://helm.sh/docs/topics/charts/).
+
+Helm is the package manager (like winget, npm, yum and apt) that can be installed and Charts are packages (like msi, debs and rpms) stored locally or on remote Helm repositories. Visit [Helm GitHub repo](https://github.com/helm/helm/releases) for the latest installation instructions.
+
+#### Install Helm
+
+```sh
+VER=$(curl -s https://api.github.com/repos/helm/helm/releases/latest | grep tag_name | cut -d '"' -f 4 | sed 's/v//g')
+wget https://get.helm.sh/helm-v$VER-linux-amd64.tar.gz # macOS replace with `darwin-amd64`
+tar xvf helm-v3.9.3-linux-amd64.tar.gz
+sudo install linux-amd64/helm /usr/local/bin
+helm version
+```
+
+#### ArtifactHUB
+
+[ArtifactHUB](https://artifacthub.io/) is a Helm Charts registry, like the [npm registry](https://www.npmjs.com/) or [docker hub](https://hub.docker.com/), used to find, install and publish Charts.
+
+```sh
+# add a helm repo
+helm repo add $RELEASE_NAME $RELEASE_URL
+# install helm chart from an added repo
+helm install $RELEASE_NAME $RELEASE_NAME/$CHART_NAME
+# list helm repo
+helm repo list
+# search for a chart in added repos
+helm search repo $RELEASE_NAME
+# update helm repos
+helm repo update
+# list currently installed charts
+helm list
+# show summary of a chart
+helm show chart $RELEASE_NAME/$CHART_NAME
+helm show all $RELEASE_NAME/$CHART_NAME
+# view status of a chart
+helm status $CHART_NAME
+# delete currently installed charts
+helm delete
+# uninstall helm chart
+helm uninstall $RELEASE_NAME
+```
+
+### Lab 13.1. Explore ArtifactHUB
+
+- visit artifacthub, find and install a chart.
+- list available charts in added repo
+- update repo
+
 ## 14. Troubleshooting
 
 ## 15. Exam
