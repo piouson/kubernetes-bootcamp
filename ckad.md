@@ -6,18 +6,56 @@ This course is a part of my cloud-native application developer bootcamp series.
 
 ## What you will learn
 
-- kubernetes
-- improve linux understanding
-- containers
+In summary, you will be learning cloud-native application development, which is a modern approach to building and running software applications that exploits the flexibility, scalability, and resilience of cloud computing. Some highlights include:
+
+- proficiency working on the command-line
+- proficiency working with containers
+- proficiency working with infrastructure as code
+- microservices architecture
+- devops with kubernetes
 
 ## Requirements
 
-A Linux/Unix environment with Docker installed
+A Unix-based environment running docker, that's either Docker Engine or Docker Desktop.
 
-- macOS install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/)
+- macOS [install Docker Desktop](https://docs.docker.com/desktop/install/mac-install/)
 - Windows [setup WSL2 development environment](https://docs.microsoft.com/en-us/windows/wsl/setup/environment), then:
-  - option 1 [install Docker engine on WSL2](https://docs.docker.com/engine/install/ubuntu/) and complete [post install steps](https://docs.docker.com/engine/install/linux-postinstall/)
+  - option 1 install Docker Engine on WSL2, see below
   - option 2 [install Docker Desktop with WSL2 backend](https://docs.docker.com/desktop/windows/wsl/)
+
+<details>
+  <summary><b>docker engine install steps on Ubuntu/WSL2</b></summary>
+
+```sh
+# Windows/WSL2 prerequisites
+# a. disable docker desktop integration with WSL2 Ubuntu, see https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png
+# b. enable `systemd` on WSL2
+git clone https://github.com/DamionGans/ubuntu-wsl2-systemd-script.git
+cd ubuntu-wsl2-systemd-script/
+sudo bash ubuntu-wsl2-systemd-script.sh --force
+cd ../ && rm -rf ubuntu-wsl2-systemd-script/
+exec bash
+systemctl # long output confirms systemd up and running
+
+# Docker install steps for Ubuntu/WSL2
+# 1. uninstall old docker versions
+sudo apt-get remove docker docker-engine docker.io containerd runc
+# 2. setup docker repository
+sudo apt-get update
+sudo apt-get -y install ca-certificates curl gnupg lsb-release
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+# 3. install docker engine
+sudo apt-get update
+sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+# 4. manage docker as non-root user
+sudo groupadd docker
+sudo usermod -aG docker $USER
+# 5. start a new terminal to update group membership
+docker run hello-world
+```
+</details>
 
 ## 1. Understanding and Using Containers
 
@@ -110,7 +148,7 @@ docker {start|stop|restart|rm} $CONTAINER_NAME_OR_ID
 15. List all containers
 16. Delete all containers
 
-> The `Entrypoint` of a container allows the container to run as an executable. This is the default command used when no arguments are passed to the container
+> The `Entrypoint` of a container is [the init process](https://en.wikipedia.org/wiki/Init) and allows the container to run as an executable. This is the default command used when no arguments are passed to the container.
 >
 > Note that commands after `imageName` are passed to the container as arguments. \
 > ❌ `docker run -it mysql -e MYSQL_PASSWORD=hello` \
@@ -185,11 +223,9 @@ Explore [Docker Hub](https://hub.docker.com/) and search for images you've used 
 
 ## 2. Managing Container Images
 
-A docker image consist of layers, and each [image layer](https://vsupalov.com/docker-image-layers/) is its own image. An image layer is a change on an image - every command (FROM, RUN, COPY, etc.) in your Dockerfile (aka Containerfile by OCI) causes a change, thus creating a new layer. It is recommended reduce your image layers as best possible, e.g. by chaining commands `apt update && apt upgrade -y`.
+A docker image consist of layers, and each [image layer](https://vsupalov.com/docker-image-layers/) is its own image. An image layer is a change on an image - every command (FROM, RUN, COPY, etc.) in your Dockerfile (aka Containerfile by OCI) causes a change, thus creating a new layer. It is recommended reduce your image layers as best possible, e.g. replace multiple `RUN` commands with "command chaining" `apt update && apt upgrade -y`.
 
-A name can be assigned to an image by "tagging" the image. This is often used to identify the image version or registry.
-
-### Custom Images
+> A name can be assigned to an image by "tagging" the image. This is often used to identify the image version and/or registry.
 
 ```sh
 # to view image layers/history, see `docker image history --help`
@@ -201,7 +237,7 @@ docker tag nginx nginx:1.1
 docker tag nginx domain.com/nginx:1.1
 ```
 
-### Lab 2.1. Manage images
+### Lab 2.1. Working with images
 
 1. List all images
 2. Inspect one of the images with `| less` and review the `ContainerConfig` and `Config`
@@ -209,22 +245,21 @@ docker tag nginx domain.com/nginx:1.1
 4. Tag the image with the repository `localhost` and a version
 5. List all images
 
-### Custom images
+### Lab 2.2. Custom images
 
 Although, we can also [create an image from a running container using `docker commit`](https://docs.docker.com/engine/reference/commandline/commit/), we will only focus on using a Dockerfile, which is the recommended method.
+
+Build the below Dockerfile with `docker build -t $IMAGE_NAME:$TAG /path/to/Dockerfile/directory`, see `docker build --help
 
 ```Dockerfile
 # Example Dockerfile
 FROM ubuntu
 MAINTAINER Piouson
-# remember to chain commands and clean cache after installs
 RUN apt-get update && \
     apt-get install -y bash nmap iproute2 && \
     apt-get clean
 ENTRYPOINT ["/usr/bin/nmap"]
 CMD ["-sn", "172.17.0.0/24"]
-# build the Dockerfile, see `docker build --help
-docker build -t $IMAGE_NAME:$TAG /path/to/Dockerfile/directory`
 ```
 
 ### Dockerfile overview
@@ -254,50 +289,48 @@ CMD ["arg1", "arg2"] # if ENTRYPOINT is not specified, args will be passed to `/
 
 ### Lab 2.2. Create image from Dockerfile
 
-> See [best practices for writing Dockerfile](https://docs.docker.com/develop/develop-images/dockerfile_best-practices) for more details.
+See [best practices for writing Dockerfile](https://docs.docker.com/develop/develop-images/dockerfile_best-practices).
+
+```sh
+# find package containing app (debian-based)
+dpkg -S /path/to/file/or/pattern # see dpkg --help
+dpkg -S */$APP_NAME
+# find package containing app (rpm-based)
+dnf provides /path/to/file/or/pattern
+dnf provides */$APP_NAME
+```
 
 1. Create a Dockerfile based on the following:
-   - Based on `fedora`
-   - Contains `ps` and network tools
-   - Should run `sshd` process
+   - Base image should be debian-based or rpm-based
+   - Should include packages containing `ps` application and network utilities like `ip` and `ss`
+   - Should run the `sshd` process when started
 2. Build the Dockerfile
+3. Run a container from the image and review behaviour
 
 > In most cases, building an image goes beyond a successful build. Some installed packages require additional steps to run containers successfully
 
-### Lab 2.3. Containerise an application
+### Lab 2.3. Containerise your application
 
 1. Bootstrap a frontend/backend application project, your choice of language
 2. Create a Dockerfile to containerise the project
 3. Build the Dockerfile
 4. Create a container from the image
-5. Test the application
+5. Check that the application works
 
 ## 3. Understanding Kubernetes
 
 [K8s](kubernetes.io) is an open-source system for automating deployment, scaling and containerized applications management, currently owned by CNCF - Linux Foundation. \
 K8s **release cycle is 3 months** and deprecated features are supported for a minimum of 2 release cycles (6 months).
 
+> You can watch [kubernetes in 1 minute](https://www.youtube.com/watch?v=BzvLp-lH5_Q&list=PLBBog2r6uMCSplEmHu-1n7VixRn9RTZP5&index=6) for a quick overview \
+> When you've got more time, watch/listen to **Kubernetes: The Documentary ([PART 1](https://www.youtube.com/watch?v=BE77h7dmoQU) & [PART 2](https://www.youtube.com/watch?v=318elIq37PE))**
+
 ### Lab 3.1. Kubernetes in Google Cloud
 
 - Signup and Login to [console.cloud.google.com](https://console.cloud.google.com)
 - Use the "Cluster setup guide" to create "My first cluster"
 - Connect to the cluster using the "Cloud Shell"
-- Run the basic commands
-
-```sh
-# help
-kubectl --help | less
-# get an overview of available resources
-kubectl get all, see `kubectl get --help`
-# create application
-kubectl create -h
-kubectl create deploy myapp --image=nginx --replcias=3
-kubectl get all
-# get complete list of supported API resources
-kubectl api-resources
-# delete pod, deployment, service, see `kubectl delete --help`
-kubectl delete {pod|deploy|service} [podName|deploymentName|serviceName]
-```
+- View existing Kubernetes resources by running `kubectl get all`
 
 ### Basic Kubernetes API resources
 
@@ -305,20 +338,58 @@ kubectl delete {pod|deploy|service} [podName|deploymentName|serviceName]
 - ReplicaSet: manages scalability - array of pods
 - Pods: manages containers (**note that one container per pod is the standard**)
 
-### Lab 3.2. Explore Kubernetes API resources via GCloud
+<details>
+  <summary>Kubernetes architecture</summary>
+  
+![kubernetes-architecture from https://platform9.com/blog/kubernetes-enterprise-chapter-2-kubernetes-architecture-concepts/](https://user-images.githubusercontent.com/17856665/185714430-afe68ed2-9593-47c1-b032-b9ad9630f9fa.png)
+</details>
 
-- Use `kubectl create deploy` to run any image, e.g. nginx image
-- Get an overview of resources to confirm created resources
-- Delete the pod create and confirm pod is recreated by replicaset
-- Use `kubectl create api-resources` to get a list of available API resources
-- Delete the deployment and confirm deleted resources
-- Delete the service and confirm no resources left
+<details>
+  <summary>Pods architecture</summary>
+  
+![pods-architecture from https://platform9.com/blog/kubernetes-enterprise-chapter-2-kubernetes-architecture-concepts/](https://user-images.githubusercontent.com/17856665/185716058-b9b273ab-295b-4a5a-9d63-31b6f0d25e2c.jpg)
+</details>
 
-> Remember to delete Google cloud cluster to avoid charges
+```sh
+# help
+kubectl --help | less
+# view available resources
+kubectl get all, see `kubectl get --help`
+# create an application, see `kubectl create deploy -h`
+kubectl create deploy myapp --image=nginx
+# create an application with six replicas
+kubectl create deploy myapp --image=nginx --replcias=6
+# view complete list of supported API resources
+kubectl api-resources
+# delete pod, deployment, service, see `kubectl delete --help`
+kubectl delete {pod|deploy|service} [podName|deploymentName|serviceName]
+```
+
+### Lab 3.2. Explore Kubernetes API resources via Google Cloud
+
+1. Create an `nginx` application with three replicas
+2. View available resources
+3. Delete a pod create
+4. View available resources, how many pods left, can you find the deleted pod?
+5. Create an
+5. List supported API resources
+6. Delete the application
+7. view available resource
+8. Delete the Kubernetes service
+9. view available resources
+
+> Remember to delete Google cloud cluster to avoid charges if you wish to use a local environment detailed in the next chapter
 
 ## 4. Kubernetes Lab Environment
 
-Methods on Windows below used Docker Desktop with WSL2 (Ubuntu) engine.
+```sh
+# check kubernetes version
+kubectl version
+# list kubernetes context (available kubernetes clusters - docker, minikube, etc)
+kubectl config get-contexts # this should list docker-desktop as an option
+# switch kubernetes context
+kubectl config use-context docker-desktop
+```
 
 ### Use Docker Desktop
 
@@ -328,73 +399,63 @@ Methods on Windows below used Docker Desktop with WSL2 (Ubuntu) engine.
   ![image](https://user-images.githubusercontent.com/17856665/178120815-357cea98-ecf1-4536-81af-a614b7b4cf5e.png)
 </details>
 
-```sh
-# after docker desktop restarts
-kubectl config get-contexts # this should list docker-desktop as an option
-kubectl config use-context docker-desktop
-```
-
 > See Docker's [Deploy on Kubernetes](https://docs.docker.com/desktop/kubernetes/) for more details \
 > Note that using Docker Desktop will have network limitations when exposing your applications publicly, see alternative Minikube option below
 
 ### Use Minikube
 
-1. Disable Docker Desktop integration with WSL2 Ubuntu
-2. Install on WSL2 Ubuntu (only tested 18.04 bionic): [`docker engine`](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script), [`minikube`](https://minikube.sigs.k8s.io/docs/start/), `conntrack` and [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management)
-3. [Enable **`systemd`** on WSL2 Ubuntu](https://github.com/DamionGans/ubuntu-wsl2-systemd-script)
-3. Start minikube cluster
+Locally, minikube is the recommended kubernetes solution for this course. We will be using Kubernetes v1.23.9 because recent changes in the latest version may affect installation steps. \
+See the [official minikube installation docs](https://minikube.sigs.k8s.io/docs/start/)
+
+#### Install Minikube on macOS
 
 ```sh
-# 1. disable docker desktop integration with wsl2 ubuntu
-# 2a. enable `systemd` on wsl2
-git clone https://github.com/DamionGans/ubuntu-wsl2-systemd-script.git
-cd ubuntu-wsl2-systemd-script/
-sudo bash ubuntu-wsl2-systemd-script.sh --force
-cd ../ && rm -rf ubuntu-wsl2-systemd-script/
-exec bash
-systemctl # long output confirms systemd up and running
-sudo sysctl fs.protected_regular=0 # required by minikube
-# 3a. uninstall old docker versions
-sudo apt-get remove docker docker-engine docker.io containerd runc
-# 3b. setup docker repo
-sudo apt-get update
-sudo apt-get -y install ca-certificates curl gnupg lsb-release
-sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-# 3c. install docker engine
-sudo apt-get update
-sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
-# 3d. manage docker as non-root user
-sudo groupadd docker
-sudo usermod -aG docker $USER
-# 3e. start another terminal to update group membership before testing docker
-docker run hello-world
-# 4. install minikube
+# 1. install minikube
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-darwin-amd64
+sudo install minikube-darwin-amd64 /usr/local/bin/minikube
+rm minikube-darwin-amd64
+# 2. start a minikube cluster
+minikube start --kubernetes-version=1.23.9
+```
+
+#### Install Minikube on Windows WSL2
+
+```sh
+# 1. install minikube
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
 chmod +x ./minikube-linux-amd64
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
-rm -rf minikube-linux-amd64 $HOME/.minikube
-# 5. install minikube deps - conntrack
+rm minikube-linux-amd64
+# 2. install minikube prereqs - conntrack
 sudo apt install conntrack
-# 6a. start a minikube cluster
+sudo sysctl fs.protected_regular=0
+# 3. start a minikube cluster
+minikube start --driver=docker --kubernetes-version=1.23.9
+# 3b. optional, start a minikube cluster with `--driver=none`
 sudo minikube start --driver=none --kubernetes-version=1.23.9
-# 6b. change the owner of the .kube and .minikube directories
+# 4. change the owner of the .kube and .minikube directories
 sudo chown -R $USER $HOME/.kube $HOME/.minikube
-# 6c. create alias for `kubectl` in `.bashrc` or your preferred profile file
+```
+
+#### Use minikube and kubectl
+
+```sh
+# 1. confirm minikube running
+minikube status
+# 2. create `kubectl` alias in `.bashrc`
 printf "
 # minikube kubectl
 alias kubectl='minikube kubectl --'
 " >> ~/.bashrc
 exec bash
-# 6d. confirm running
+# 3. use the alias
 kubectl version
+kubectl get all
+# 4. checkout the kubernetes dashboard
 minikube dashboard
 ```
 
-> Ref [WSL+Docker+Kubernetes tutorial](https://kubernetes.io/blog/2020/05/21/wsl-docker-kubernetes-on-the-windows-desktop/)
-
-#### Managing Minikube
+#### Minikube commands
 
 ```sh
 # show current status, see `minikube --help`
@@ -415,19 +476,27 @@ minikube addons list
 minikube addons enable [addonName]
 ```
 
-### Lab 4. Explore Kubernetes API resources via Minikube
+### Lab 4.1. Kubernetes dashboard
 
-- Repeat [Lab 3.2](#lab-32-explore-kubernetes-api-resources-via-gcloud) in Minikube
-- Add kubectl autocompletion, see `kubectl completion --help`
-- Use the Kubernetes Dashboard to deploy a webserver (nginx) app
+1. View available resources
+2. Use the Kubernetes Dashboard to deploy a webserver
+3. View available resources
+4. Delete created resources
+5. Add kubectl autocompletion, see `kubectl completion --help`
+
+### Lab 4.2. Explore Kubernetes API resources via Minikube
+
+1. Run an `nginx` Pod
+2. View resources
+3. Delete the Pod
+4. View resources
+5. Repeat [Lab 3.2](#lab-32-explore-kubernetes-api-resources-via-gcloud) in Minikube
+
+> Pods started without a deployment are called **"naked"** Pods - these are not managed by a replicaset, therefore, are not rescheduled on failure, not eligible for rolling updates, cannot be scaled, cannot be replaced automatically. Naked Pods are not recommended in live environments.
 
 ## 5. Pods
 
-[Pods](https://kubernetes.io/docs/concepts/workloads/pods/) are the smallest deployable units of computing that you can create and manage in Kubernetes.
-
-### Naked Pods
-
-Pods started without a deployment are called "naked" Pods, and since they are not managed by a replicaset, therefore, "naked" Pods: are not rescheduled on failure; not eligible for rolling updates; cannot be scaled; cannot be replaced automatically 
+[Pods](https://kubernetes.io/docs/concepts/workloads/pods/) are the smallest deployable units of computing that you can create and manage in Kubernetes. Although, naked Pods are not recommended, managing naked Pods are a big part of CKAD.
 
 ###  Managing Pods
 
