@@ -16,12 +16,15 @@ In summary, you will be learning cloud-native application development, which is 
 
 ## Requirements
 
-A Unix-based environment running docker, that's either Docker Engine or Docker Desktop.
+A Unix-based environment running docker (Docker Engine or Docker Desktop).
 
 - macOS [install Docker Desktop](https://docs.docker.com/desktop/install/mac-install/)
 - Windows [setup WSL2 development environment](https://docs.microsoft.com/en-us/windows/wsl/setup/environment), then:
   - option 1 install Docker Engine on WSL2, see below
   - option 2 [install Docker Desktop with WSL2 backend](https://docs.docker.com/desktop/windows/wsl/)
+  
+> Docker Desktop has certain network limitations affecting some network related labs. \
+> Consider using Docker Engine if you are **not** on macOS
 
 <details>
   <summary><b>docker engine install steps on Ubuntu/WSL2</b></summary>
@@ -187,7 +190,7 @@ docker image rm $IMAGE_ID
 
 1. Run a `nginx` container with name `webserver`
 2. Inspect the container with `| less` and review the `State` and `NetworkSettings`, quit with `q`
-3. Visit `http://$CONTAINER_IP_ADDRESS` in your browser # this may not work depending on your envrionment network settings
+3. Visit `http://$CONTAINER_IP_ADDRESS` in your browser (this may not work depending on your envrionment network settings)
 4. Run another `nginx` container with name `webserver` and exposed on port 80
 5. Visit http://localhost in your browser
 6. Delete the containers
@@ -404,8 +407,9 @@ kubectl config use-context docker-desktop
 
 ### Use Minikube
 
-Locally, minikube is the recommended kubernetes solution for this course. We will be using Kubernetes v1.23.9 because recent changes in the latest version may affect installation steps. \
-See the [official minikube installation docs](https://minikube.sigs.k8s.io/docs/start/)
+Minikube is the recommended Kubernetes solution for this course on a local lab environment. See the [official minikube installation docs](https://minikube.sigs.k8s.io/docs/start/).
+
+> [Kubernetes v1.24+ has deprecated docker as a container-runtime and now uses cri-o](https://kubernetes.io/blog/2020/12/02/dont-panic-kubernetes-and-docker/). Therefore, we use Kubernetes v1.23 to avoid installing cri-o and its dependencies.
 
 #### Install Minikube on macOS
 
