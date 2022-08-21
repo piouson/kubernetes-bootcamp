@@ -21,7 +21,10 @@ A Unix-based environment running docker (Docker Engine or Docker Desktop).
 - macOS [install Docker Desktop](https://docs.docker.com/desktop/install/mac-install/)
 - Windows [setup WSL2 development environment](https://docs.microsoft.com/en-us/windows/wsl/setup/environment), then:
   - option 1 install Docker Engine on WSL2, see below
-  - option 2 [install Docker Desktop with WSL2 backend](https://docs.docker.com/desktop/windows/wsl/)
+  - option 2 [install Docker Desktop with WSL2 backend](https://docs.docker.com/desktop/windows/wsl/) - [`winget install Docker.DockerDesktop`](https://docs.microsoft.com/en-us/windows/package-manager/winget/)
+- preferably, have a command-line package manager for your operating system
+  - macOS use [Homebrew](https://brew.sh/)
+  - Windows use [winget](https://docs.microsoft.com/en-us/windows/package-manager/winget/)
   
 > Docker Desktop has certain network limitations affecting some network related labs. \
 > Consider using Docker Engine if you are **not** on macOS
@@ -1581,21 +1584,21 @@ kubectl delete -f lab12.yaml
 
 There are thousands of people and companies packaging their applications for deployment on Kubernetes. A [best practice](https://kubernetes.io/blog/2016/10/helm-charts-making-it-simple-to-package-and-deploy-apps-on-kubernetes/) is to package these applications as [Helm Charts](https://helm.sh/docs/topics/charts/).
 
-Helm is the package manager (like winget, npm, yum and apt) that can be installed and Charts are packages (like msi, debs and rpms) stored locally or on remote Helm repositories. Visit [Helm GitHub repo](https://github.com/helm/helm/releases) for the latest installation instructions.
-
-#### Install Helm
+[Helm](https://helm.sh/) is a package manager you can install, like [winget](https://docs.microsoft.com/en-us/windows/package-manager/winget/), npm, yum and apt, and Charts are packages stored locally or on remote Helm repositories, like msi, debs and rpms.
 
 ```sh
+# helm installation steps
 VER=$(curl -s https://api.github.com/repos/helm/helm/releases/latest | grep tag_name | cut -d '"' -f 4 | sed 's/v//g')
 wget https://get.helm.sh/helm-v$VER-linux-amd64.tar.gz # macOS replace with `darwin-amd64`
 tar xvf helm-v3.9.3-linux-amd64.tar.gz
 sudo install linux-amd64/helm /usr/local/bin
+rm helm-v$VER-linux-amd64.tar.gz
 helm version
 ```
 
-#### ArtifactHUB
+### ArtifactHUB
 
-[ArtifactHUB](https://artifacthub.io/) is a Helm Charts registry, like the [npm registry](https://www.npmjs.com/) or [docker hub](https://hub.docker.com/), used to find, install and publish Charts.
+[ArtifactHUB](https://artifacthub.io/) is a Helm Charts registry, like [docker hub](https://hub.docker.com/) or the [npm registry](https://www.npmjs.com/), used to find, install and publish Charts.
 
 ```sh
 # add a helm repo
@@ -1604,13 +1607,13 @@ helm repo add $RELEASE_NAME $RELEASE_URL
 helm install $RELEASE_NAME $RELEASE_NAME/$CHART_NAME
 # list helm repo
 helm repo list
-# search for a chart in added repos
+# search for charts in a repo
 helm search repo $RELEASE_NAME
-# update helm repos
+# update helm repos (running update command after adding new repo is good practice)
 helm repo update
 # list currently installed charts
 helm list
-# show summary of a chart
+# show details of a chart
 helm show chart $RELEASE_NAME/$CHART_NAME
 helm show all $RELEASE_NAME/$CHART_NAME
 # view status of a chart
@@ -1621,11 +1624,155 @@ helm delete
 helm uninstall $RELEASE_NAME
 ```
 
-### Lab 13.1. Explore ArtifactHUB
+### Lab 13.1. Explore Helm Charts
 
-- visit artifacthub, find and install a chart.
-- list available charts in added repo
-- update repo
+1. [Install Helm](https://github.com/helm/helm#install)
+2. List installed Helm Charts
+3. List installed Helm repos
+4. Find and install a Chart from [ArtifactHUB](https://artifacthub.io/)
+5. View resources created in your cluster by the Helm Chart
+6. Update Helm repo
+7. List installed Helm Charts
+7. List installed Helm repos
+8. View details of installed Chart
+9. View status of installed Chart
+10. Search for available Charts in added Helm repo
+
+### Helm templates
+
+Helm Charts come with preset configuration stored in a YAML file, some of which may not be of use to you. One powerful feature of Helm is the option to customise the base chart configuration before installation.
+
+```sh
+# view chart preset configuration
+helm show values $RELEASE_NAME/$CHART_NAME | less
+# download a copy of a chart configuation file
+helm pull $RELEASE_NAME/$CHART_NAME
+# verify a chart template
+helm template --debug /path/to/template/directory
+# install chart from template
+helm install -f /path/to/values.yaml {$NAME|--generate-name} /path/to/template/directory
+
+# working with {tar,tar.gz,tgz,etc} archives, see `tar --help`
+# extract tar file to current directory, `-x|--extract`, `-v|--verbose, `-f|--file`
+tar -xvf file.tgz
+# extract tar file to specified directory, `-C|--directory`
+tar -xvf file.tgz -C /path/to/directory
+# list contents of a tar file, `-t|--list`
+tar -tvf file.tar
+```
+
+### Lab 13.2. Customising Helm Charts
+
+1. Download a Chart template and extract the content to a specified directory
+2. Edit the template and change any value
+3. Verify the edited template
+4. Install the edited template
+5. View resources created by the Helm Chart
+6. List installed Charts
+7. List installed Helm repos
+
+### Kustomize
+
+[Kustomize](https://github.com/kubernetes-sigs/kustomize) is a Kubernetes standalone tool to customize Kubernetes resources through a [kustomization.yaml file](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#kustomization).
+
+> Kustomize is not currently part of the CKAD curriculum but good to know for general DevOps practice.
+
+[Kustomize can manage configuration files in three ways](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize):
+
+- generating resources from other sources, e.g. generate with [`secretGenerator`](https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kustomize/#create-the-kustomization-file) and [`configMapGenerator`](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#create-a-configmap-from-generator)
+   ```sh
+   # generate configmap example
+   cat <<EOF >./kustomization.yaml
+   configMapGenerator:
+   - name: example-configmap-2
+     literals:
+     - FOO=Bar
+   EOF
+   ```
+- composing and customising collections of resources
+   ```sh
+   cat <<EOF >./kustomization.yaml
+   resources:
+   - deployment.yaml
+   - service.yaml
+   EOF
+   ```
+- setting cross-cutting fields for resources, e.g. setting same namespaces, name prefix/suffix, labels or annotations to all resources
+   ```sh
+   cat <<EOF >./kustomization.yaml
+   namespace: my-namespace
+   namePrefix: dev-
+   nameSuffix: "-001"
+   commonLabels:
+     app: bingo
+   commonAnnotations:
+     oncallPager: 800-555-1212
+   resources:
+   - deployment.yaml
+   - service.yaml
+   EOF
+   ```
+
+```sh
+# create resources from a kustomization file
+kubectl apply -k /path/to/directory/containing/kustomization.yaml
+# view resources found in a directory containing a kustomization file
+kubectl kustomize /path/to/directory/containing/kustomization.yaml
+```
+
+We can take advantage of Kustomization's "composing and customising" feature to create deployment pipelines by using a directory layout where multiple [__overlay__](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#overlay) kustomizations ([variants](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant)) refer to a [__base__](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#base) kustomization:
+
+```sh
+├── base
+│   ├── deployment.yaml
+│   ├── kustomization.yaml
+│   └── service.yaml
+└── overlays
+    ├── dev
+    │   ├── kustomization.yaml
+    │   └── patch.yaml
+    ├── prod
+    │   ├── kustomization.yaml
+    │   └── patch.yaml
+    └── staging
+        ├── kustomization.yaml
+        └── patch.yaml
+```
+
+### Lab 13.3. Kustomize resources
+
+1. Create a `service.yaml` resource file for a service
+2. Create a `deployment.yaml` resource file for an app using the service
+3. Create a `kustomization.yaml` file with name prefix/suffix and common labels for both resource files
+4. Apply the Kustomization file to create the resources
+5. Review resources created and confirm that the prefix/suffix and labels are applied
+
+### Lab 13.4. Blue/Green deployments
+
+Blue/green deployment is a update-strategy used to accomplish zero-downtime. The current version application is marked blue and the new version application is marked green. In Kubernetes, blue/green deployment can be easily implemented with Services.
+
+<details>
+  <summary><b>blue/green update strategy</b></summary>
+  
+  ![blue-green update strategy from https://engineering-skcc.github.io/performancetest/Cloud-%ED%99%98%EA%B2%BD-%EC%84%B1%EB%8A%A5%EB%B6%80%ED%95%98%ED%85%8C%EC%8A%A4%ED%8A%B8/](https://user-images.githubusercontent.com/17856665/185770858-83a088c2-4701-4fd6-943e-ebfb020aa498.gif)
+</details>
+
+1. Create a webserver application with three replicas (blue deployment)
+2. Make the application accessible through your host on a specific port
+3. Create a new application using [1] as base (green deployment)
+4. Make some changes to green deployment and test all running okay
+5. Make green deployment accessible through your host on the same port to replace blue deployment
+6. Confirm all working okay
+
+### Lab 13.5. Canary deployments
+
+Canary deployment is an update strategy where updates are deployed in small scale to confirm no issues before full deployment.
+
+<details>
+  <summary><b>canary update strategy</b></summary>
+  
+  ![canary update strategy from https://life.wongnai.com/project-ceylon-iii-argorollouts-55ec70110f0a](https://user-images.githubusercontent.com/17856665/185770905-7c3901ec-f97a-4046-8411-7a722b0601a4.png)
+</details>
 
 ## 14. Troubleshooting
 
