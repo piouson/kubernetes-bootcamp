@@ -1934,11 +1934,7 @@ wget -qO- https://url/to/file | less # quiet mode
 
 ### StatefulSets
 
-[StatefulSet](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/) is the workload API object used to manage stateful applications - manages the deployment and scaling of a set of Pods, and provides guarantees about the ordering and uniqueness of these Pods.
-
-Like Deployments, a StatefulSet manages Pods that are based on an identical container spec. Unlike Deployments, StatefulSet Pods are not interchangeable: each has a persistent identifier that it maintains across any rescheduling.
-
-> StatefulSet is mainly used to provide a persistent identity to Pods as well as specific storage volume per Pod
+[StatefulSet](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/) is similar to Deployments but provides guarantees about the ordering and uniqueness of managed Pods. Unlike Deployments, StatefulSet Pods are not interchangeable: each has a persistent identifier and storage volume that it maintains across any rescheduling.
 
 #### Using StatefulSets
 
