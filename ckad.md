@@ -1680,8 +1680,10 @@ tar -tvf file.tar
 [Kustomize can manage configuration files in three ways](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize):
 
 - generating resources from other sources, e.g. generate with [`secretGenerator`](https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kustomize/#create-the-kustomization-file) and [`configMapGenerator`](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#create-a-configmap-from-generator)
+   <details>
+     <summary>configmap generator example</summary>
+
    ```sh
-   # generate configmap example
    cat <<EOF >./kustomization.yaml
    configMapGenerator:
    - name: example-configmap-2
@@ -1689,15 +1691,25 @@ tar -tvf file.tar
      - FOO=Bar
    EOF
    ```
-- composing and customising collections of resources
+   </details>
+- composing and customising collections of resources, e.g. composing two resources together or adding a patch, see example:
+   <details>
+     <summary>composing & customising example</summary>
+
    ```sh
    cat <<EOF >./kustomization.yaml
    resources:
-   - deployment.yaml
+   - deployment.yaml # uses 1 replica
    - service.yaml
+   patchesStrategicMerge:
+   - patch.yaml # change Deployment to 3 replicas
    EOF
    ```
+   </details>
 - setting cross-cutting fields for resources, e.g. setting same namespaces, name prefix/suffix, labels or annotations to all resources
+   <details>
+     <summary>cross-cutting fields example</summary>
+
    ```sh
    cat <<EOF >./kustomization.yaml
    namespace: my-namespace
@@ -1712,15 +1724,21 @@ tar -tvf file.tar
    - service.yaml
    EOF
    ```
+   </details>
 
 ```sh
 # create resources from a kustomization file
 kubectl apply -k /path/to/directory/containing/kustomization.yaml
 # view resources found in a directory containing a kustomization file
 kubectl kustomize /path/to/directory/containing/kustomization.yaml
+# view resources found in a directory containing a kustomization file
+kubectl kustomize /path/to/directory/containing/kustomization.yaml
 ```
 
 We can take advantage of Kustomization's "composing and customising" feature to create deployment pipelines by using a directory layout where multiple [__overlay__](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#overlay) kustomizations ([variants](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant)) refer to a [__base__](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#base) kustomization:
+
+<details>
+  <summary>pipeline layout example</summary>
 
 ```sh
 ├── base
@@ -1729,15 +1747,16 @@ We can take advantage of Kustomization's "composing and customising" feature to 
 │   └── service.yaml
 └── overlays
     ├── dev
-    │   ├── kustomization.yaml
+    │   ├── kustomization.yaml # `bases: ['../../base']`, `namePrefix: dev-`
     │   └── patch.yaml
     ├── prod
-    │   ├── kustomization.yaml
+    │   ├── kustomization.yaml # `bases: ['../../base']`, `namePrefix: prod-`
     │   └── patch.yaml
     └── staging
-        ├── kustomization.yaml
+        ├── kustomization.yaml # `bases: ['../../base']`, `namePrefix: staging-`
         └── patch.yaml
 ```
+</details>
 
 ### Lab 13.3. Kustomize resources
 
@@ -1749,7 +1768,7 @@ We can take advantage of Kustomization's "composing and customising" feature to 
 
 ### Lab 13.4. Blue/Green deployments
 
-Blue/green deployment is a update-strategy used to accomplish zero-downtime. The current version application is marked blue and the new version application is marked green. In Kubernetes, blue/green deployment can be easily implemented with Services.
+[Blue/green deployment](https://kubernetes.io/blog/2018/04/30/zero-downtime-deployment-kubernetes-jenkins/#blue-green-deployment) is a update-strategy used to accomplish zero-downtime deployments. The current version application is marked blue and the new version application is marked green. In Kubernetes, blue/green deployment can be easily implemented with Services.
 
 <details>
   <summary><b>blue/green update strategy</b></summary>
@@ -1757,22 +1776,187 @@ Blue/green deployment is a update-strategy used to accomplish zero-downtime. The
   ![blue-green update strategy from https://engineering-skcc.github.io/performancetest/Cloud-%ED%99%98%EA%B2%BD-%EC%84%B1%EB%8A%A5%EB%B6%80%ED%95%98%ED%85%8C%EC%8A%A4%ED%8A%B8/](https://user-images.githubusercontent.com/17856665/185770858-83a088c2-4701-4fd6-943e-ebfb020aa498.gif)
 </details>
 
-1. Create a webserver application with three replicas (blue deployment)
-2. Make the application accessible through your host on a specific port
-3. Create a new application using [1] as base (green deployment)
-4. Make some changes to green deployment and test all running okay
-5. Make green deployment accessible through your host on the same port to replace blue deployment
-6. Confirm all working okay
+1. Create a webserver application (blue deployment)
+   - three replicas
+   - use an older version of the image
+   - mount the DocumentRoot `index.html` as volume
+2. Make the application accessible via an IP
+3. Verify created resources and test access with `curl`
+4. Create a new application using [1] as base (green deployment)
+   - three replicas
+   - use a newer version of the image
+   - the landing page should look different from the webserver in [1]
+   - mount the DocumentRoot `index.html` as volume
+5. Verify created resources and test access with `curl`
+6. Make green deployment accessible via an IP by replacing the Service for blue deployment
+7. Confirm all working okay with `curl`
 
 ### Lab 13.5. Canary deployments
 
-Canary deployment is an update strategy where updates are deployed in small scale to confirm no issues before full deployment.
+Canary deployment is an update strategy where updates are deployed to a subset of users/servers (canary application) for testing prior to full deployment. This is a scenario where Labels are required to distinguish deployments by release or configuration.
 
 <details>
   <summary><b>canary update strategy</b></summary>
   
   ![canary update strategy from https://life.wongnai.com/project-ceylon-iii-argorollouts-55ec70110f0a](https://user-images.githubusercontent.com/17856665/185770905-7c3901ec-f97a-4046-8411-7a722b0601a4.png)
 </details>
+
+1. Create a webserver application
+   - three replicas
+   - selector `updateType: canary`
+   - use an older version of the image
+   - mount the DocumentRoot `index.html` as volume
+2. Make the application accessible via an IP
+3. Verify created resources and test access with `curl`
+4. Create a new application using [1] as base
+   - one replica
+   - selector `updateType: canary`
+   - use a newer version of the image in [1]
+   - the landing page should look different from the webserver in [1]
+   - mount the DocumentRoot `index.html` as volume
+5. Verify created resources and confirm the Service targets both webservers
+6. Run multiple `curl` requests to the IP in [2] and confirm access to both webservers
+7. Scale up the new webserver to three replicas and confirm all Pods running
+8. Scale down the old webserver to zero and confirm no Pods running
+
+> Scaling down to zero instead of deleting provides an easy option to revert changes when there are issues
+
+### Custom Resource Definition (CRD)
+
+A __Resource__ is an endpoint in the Kubernetes API that stores a collection of [API objects](https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/) of a certain kind; for example, the Pods resource contains a collection of Pod objects.
+
+A [__Custom Resource__](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) is an extension of the Kubernetes API that is not necessarily available in a default Kubernetes installation. Many core Kubernetes functions are now built using custom resources, making Kubernetes more modular.
+
+Although, we only focus on one, there are [two ways to add custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#comparing-ease-of-use) to your cluster:
+
+- [CRDs](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition) allows user-defined resources to be added to the cluster. They are simple and can be created without any programming. In reality, [Operators](#operator-pattern) are preferred to CRDs.
+- [API Aggregation](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/apiserver-aggregation/) requires programming, but allows more control over API behaviors like how data is stored and conversion between API versions.
+
+```sh
+# CRD example "resourcedefinition.yaml"
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: crontabs.stable.example.com # must match `<plural>.<group>` spec fields below
+spec:
+  group: stable.example.com # REST API: /apis/<group>/<version>
+  versions: # list of supported versions
+    - name: v1
+      served: true # enabled/disabled this version, controls deprecations
+      storage: true # one and only one version must be storage version.
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                cronSpec:
+                  type: string
+                image:
+                  type: string
+                replicas:
+                  type: integer
+  scope: Namespaced # or Cluster
+  names:
+    plural: crontabs # REST API: /apis/<group>/<version>/<plural>
+    singular: crontab # used for display and as alias on CLI
+    kind: CronTab # CamelCased singular type for resource manifests.
+    shortNames:
+    - ct # allow `crontab|ct` to match this resource on CLI
+```
+
+### Lab 13.6. Custom objects
+
+You can follow the [official CRD tutorial](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/).
+
+1. Create a custom resource from the snippet above
+2. Confirm a new API resource added
+3. Create a custom object of the custom resource
+   ```sh
+   apiVersion: "stable.example.com/v1"
+   kind: CronTab
+   metadata:
+     name: my-new-cron-object
+   spec:
+     cronSpec: "* * * * */5"
+     image: my-awesome-cron-image
+   ```
+4. Review all resources created and confirm the `shortName` works
+5. Directly access the Kubernetes REST API and confirm endpoints for:
+   - group `/apis/<group>`
+   - version `/apis/<group>/<version>`
+   - plural `/apis/<group>/<version>/<plural>`
+6. Clean up by deleting with the manifest files
+
+### Operator pattern
+
+[Operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) are software extensions to Kubernetes that make use of custom resources to manage applications and their components. The operator pattern captures how you can write code to automate a task beyond what Kubernetes itself provides.
+
+Kubernetes' operator pattern concept lets you extend the cluster's behaviour without modifying the code of Kubernetes itself by linking [controllers](https://kubernetes.io/docs/concepts/architecture/controller/) (a non-terminating loop, or control loop, that regulates the cluster to a desired state) to one or more custom resources. Operators are clients of the Kubernetes API that act as controllers for a Custom Resource.
+
+Although, you can write your own operator, majority prefer to find ready-made operators on community websites like [OperatorHub.io](https://operatorhub.io/). Many Kubernetes solutions are provided as operators like [Prometheus](https://prometheus.io/) or Tigera (calico).
+
+> This lab requires the Calico plugin. You will need to delete and start a new cluster if your current one doesn't support Calico
+
+### Lab 13.7. Operators
+
+See the [official Calico install steps](https://projectcalico.docs.tigera.io/getting-started/kubernetes/minikube).
+
+```sh
+# 1. start a new cluster with network `192.168.0.0/16` or `10.10.0.0/16` whichever subnet is free in your network
+minikube start --kubernetes-version=1.23.9 --network-plugin=cni --extra-config=kubeadm.pod-network-cidr=10.10.0.0/16
+# 2. install tigera calico operator
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.0/manifests/tigera-operator.yaml
+# 3. install custom resource definitions
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.0/manifests/custom-resources.yaml
+# 4. view an installation resource
+kubectl get installation -o yaml | less
+# 5. verify calico installation
+watch kubectl get pods -l k8s-app=calico-node -A
+# you can use wget to view a file without saving
+wget -O- https://url/to/file | less
+wget -qO- https://url/to/file | less # quiet mode
+```
+
+1. Start a Minikube cluster with the `cni` network plugin and a suitable subnet
+2. List existing namespaces
+3. Install the Tigera Calico operator
+4. Confirm resources added:
+   - new API resources for `tigera`
+   - new namespaces
+   - resources in the new namespaces
+5. Review the CRDs manifest file and ensure matching `cidr`, then install
+6. Confirm resources added:
+   - new `Installation` resource
+   - new namespaces
+   - resources in the new namespaces (Calico Pods take awhile to enter `Running` status)
+
+### StatefulSets
+
+[StatefulSet](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/) is the workload API object used to manage stateful applications - manages the deployment and scaling of a set of Pods, and provides guarantees about the ordering and uniqueness of these Pods.
+
+Like Deployments, a StatefulSet manages Pods that are based on an identical container spec. Unlike Deployments, StatefulSet Pods are not interchangeable: each has a persistent identifier that it maintains across any rescheduling.
+
+#### Using StatefulSets
+
+StatefulSets are valuable for applications that require one or more of the following.
+
+- Stable - persistence across Pod (re)scheduling, unique network identifiers.
+- Stable, persistent storage.
+- Ordered, graceful deployment and scaling.
+- Ordered, automated rolling updates.
+
+#### Limitations of StatefulSets
+
+- Storage must either be provisioned by a [PersistentVolume Provisioner]() based on StorageClass, or pre-provisioned by an admin
+- To ensure data safety, deleting and/or scaling a StatefulSet down will not delete associated volumes
+- You are responsible for creating a [Headless Service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) to provide network access to the Pods
+- To achieve ordered and graceful termination of Pods, scale the StatefulSet down to 0 prior to deletion
+- It's possible to get into a broken state that requires [manual repair](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#forced-rollback) when using [Rolling Updates](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#rolling-updates) with the default [Pod Management Policy](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies) (`OrderedReady`)
+
+If you want to use storage volumes to provide persistence for your workload, you can use a StatefulSet as part of the solution. Although individual Pods in a StatefulSet are susceptible to failure, the persistent Pod identifiers make it easier to match existing volumes to the new Pods that replace any that have failed.
+
 
 ## 14. Troubleshooting
 
