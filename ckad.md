@@ -1938,6 +1938,8 @@ wget -qO- https://url/to/file | less # quiet mode
 
 Like Deployments, a StatefulSet manages Pods that are based on an identical container spec. Unlike Deployments, StatefulSet Pods are not interchangeable: each has a persistent identifier that it maintains across any rescheduling.
 
+> StatefulSet is mainly used to provide a persistent identity to Pods as well as specific storage volume per Pod
+
 #### Using StatefulSets
 
 StatefulSets are valuable for applications that require one or more of the following.
@@ -1955,8 +1957,13 @@ StatefulSets are valuable for applications that require one or more of the follo
 - To achieve ordered and graceful termination of Pods, scale the StatefulSet down to 0 prior to deletion
 - It's possible to get into a broken state that requires [manual repair](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#forced-rollback) when using [Rolling Updates](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#rolling-updates) with the default [Pod Management Policy](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies) (`OrderedReady`)
 
-If you want to use storage volumes to provide persistence for your workload, you can use a StatefulSet as part of the solution. Although individual Pods in a StatefulSet are susceptible to failure, the persistent Pod identifiers make it easier to match existing volumes to the new Pods that replace any that have failed.
+### Lab 13.8. Components of a StatefulSet
 
+See the [example manifest](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components)
+
+1. Create a StatefulSet based on the example manifest
+2. Verify resources created and compare to a regular deployment
+3. Confirm persistent volume claims created
 
 ## 14. Troubleshooting
 
