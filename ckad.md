@@ -82,14 +82,18 @@ A container registry is a repository, or collection of repositories, used to sto
 docker run busybox
 # run in interactive mode
 docker run -it busybox
+# run in interactive mode and delete container when stopped
+docker run -it --rm busybox
 # run in detached mode
 docker run -d busybox
 # run a command in a new container
 docker run busybox echo "Hello, World!"
 # run container with specified name
 docker run -d --name webserver httpd
-# execute commands in running container, see `docker exec --help`
-docker exec -it busybox sh # `sh` runs in a different shell session
+# use `dash` to execute commands in running container, see `docker exec --help`
+docker exec -it $containerName sh # `sh` will run in a different shell session
+# use `bash` to execute commands in running container
+docker exec -it $containerName bash
 # list running containers
 docker ps
 # list all containers
@@ -132,15 +136,37 @@ docker {start|stop|restart|rm} $CONTAINER_NAME_OR_ID
 5. Exit the container
 6. List running containers
 7. List all containers
-8. Repeat [1-4] but exit the container without stopping it
-9. Delete the container
+8. Repeat [2] and exit the container without stopping it
+9. List running containers
+10. List all containers
+11. Delete the containers
 
 <details>
-  <summary>lab 1.2 solution</summary>
+  <summary>lab1.2 solution</summary>
   
 ```sh
-docker run -it busybox
+# host terminal
 ps aux
+docker run --name box1 -it busybox
+# container terminal
+ps aux
+uname -r
+cat /proc/version
+hostnamectl # not found
+cat /etc/*-release # not found
+busybox | head
+exit
+# host terminal
+docker ps
+docker ps -a
+docker run --name box2 -it busybox
+# container terminal
+ctrl+p ctrl+q
+# host terminal
+docker ps
+docker ps -a
+docker stop box2
+docker rm box1 box2
 ```
 </details>
 
@@ -148,29 +174,99 @@ ps aux
 >
 > `CTRL+P, CTRL+Q` only works when running a container in interactive mode, see [how to attach/detach containers](https://stackoverflow.com/a/19689048/1235675) for more details
 
-### Lab 1.3. Container arguments
+### Lab 1.3. Entering and exiting containers
 
 1. Run a `nginx` container
 2. List running containers (use another terminal if stuck)
 3. Exit the container
-4. Run another `nginx` container in interactive mode
-5. List running containers (use another terminal if stuck)
-6. Exit the container
-7. Run a `busybox` container with command `sleep 20` as argument, see `sleep --help`
-8. List running containers (use another terminal if stuck)
-9. Exit container
-10. Run another `busybox` container in detached mode
-11. Connect to the container to execute commands
-12. Review the running processes and note the PID
-13. Exit container
-14. List running containers
-15. List all containers
-16. Delete all containers
+4. List running containers
+5. Run another `nginx` container in interactive mode
+6. Review container kernel details
+7. Review running processes in the container
+8. Exit container
+9. Run another `nginx` container in detached mode
+10. List running containers
+11. Connect a shell to the new container interactively
+12. Exit the container
+13. List running containers
+14. Delete all containers
 
-> The `Entrypoint` of a container is [the init process](https://en.wikipedia.org/wiki/Init) and allows the container to run as an executable. This is the default command used when no arguments are passed to the container.
+<details>
+<summary>lab1.3 solution</summary>
+
+```sh
+# host terminal
+docker run --name webserver1 nginx
+# host second terminal
+docker ps
+# host terminal
+ctrl+c
+docker ps
+docker run --name webserver2 -it --rm nginx bash
+# container terminal
+cat /etc/*-release
+ps aux # not found
+ls /proc
+ls /proc/1 # list processes running on PID 1
+cat /proc/1/$processName
+exit
+# host terminal
+docker run --name webserver3 -d nginx
+docker ps
+docker exec -it webserver3 bash
+# container terminal
+exit
+# host terminal
+docker ps
+docker stop webserver3
+docker rm webserver1 webserver2 webserver3
+```
+</details>
+
+### Lab 1.4. Container arguments
+
+1. Run a `busybox` container with command `sleep 30` as argument, see `sleep --help`
+2. List running containers (use another terminal if stuck)
+3. Exit container (note that container will auto exit after 30s)
+4. Run another `busybox` container in detached mode with command `sleep 300` as argument
+5. List running containers
+6. Connect to the container to execute commands
+7. Exit container
+8. List running containers
+9. Run another `busybox` container in detached mode, no commands
+10. List running containers
+11. List all containers
+12. Delete all containers
+
+<details>
+<summary>lab1.4 solution</summary>
+
+```sh
+# host terminal
+docker run --name box1 busybox sleep 30
+# host second terminal
+docker ps
+docker stop box1
+# host terminal
+docker run --name box2 -d busybox sleep 300
+docker ps
+docker exec -it box2 sh
+# container terminal
+exit
+# host terminal
+docker ps
+docker run --name box3 -d busybox
+docker ps
+docker ps -a
+docker stop box2
+docker rm box1 box2 box3
+```
+</details>
+
+> The `Entrypoint` of a container is [the init process](https://en.wikipedia.org/wiki/Init) and allows the container to run as an executable. Commands passed to a container are passed to the container's entrypoint process.
 >
-> Note that commands after `imageName` are passed to the container as arguments. \
-> ❌ `docker run -it mysql -e MYSQL_PASSWORD=hello` \
+> Note that `docker` commands after `imageName` are passed to the container's entrypoint as arguments. \
+> ❌ `docker run -it mysql -e MYSQL_PASSWORD=hello` will pass `-e MYSQL_PASSWORD=hello` to the container
 > ✔️ `docker run -it -e MYSQL_PASSWORD=hello mysql`
 
 ### Managing containers and images
@@ -202,7 +298,7 @@ docker image rm $IMAGE_ID
 # see `docker --help` for complete resources
 ```
 
-### Lab 1.4. Container ports and IP
+### Lab 1.5. Container ports and IP
 
 1. Run a `nginx` container with name `webserver`
 2. Inspect the container with `| less` and review the `State` and `NetworkSettings`, quit with `q`
@@ -211,7 +307,7 @@ docker image rm $IMAGE_ID
 5. Visit http://localhost in your browser
 6. Delete the containers
 
-### Lab 1.5. Container volumes
+### Lab 1.6. Container volumes
 
 1. Create an `html/index.html` file with some content
 2. Run any webserver containers on port 80 and mount the `html` folder to the [DocumentRoot](https://serverfault.com/a/588388)
@@ -222,7 +318,7 @@ docker image rm $IMAGE_ID
 5. List all containers
 6. Delete containers
 
-### Lab 1.6. Container environment variables
+### Lab 1.7. Container environment variables
 
 1. Run a `mysql` container in detached mode
 2. Connect to the container
@@ -234,7 +330,7 @@ docker image rm $IMAGE_ID
 8. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
 8. Check all resources are deleted, containers, images and volumes.
 
-### Lab 1.7. Container registries
+### Lab 1.8. Container registries
 
 Explore [Docker Hub](https://hub.docker.com/) and search for images you've used so far or images/applications you use day-to-day, like databases, environment tools, etc.
 
