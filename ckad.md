@@ -91,9 +91,9 @@ docker run busybox echo "Hello, World!"
 # run container with specified name
 docker run -d --name webserver httpd
 # use `dash` to execute commands in running container, see `docker exec --help`
-docker exec -it $containerName sh # `sh` will run in a different shell session
+docker exec -it $CONTAINER_NAME sh # `sh` will run in a different shell session
 # use `bash` to execute commands in running container
-docker exec -it $containerName bash
+docker exec -it $CONTAINER_NAME bash
 # list running containers
 docker ps
 # list all containers
@@ -208,7 +208,7 @@ cat /etc/*-release
 ps aux # not found
 ls /proc
 ls /proc/1 # list processes running on PID 1
-cat /proc/1/$processName
+cat /proc/1/$PROCESS_NAME
 exit
 # host terminal
 docker run --name webserver3 -d nginx
@@ -420,11 +420,25 @@ docker tag nginx domain.com/nginx:1.1
 
 ### Lab 2.1. Working with images
 
-1. List all images
+1. List all images (if you've just finished [lab1.7](#lab-17-container-environment-variables), run new container to download an image)
 2. Inspect one of the images with `| less` and review the `ContainerConfig` and `Config`
 3. View the image history
 4. Tag the image with the repository `localhost` and a version
 5. List all images
+
+<details>
+<summary>lab2.1 solution</summary>
+
+```sh
+# host terminal
+docker image ls
+docker inspect $IMAGE_ID | grep -A 40 ContainerConfig | less
+docker inspect $IMAGE_ID | grep -A 40 '"Config"' | less
+docker image history $IMAGE_ID
+docker tag nginx localhost/nginx:1.1
+docker image ls
+```
+</details>
 
 ### Lab 2.2. Custom images
 
