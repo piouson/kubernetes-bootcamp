@@ -525,6 +525,31 @@ dnf provides */sshd
 <summary>lab2.2 solution</summary>
 
 ```sh
+# run ubuntu container to find debian-based packages
+docker run -it --rm ubuntu
+# container terminal
+apt update
+apt install -y apt-file
+apt-file update
+apt-file search --regex "bin/ip$"
+apt-file search --regex "bin/ss$"
+apt-file search --regex "bin/arp$"
+# found `iproute2` and `net-tools`
+exit
+```
+
+```sh
+# alternatively, run fedora container to find rpm-based packages
+docker run -it --rm fedora
+# container terminal
+dnf provides *bin/ip
+dnf provides *bin/ss
+dnf provides *bin/arp
+# found `iproute` and `net-tools`
+exit
+```
+
+```sh
 # host terminal
 mkdir test
 nano test/Dockerfile
@@ -533,7 +558,7 @@ nano test/Dockerfile
 ```Dockerfile
 # Dockerfile
 FROM alpine
-RUN apk add --no-cache bash nmap iproute2 net-tools
+RUN apk add --no-cache nmap iproute2 net-tools
 ENTRYPOINT ["/usr/bin/nmap"]
 CMD ["-sn", "172.17.0.0/16"]
 ```
@@ -551,7 +576,7 @@ nano test/Dockerfile
 ```Dockerfile
 # Dockerfile
 FROM alpine
-RUN apk add --no-cache bash nmap iproute2 net-tools
+RUN apk add --no-cache nmap iproute2 net-tools
 CMD ["/usr/bin/nmap", "-sn", "172.17.0.0/16"]
 ```
 
@@ -765,7 +790,7 @@ sudo minikube start --driver=none --kubernetes-version=1.23.9
 sudo chown -R $USER $HOME/.kube $HOME/.minikube
 ```
 
-#### Use minikube and kubectl
+### Minikube and kubectl
 
 ```sh
 # 1. confirm minikube running
