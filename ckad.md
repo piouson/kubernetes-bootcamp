@@ -790,7 +790,7 @@ sudo minikube start --driver=none --kubernetes-version=1.23.9
 sudo chown -R $USER $HOME/.kube $HOME/.minikube
 ```
 
-### Minikube and kubectl
+### Complete minikube installation
 
 ```sh
 # 1. confirm minikube running
