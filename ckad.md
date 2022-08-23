@@ -301,34 +301,100 @@ docker image rm $IMAGE_ID
 ### Lab 1.5. Container ports and IP
 
 1. Run a `nginx` container with name `webserver`
-2. Inspect the container with `| less` and review the `State` and `NetworkSettings`, quit with `q`
+2. Inspect the container (use `| less` to avoid console clutter) and review the `State` and `NetworkSettings` fields, quit with `q`
 3. Visit `http://$CONTAINER_IP_ADDRESS` in your browser (this may not work depending on your envrionment network settings)
 4. Run another `nginx` container with name `webserver` and exposed on port 80
 5. Visit http://localhost in your browser
 6. Delete the containers
 
+<details>
+<summary>lab1.5 solution</summary>
+
+```sh
+# host terminal
+docker run -d --name webserver nginx
+docker inspect webserver | grep -A 13 '"State"' | less
+docker inspect webserver | grep -A 50 '"NetworkSettings"' | less
+curl http://$(docker inspect webserver --format "{{.NetworkSettings.IPAddress}}") | less
+docker stop webserver
+docker rm webserver
+docker run -d --name webserver -p 80:80 nginx
+curl localhost | less
+docker ps
+docker ps -a
+docker stop webserver
+docker rm webserver
+```
+</details>
+
+> Always run containers in detached mode to avoid getting stuck in the container `STDOUT`
+
 ### Lab 1.6. Container volumes
 
 1. Create an `html/index.html` file with some content
-2. Run any webserver containers on port 80 and mount the `html` folder to the [DocumentRoot](https://serverfault.com/a/588388)
+2. Run any webserver containers on port 8080 and mount the `html` folder to the [DocumentRoot](https://serverfault.com/a/588388)
    - option `nginx` DocumentRoot - `/usr/share/nginx/html`
    - option `httpd` DocumentRoot - `/usr/local/apache2/htdocs`
-3. Visit http://localhost
+3. Visit http://localhost:8080
 4. List running containers
 5. List all containers
 6. Delete containers
+
+<details>
+<summary>lab1.6 solution</summary>
+
+```sh
+# host terminal
+cd ~
+mkdir html
+echo "Welcome to Lab 1.6 Container volumes" >> html/index.html
+# with nginx
+docker run -d --name webserver -v ~/html:/usr/share/nginx/html -p 8080:80 nginx
+# with httpd
+# docker run -d --name webserver -v ~/html:/usr/local/apache2/htdocs -p 8080:80 httpd
+curl localhost:8080
+docker ps
+docker ps -a
+docker stop webserver
+docker rm webserver
+```
+</details>
 
 ### Lab 1.7. Container environment variables
 
 1. Run a `mysql` container in detached mode
 2. Connect to the container
 3. Review the container logs and resolve the output message regarding environment variable
-4. List running containers
-5. List all containers
-6. List all images
-7. List all volumes
-8. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
-8. Check all resources are deleted, containers, images and volumes.
+4. Confirm issue resolved by connecting to the container
+5. Exit the container
+6. List running containers
+7. List all containers
+8. List all images
+9. List all volumes
+10. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
+11. Check all resources are deleted, containers, images and volumes.
+
+<details>
+<summary>lab1.7 solution</summary>
+
+```sh
+# host terminal
+docker run -d --name db mysql
+docker exec -it db bash # error not running
+docker logs db
+docker rm db
+docker run -d --name db -e MYSQL_ROOT_PASSWORD=secret mysql
+docker ps
+docker ps -a
+docker image ls
+docker volume ls
+docker stop db
+docker ps # no containers running
+docker system prune --all --volumes
+docker image ls
+docker volume ls
+```
+</details>
 
 ### Lab 1.8. Container registries
 
