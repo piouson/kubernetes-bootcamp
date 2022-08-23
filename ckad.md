@@ -866,7 +866,8 @@ kubectl get all # pod gone
 ```
 </details>
 
-> Pods started without a deployment are called **"naked"** Pods - these are not managed by a replicaset, therefore, are not rescheduled on failure, not eligible for rolling updates, cannot be scaled, cannot be replaced automatically. Naked Pods are not recommended in live environments.
+> Pods started without a deployment are called **"naked"** Pods - these are not managed by a replicaset, therefore, are not rescheduled on failure, not eligible for rolling updates, cannot be scaled, cannot be replaced automatically. \
+Naked Pods are not recommended in live environments.
 
 ## 5. Pods
 
