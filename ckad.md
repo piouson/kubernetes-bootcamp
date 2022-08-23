@@ -790,24 +790,6 @@ sudo minikube start --driver=none --kubernetes-version=1.23.9
 sudo chown -R $USER $HOME/.kube $HOME/.minikube
 ```
 
-### Complete minikube installation
-
-```sh
-# 1. confirm minikube running
-minikube status
-# 2. create `kubectl` alias in `.bashrc`
-printf "
-# minikube kubectl
-alias kubectl='minikube kubectl --'
-" >> ~/.bashrc
-exec bash
-# 3. use the alias
-kubectl version
-kubectl get all
-# 4. checkout the kubernetes dashboard
-minikube dashboard
-```
-
 #### Minikube commands
 
 ```sh
@@ -829,35 +811,40 @@ minikube addons list
 minikube addons enable [addonName]
 ```
 
-### Lab 4.1. Kubernetes dashboard
+### Lab 4.1. Setup minikube and kubectl
 
-1. View available resources
-2. Use the Kubernetes Dashboard to deploy a webserver with three replicas
-3. View available resources
-4. Delete created resources
-5. Add kubectl autocompletion, see `kubectl completion --help`
-
-<details>
-<summary>lab4.1 solution</summary>
-
-```sh
-# host terminal
-kubectl api-resources
-minikube dashboard
-# visit url provided in browser
-# click on top right plus "+" icon
-# select "Create from form"
-# enter "App name: app", "Container image: nginx", "Number of pods: 3"
-# Click "Deploy"
-# back to host terminal
-ctrl+c # to terminate
-kubectl get all
-kubectl delete deploy app
-# add kubectl auto-completion
-echo "source <(kubectl completion bash)" >> ~/.bashrc # macos replace bash with zsh
-exec bash
-```
-</details>
+1. confirm minikube running `minikube status`
+2. create `kubectl` alias in `.bashrc`
+   ```sh
+   printf "
+   # minikube kubectl
+   alias kubectl='minikube kubectl --'
+   " >> ~/.bashrc
+   exec bash
+   ```
+3. start using the alias
+   ```sh
+   kubectl version
+   kubectl get all
+   ```
+4. enable kubectl autocompletion, see `kubectl completion --help`
+   ```sh
+   echo "source <(kubectl completion bash)" >> ~/.bashrc # macos replace bash with zsh
+   exec bash
+   ```
+5. open the kubernetes dashboard with `minikube dashboard`
+6. use the Kubernetes Dashboard to deploy a webserver with three replicas
+   - visit url provided in browser
+   - click on top right plus "+" icon
+   - select `Create from form`
+   - enter App name: `app`, Container image: `nginx`, Number of pods: `3`
+   - click `Deploy`
+7. Return to the terminal and delete created resources
+   ```sh
+   ctrl+c # to terminate dashboard
+   kubectl get all
+   kubectl delete deploy app
+   ```
 
 ### Lab 4.2. Explore Kubernetes API resources via Minikube
 
