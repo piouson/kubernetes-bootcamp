@@ -396,6 +396,8 @@ docker volume ls
 ```
 </details>
 
+> You don't always have to run a new container, we have had to do this to apply new configuration. You can restart an existing container `docker ps -a`, if it meets your needs, with `docker start $CONTAINER`
+
 ### Lab 1.8. Container registries
 
 Explore [Docker Hub](https://hub.docker.com/) and search for images you've used so far or images/applications you use day-to-day, like databases, environment tools, etc.
@@ -425,6 +427,9 @@ docker tag nginx domain.com/nginx:1.1
 3. View the image history
 4. Tag the image with the repository `localhost` and a version
 5. List all images
+6. View the tagged image history
+7. Delete tagged image by ID
+8. Lets try that again, delete tagged image by tag
 
 <details>
 <summary>lab2.1 solution</summary>
@@ -432,11 +437,15 @@ docker tag nginx domain.com/nginx:1.1
 ```sh
 # host terminal
 docker image ls
-docker inspect $IMAGE_ID | grep -A 40 ContainerConfig | less
-docker inspect $IMAGE_ID | grep -A 40 '"Config"' | less
-docker image history $IMAGE_ID
+# using nginx image
+docker image inspect nginx | grep -A 40 ContainerConfig | less
+docker image inspect nginx | grep -A 40 '"Config"' | less
+docker image history nginx
 docker tag nginx localhost/nginx:1.1
 docker image ls
+docker image history localhost/nginx:1.1 # tagging isn't a change
+docker image rm $IMAGE_ID # error conflict
+docker image rm localhost/nginx:1.1 # deleting removes tag
 ```
 </details>
 
@@ -451,10 +460,10 @@ Build the below Dockerfile with `docker build -t $IMAGE_NAME:$TAG /path/to/Docke
 FROM ubuntu
 MAINTAINER Piouson
 RUN apt-get update && \
-    apt-get install -y bash nmap iproute2 && \
+    apt-get install -y nmap iproute2 && \
     apt-get clean
 ENTRYPOINT ["/usr/bin/nmap"]
-CMD ["-sn", "172.17.0.0/24"]
+CMD ["-sn", "172.17.0.0/16"] # nmap will scan docker network subnet `172.17.0.0/16` for running containers
 ```
 
 ### Dockerfile overview
@@ -487,30 +496,131 @@ CMD ["arg1", "arg2"] # if ENTRYPOINT is not specified, args will be passed to `/
 See [best practices for writing Dockerfile](https://docs.docker.com/develop/develop-images/dockerfile_best-practices).
 
 ```sh
-# find package containing app (debian-based)
-dpkg -S /path/to/file/or/pattern # see dpkg --help
+# find a package containing an app (debian-based)
+apt-file search --regex <filepath-pattern> # requires `apt-file` installation, see `apt-file --help`
+apt-file search --regex ".*/sshd$"
+# find a package containing an app, if app already installed (debian-based)
+dpkg -S /path/to/file/or/pattern # see `dpkg --help`
 dpkg -S */$APP_NAME
-# find package containing app (rpm-based)
+# find a package containing an app (rpm-based)
 dnf provides /path/to/file/or/pattern
-dnf provides */$APP_NAME
+dnf provides */sshd
 ```
 
 1. Create a Dockerfile based on the following:
    - Base image should be debian-based or rpm-based
-   - Should include packages containing `ps` application and network utilities like `ip` and `ss`
-   - Should run the `sshd` process when started
-2. Build the Dockerfile
-3. Run a container from the image and review behaviour
+   - Should include packages containing `ps` application and network utilities like `ip`, `ss` and `arp`
+   - Should run the `nmap` process as the `ENTRYPOINT` with arguments `-sn 172.17.0.0/16`
+2. Build the Dockerfile with repository `local` and version `1.0`
+3. List images
+4. Run separate containers from the image as follows and review behaviour
+   - do not specify any modes
+   - in interactive mode with a shell
+   - in detached mode, then check the logs
+5. Edit the Dockerfile to run the same process and arguments but **not** as `ENTRYPOINT`
+6. Repeat all three options in [4] and compare the behaviour
+7. Clean up
+
+<details>
+<summary>lab2.2 solution</summary>
+
+```sh
+# host terminal
+mkdir test
+nano test/Dockerfile
+```
+
+```Dockerfile
+# Dockerfile
+FROM alpine
+RUN apk add --no-cache bash nmap iproute2 net-tools
+ENTRYPOINT ["/usr/bin/nmap"]
+CMD ["-sn", "172.17.0.0/16"]
+```
+
+```sh
+# host terminal
+docker build -t local/alpine:1.0 ./test
+docker run --name alps1 local/alpine:1.0
+docker run --name alps2 -it local/alpine:1.0 sh
+docker run --name alps3 -d local/alpine:1.0
+docker log alps3
+nano test/Dockerfile
+```
+
+```Dockerfile
+# Dockerfile
+FROM alpine
+RUN apk add --no-cache bash nmap iproute2 net-tools
+CMD ["/usr/bin/nmap", "-sn", "172.17.0.0/16"]
+```
+
+```sh
+# host terminal
+docker build -t local/alpine:1.1 ./test
+docker run --name alps4 local/alpine:1.0
+docker run --name alps5 -it local/alpine:1.0 sh
+# container terminal
+exit
+# host terminal
+docker run --name alps6 -d local/alpine:1.0
+docker log alps6
+docker stop alps3 alps5 alps6
+docker rm alps1 alps2 alps3 alps4 alps5 alps6
+docker image rm local/alpine:1.0 local/alpine:1.1
+```
+</details>
 
 > In most cases, building an image goes beyond a successful build. Some installed packages require additional steps to run containers successfully
 
 ### Lab 2.3. Containerise your application
 
+See the [official language-specific getting started guides](https://docs.docker.com/language/) which includes NodeJS, Python, Java and Go examples.
+
 1. Bootstrap a frontend/backend application project, your choice of language
-2. Create a Dockerfile to containerise the project
-3. Build the Dockerfile
-4. Create a container from the image
-5. Check that the application works
+2. Install all dependencies and test the app works
+3. Create a Dockerfile to containerise the project
+4. Build the Dockerfile
+5. Run a container from the image exposed on port 8080
+6. Confirm you can access the app on http://localhost:8080
+
+<details>
+<summary>lab2.3 nodejs solution</summary>
+
+```sh
+# host terminal
+npx express-generator --no-view test-app
+cd test-app
+yarn
+yarn start # visit localhost:3000 if OK, ctrl+c to exit
+echo node_modules > .dockerignore
+nano Dockerfile
+```
+
+```Dockerfile
+# Dockerfile
+FROM node:alpine
+ENV NODE_ENV=production
+WORKDIR /app
+COPY ["package.json", "yarn.lock", "./"]
+RUN yarn --frozen-lockfile --prod
+COPY . .
+CMD ["node", "bin/www"]
+EXPOSE 3000
+```
+
+```sh
+# host terminal
+docker build -t local/app:1.0 .
+docker run -d --name app -p 8080:3000 local/app:1.0
+curl localhost:8080
+docker stop app
+docker rm app
+docker image rm local/app:1.0
+cd ..
+rm -rf test-app
+```
+</details>
 
 ## 3. Understanding Kubernetes
 
@@ -521,6 +631,9 @@ K8s **release cycle is 3 months** and deprecated features are supported for a mi
 > When you've got more time, watch/listen to **Kubernetes: The Documentary ([PART 1](https://www.youtube.com/watch?v=BE77h7dmoQU) & [PART 2](https://www.youtube.com/watch?v=318elIq37PE))**
 
 ### Lab 3.1. Kubernetes in Google Cloud
+
+> A local lab setup is covered in [chapter 4 with minikube](#4-kubernetes-lab-environment) \
+> Skip this lab if you do not currently have a Google Cloud account with Billing enabled
 
 - Signup and Login to [console.cloud.google.com](https://console.cloud.google.com)
 - Use the "Cluster setup guide" to create "My first cluster"
@@ -550,9 +663,9 @@ K8s **release cycle is 3 months** and deprecated features are supported for a mi
 kubectl --help | less
 # view available resources
 kubectl get all, see `kubectl get --help`
-# create an application, see `kubectl create deploy -h`
+# create an application/deployment, see `kubectl create deploy -h`
 kubectl create deploy myapp --image=nginx
-# create an application with six replicas
+# create an application/deployment with six replicas
 kubectl create deploy myapp --image=nginx --replcias=6
 # view complete list of supported API resources
 kubectl api-resources
@@ -562,16 +675,35 @@ kubectl delete {pod|deploy|service} [podName|deploymentName|serviceName]
 
 ### Lab 3.2. Explore Kubernetes API resources via Google Cloud
 
+> This lab is repeated in [chapter 4 with minikube](#4-kubernetes-lab-environment) \
+> Skip this lab if you do not currently have a Google Cloud account with Billing enabled
+
 1. Create an `nginx` application with three replicas
 2. View available resources
 3. Delete a pod create
 4. View available resources, how many pods left, can you find the deleted pod?
-5. Create an
 5. List supported API resources
 6. Delete the application
 7. view available resource
 8. Delete the Kubernetes service
 9. view available resources
+10. If nothing found, allow 5s and try [9] again
+
+<details>
+<summary>lab3.2 solution</summary>
+
+```sh
+kubectl create deploy webserver --image=nginx --replicas=3
+kubectl get all
+kubectl delete pod $POD_NAME
+kubectl get all # new pod auto created to replace deleted
+kubectl api-resources
+kubectl delete deploy webserver
+kubectl get all
+kubectl delete svc kubernetes
+kubectl get all # new kubernetes service is auto created to replace deleted
+```
+</details>
 
 > Remember to delete Google cloud cluster to avoid charges if you wish to use a local environment detailed in the next chapter
 
@@ -675,10 +807,32 @@ minikube addons enable [addonName]
 ### Lab 4.1. Kubernetes dashboard
 
 1. View available resources
-2. Use the Kubernetes Dashboard to deploy a webserver
+2. Use the Kubernetes Dashboard to deploy a webserver with three replicas
 3. View available resources
 4. Delete created resources
 5. Add kubectl autocompletion, see `kubectl completion --help`
+
+<details>
+<summary>lab4.1 solution</summary>
+
+```sh
+# host terminal
+kubectl api-resources
+minikube dashboard
+# visit url provided in browser
+# click on top right plus "+" icon
+# select "Create from form"
+# enter "App name: app", "Container image: nginx", "Number of pods: 3"
+# Click "Deploy"
+# back to host terminal
+ctrl+c # to terminate
+kubectl get all
+kubectl delete deploy app
+# add kubectl auto-completion
+echo "source <(kubectl completion bash)" >> ~/.bashrc # macos replace bash with zsh
+exec bash
+```
+</details>
 
 ### Lab 4.2. Explore Kubernetes API resources via Minikube
 
@@ -687,6 +841,18 @@ minikube addons enable [addonName]
 3. Delete the Pod
 4. View resources
 5. Repeat [Lab 3.2](#lab-32-explore-kubernetes-api-resources-via-gcloud) in Minikube
+
+<details>
+<summary>lab4.2 solution</summary>
+
+```sh
+kubectl run webserver --image=nginx
+kubectl get all
+kubectl delete pod webserver
+kubectl get all # pod gone
+# see `lab3.2 solution` for remaining steps
+```
+</details>
 
 > Pods started without a deployment are called **"naked"** Pods - these are not managed by a replicaset, therefore, are not rescheduled on failure, not eligible for rolling updates, cannot be scaled, cannot be replaced automatically. Naked Pods are not recommended in live environments.
 
