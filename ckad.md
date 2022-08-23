@@ -97,7 +97,11 @@ docker ps -a
 # view kernel details from inside a container
 uname -r
 cat /proc/version
-hostnamectl # linux only
+hostnamectl
+# view os version
+cat /etc/redhat-release # for redhat, centos, fedora
+cat /etc/os-release # other unix-based os
+cat /etc/*-release # works on all popular unix-based os
 # view container processes from inside a container
 ps aux # view all user-oriented processes, see `ps --help a`
 # view container processes, alternative to `ps`
@@ -118,18 +122,27 @@ docker {start|stop|restart|rm} $CONTAINER_NAME_OR_ID
 
 1. Run `docker info` to confirm docker client and server statuses
 2. Run `docker run hello-world`
-3. Run `ps aux` to review running processes on your host device
 
 ### Lab 1.2. First container interaction
 
-1. Run a `busybox` container in interactive mode `docker run -it busybox`
-2. Review the container kernel details
-3. Review the running processes in the container and note PID
-4. Exit the container
-5. List running containers
-6. List all containers
-7. Repeat [1-4] but exit the container without stopping it
-8. Delete the container
+1. Run `ps aux` to review running processes on your host device
+2. Run a `busybox` container in interactive mode `docker run -it busybox`
+3. Review the container kernel details
+4. Review the running processes in the container and note PID
+5. Exit the container
+6. List running containers
+7. List all containers
+8. Repeat [1-4] but exit the container without stopping it
+9. Delete the container
+
+<details>
+  <summary>lab 1.2 solution</summary>
+  
+```sh
+docker run -it busybox
+ps aux
+```
+</details>
 
 > `docker ps` showing STATUS of `Exited (0)` means exit OK, but an Exit STATUS that's not 0 should be investigated `docker logs`
 >
