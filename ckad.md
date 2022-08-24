@@ -1,5 +1,3 @@
-[[_TOC_]]
-
 # CKAD Lab Guide
 
 This course is a part of my cloud-native application developer bootcamp series.
