@@ -1,8 +1,8 @@
 # CKAD Bootcamp
 
-This course is a part of my cloud-native application developer bootcamp series.
+This course is a part of my cloud-native application developer bootcamp series. Star this repo to say thank you or buy me coffee with the sponsor button.
 
-## What you will learn
+## Learning Outcomes
 
 In summary, you will be learning cloud-native application development, which is a modern approach to building and running software applications that exploits the flexibility, scalability, and resilience of cloud computing. Some highlights include:
 
@@ -11,6 +11,12 @@ In summary, you will be learning cloud-native application development, which is 
 - proficiency working with infrastructure as code
 - microservices architecture
 - devops with kubernetes
+
+<details>
+  <summary>CKAD exam objectives</summary>
+
+  <a width="100%" align="center" href="https://github.com/cncf/curriculum" alt="CKAD exam curriculum">![image](https://user-images.githubusercontent.com/17856665/186679939-ea79ce57-f277-45c8-8d02-6595d02d9f85.png)</a>
+</details>
 
 ## Requirements
 
@@ -647,7 +653,7 @@ rm -rf test-app
 
 ## 3. Understanding Kubernetes
 
-[K8s](kubernetes.io) is an open-source system for automating deployment, scaling and containerized applications management, currently owned by CNCF - Linux Foundation. \
+[K8s](kubernetes.io) is an open-source system for automating deployment, scaling and containerized applications management, currently owned by the [Cloud Native Computing Foundation (CNCF)](https://www.cncf.io/). \
 K8s **release cycle is 3 months** and deprecated features are supported for a minimum of 2 release cycles (6 months).
 
 > You can watch [kubernetes in 1 minute](https://www.youtube.com/watch?v=BzvLp-lH5_Q&list=PLBBog2r6uMCSplEmHu-1n7VixRn9RTZP5&index=6) for a quick overview \
@@ -664,6 +670,14 @@ K8s **release cycle is 3 months** and deprecated features are supported for a mi
 - View existing Kubernetes resources by running `kubectl get all`
 
 ### Basic Kubernetes API resources
+
+Entities in Kubernetes are recorded in the Kubernetes system as _Objects_, and they represent the state of your cluster. [_Kubernetes objects_](https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects) can describe:
+
+- what containerized applications are running (and on which nodes)
+- resources available to those applications
+- policies around applications behaviour - restarts, upgrades, fault-tolerance, etc
+
+Some common _Kubernetes objects_ include:
 
 - Deployment: represents the application and provides services
 - ReplicaSet: manages scalability - array of pods
@@ -686,14 +700,14 @@ K8s **release cycle is 3 months** and deprecated features are supported for a mi
 kubectl --help | less
 # view available resources
 kubectl get all, see `kubectl get --help`
-# create an application/deployment, see `kubectl create deploy -h`
+# create a deployment, see `kubectl create deploy -h`
 kubectl create deploy myapp --image=nginx
-# create an application/deployment with six replicas
+# create a deployment with six replicas
 kubectl create deploy myapp --image=nginx --replcias=6
 # view complete list of supported API resources
 kubectl api-resources
-# delete pod, deployment, service, see `kubectl delete --help`
-kubectl delete {pod|deploy|service} [podName|deploymentName|serviceName]
+# delete a deployment, see `kubectl delete --help`
+kubectl delete deploy myapp
 ```
 
 ### Lab 3.2. Explore Kubernetes API resources via Google Cloud
@@ -735,8 +749,8 @@ kubectl get all # new kubernetes service is auto created to replace deleted
 ```sh
 # check kubernetes version
 kubectl version
-# list kubernetes context (available kubernetes clusters - docker, minikube, etc)
-kubectl config get-contexts # this should list docker-desktop as an option
+# list kubernetes context (available kubernetes clusters - docker-desktop, minikube, etc)
+kubectl config get-contexts
 # switch kubernetes context
 kubectl config use-context docker-desktop
 ```
@@ -797,6 +811,8 @@ minikube status
 minikube dashboard
 # start, stop, delete cluster, see `minikube {start|stop|delete} --help`
 minikube {start|stop|delete}
+# start minikube with a specified driver and specified kubernetes version
+minikube start --driver=docker --kubernetes-version=1.23
 # show current IP address
 minikube ip
 # show current version
@@ -864,94 +880,335 @@ kubectl get all # pod gone
 ```
 </details>
 
-> Pods started without a deployment are called **"naked"** Pods - these are not managed by a replicaset, therefore, are not rescheduled on failure, not eligible for rolling updates, cannot be scaled, cannot be replaced automatically. \
-Naked Pods are not recommended in live environments.
+> Pods started without a deployment are called _Naked Pods_ - these are not managed by a replicaset, therefore, are not rescheduled on failure, not eligible for rolling updates, cannot be scaled, cannot be replaced automatically. \
+Although, _Naked Pods_ are not recommended in live environments, they are crucial for learning how to manage Pods, which is a big part of CKAD.
 
 ## 5. Pods
 
-[Pods](https://kubernetes.io/docs/concepts/workloads/pods/) are the smallest deployable units of computing that you can create and manage in Kubernetes. Although, naked Pods are not recommended, managing naked Pods are a big part of CKAD.
+[Pods](https://kubernetes.io/docs/concepts/workloads/pods/) are the smallest deployable units of computing that you can create and manage in Kubernetes.
 
 ###  Managing Pods
 
 ```sh
 # run a pod, see `kubectl run --help`
-kubectl run [podName] image=[imageName]
-# run a pod with custom args, NOTE anything after ` -- ` is processed by the pod not kubectl
-kubectl run [podName] --image=[imageName] -- <arg1> <arg2> ... <argN>
-# run a pod interactively and delete after task completion
+kubectl run $POD_NAME $IMAGE_NAME
+# run a nginx pod with custom args, NOTE anything after ` -- ` is processed by the pod not kubectl
+kubectl run mypod --image=nginx -- <arg1> <arg2> ... <argN>
+# run a busybox pod interactively and delete after task completion
 kubectl run -it mypod --image=busybox --rm --restart=Never -- date
 # display running pods, see `kubectl get --help`
-kubectl get pods
-kubectl get pods [podName] -o yaml | less
+kubectl get pods # using `pod` or `pods` will work
+# display specific pod in YAML form
+kubectl get pods $POD_NAME -o yaml | less
 # show details of pod, see `kubectl describe --help`
-kubectl describe pods [podName] | less
+kubectl describe pods $POD_NAME | less
 ```
 
 > When adding commands or arguments to a `kubectl` command, anything after ` -- ` is processed by the pod not by kubectl \
-> Note: prepend `https://k8s.io/examples/` to any example files in the official docs to use the file with `kubectl`
+> Note that you can prepend [`https://k8s.io/examples/`](https://kubernetes.io/docs/concepts/workloads/pods/#using-pods) to any example files in the official docs for direct download of the YAML file
 
-### Lab 5.1 Creating Pods
+### Lab 5.1. Creating Pods
 
-- Create an nginx Pod and confirm creation
-- Display details of the Pod and review the Node, IP, container start date/time and Events
+1. Create an nginx Pod and confirm creation
+2. Display details of the Pod and review the Node, IP, container start date/time and Events
+3. Delete the Pod
+
+<details>
+<summary>lab5.1 solution</summary>
+
+```sh
+kubectl run mypod --image=nginx
+kubectl get pods
+kubectl describe pods mypod | less
+kubectl delete pods mypod
+```
+</details>
 
 ### Pod manifest file
 
+Example of a Pod manifest file with a `busybox` image and mounted _empty-directory_ volume.
+
+```yaml
+apiVersion: v1 # api version
+kind: Pod # type of resource, pod, deployment, configmap, etc
+metadata:
+  name: box # extra attributes for admin use, not used by kubernetes
+spec:
+  containers:
+  - name: box
+    image: busybox:1.28
+    volumeMounts: # mount created volume
+    - name: varlog
+      mountPath: /var/log
+  volumes: # create an empty-directory volume
+  - name: varlog
+    emptyDir: {}
+```
+
+> Volumes are covered in more detail in [Chapter 10 - Storage](#10-storage). For now it will suffice to know how to create and mount an _empty-directory_ volume
+
 ```sh
-# view the essential/top-level fields of a Pod manifest file
+# view fields description of a Kubernetes Object - see `kubectl explain --help`
+kubectl explain <object>[.field]
 kubectl explain pod
-# view more details of an `<Object>` field
-kubectl explain {pod.metadata|pod.spec|pod.status} | less
-kubectl explain --recursive {pod.metadata|pod.spec|pod.status} | less # recursively view the field
-# create, replace, delete resource with YAML file
+kubectl explain pod.metadata # or `pod.spec`, `pod.status` etc
+# include nested fields with `--recursive`
+kubectl explain --recursive pod.spec | less
+# perform actions on a resource with a YAML file
 kubectl {create|apply|replace|delete} -f pod.yaml
-# create new or update, if exists, resource from YAML file (update works if resource was created by `kubectl apply`)
-# generate YAML file
+# generate YAML file of a specific command with `--dry-run`
 kubectl run mynginx --image=nginx -o yaml --dry-run=client > pod.yaml
 ```
 
-> Manifest fields are **case sensitive**, **always generate** manifest files to avoid typos \
-> `kubectl apply` creates a new resource, or updates existing resource previously created by `kubectl apply`
+> Object fields are **case sensitive**, **always generate** manifest files to avoid typos \
+> `kubectl apply` creates a new resource, or updates existing if previously created by `kubectl apply`
 
 ### Valid reasons for multi-container Pods
 
-**Always create single container Pods!** However, some scenarios may require a [multi-container Pod pattern](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/)
+**Always create single container Pods!** However, some special scenarios require a [multi-container Pod pattern](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/):
 
-- To initialise primary container (init container)
-- To enhance primary container, e.g. for logging, monitoring, etc. ([sidecar container](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/#example-1-sidecar-containers))
-- To prevent direct access to primary container, e.g. proxy ([ambassador container](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/#example-2-ambassador-containers))
-- To match the traffic/data pattern in other applications in the cluster ([adapter container](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/#example-3-adapter-containers))
+- To initialise primary container ([Init Container](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/#understanding-init-containers))
+- To enhance primary container, e.g. for logging, monitoring, etc. ([Sidecar Container](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/#example-1-sidecar-containers))
+- To prevent direct access to primary container, e.g. proxy ([Ambassador Container](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/#example-2-ambassador-containers))
+- To match the traffic/data pattern in other applications in the cluster ([Adapter Container](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/#example-3-adapter-containers))
 
-### Lab 5.2 Using YAML file
+### Lab 5.2. Managing Pods with YAML file
 
-- Generate a base nginx Pod YAML file
-- Create a Pod using the YAML file, the container should have arguments, see [create Pod with command and args docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#define-a-command-and-arguments-when-you-create-a-pod). Run `kubectl describe` immediately after creation to review container state.
-- Create a multicontainer Pod with 2 containers sharing a volume using a YAML file, see [Pod with two container docs](https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containers-same-pod-shared-volume/#creating-a-pod-that-runs-two-containers). Run `kubectl describe` immediately after creation to review container state.
-- Create a multicontainer Pod with 1 container and 1 init container using a YAML file, see [init container docs](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/#init-containers-in-use). Run `kubectl describe` immediately after creation to review container state.
+1. Generate a YAML file of a `busybox` Pod that runs the command `sleep 60`, see [create Pod with command and args docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#define-a-command-and-arguments-when-you-create-a-pod)
+2. Apply the YAML file.
+3. List created resources
+4. View details of the Pod.
+5. Delete the Pod
+
+<details>
+<summary>lab5.2 solution</summary>
+
+```sh
+kubectl run mypod --image=busybox --dry-run=client -o yaml --command -- sleep 60 > lab5-2.yaml
+kubectl apply -f lab5-2.yaml
+kubectl get pods
+kubectl describe pods myapp | less
+kubectl delete -f lab5-2.yaml
+```
+</details>
+
+> Practice managing resources mainly with YAML file for all Labs going forward
+
+### Lab 5.3. Multi-container Pod
+
+1. Create a Pod with 2 containers and a volumne shared by both containers, see [multi-container docs](https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containers-same-pod-shared-volume/#creating-a-pod-that-runs-two-containers).
+2. List created resources
+3. View details of the Pod.
+5. Delete the Pod
+
+<details>
+<summary>lab5.3 solution</summary>
+
+```yaml
+# lab5-3.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+spec:
+  containers:
+  - name: myapp-1
+    image: busybox:1.28  
+    volumeMounts:
+    - name: logs
+      mountPath: /var/log
+  - name: myapp-2
+    image: busybox:1.28
+    volumeMounts:
+    - name: logs
+      mountPath: /var/log
+  volumes:
+  - name: logs
+    emptyDir: {}
+```
+
+```sh
+kubectl apply -f lab5-3.yaml
+kubectl get pods
+kubectl describe pods myapp | less
+kubectl logs myapp
+kubectl logs myapp -c myapp-logs
+kubectl delete -f lab5-3.yaml
+```
+</details>
+
+> Always create single container Pods!
+
+### Lab 5.4. Init Containers
+
+```sh
+# view logs of pod `mypod`
+kubectl logs mypod
+# view logs of specific container `mypod-container-1` in pod `mypod`
+kubectl logs mypod -c mypod-container-1
+```
+
+1. Create a Pod that logs `App is running|` to STDOUT
+   - the application should `Never` restart
+   - the application should use a _Init Container_ to wait for 60secs before starting
+   - the _Init Container_ should log `App is initialising...` to STDOUT
+   - see [init container docs](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/#init-containers-in-use).
+2. List created resources and note Pod `STATUS`
+3. View the logs of the main container
+4. View the logs of the _init container_
+5. View more details of the Pod and note the `State` of both containers.
+6. List created resources and confirm Pod `STATUS`
+7. Delete Pod
+
+<details>
+<summary>lab5.4 solution</summary>
+
+```sh
+# partially generate pod manifest
+kubectl run myapp --image=busybox --restart=Never --dry-run=client -o yaml --command -- sh -c "echo App is running!" > lab5-4.yaml
+```
+
+```yaml
+# edit lab5-4.yaml to add init container spec
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: myapp
+  name: myapp
+spec:
+  containers:
+  - name: myapp
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo App is running!']
+  initContainers:
+  - name: myapp-init
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo "App is initialising..." && sleep 60']
+  restartPolicy: Never
+```
+
+```sh
+kubectl apply -f lab5-4.yaml
+kubectl get pods
+kubectl logs myapp # not created until after 60secs
+kubectl logs myapp -c myapp-logs
+kubectl describe -f lab5-4.yaml | less
+kubectl get pods
+kubectl delete -f lab5-4.yaml
+```
+</details>
+
+### Lab 5.5. Sidecar Containers
+
+```sh
+# download a file
+wget https://url/of/file.extension
+# save downloaded file with a new name
+wget https://url/of/file.extension new-name.extension
+# hide output while downloading
+wget -q https://url/of/file.extension
+# view contents of a downloaded file without saving, use `-q -O` for quiet mode
+wget -O- https://url/of/file.extension
+```
+
+1. Create a `busybox` Pod that logs `date` to a file every second
+   - expose the logs with a _sidecar container_'s STDOUT to prevent direct access to the main application
+   - see example _sidecar container_ manifest `https://k8s.io/examples/admin/logging/two-files-counter-pod-streaming-sidecar.yaml`
+2. List created resources
+3. View details of the Pod
+4. View the logs of the main container
+5. View the logs of the _sidecar container_
+6. Delete created resources
+
+<details>
+<summary>lab5.5 solution</summary>
+
+```yaml
+# lab5-5.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+spec:
+  containers:
+  - name: myapp
+    image: busybox:1.28
+    args:
+    - /bin/sh
+    - -c
+    - >
+      while true;
+      do
+        echo $(date) >> /var/log/date.log;
+        sleep 1;
+      done      
+    volumeMounts:
+    - name: logs
+      mountPath: /var/log
+  - name: myapp-logs
+    image: busybox:1.28
+    args: [/bin/sh, -c, 'tail -F /var/log/date.log']
+    volumeMounts:
+    - name: logs
+      mountPath: /var/log
+  volumes:
+  - name: logs
+    emptyDir: {}
+```
+
+```sh
+kubectl apply -f lab5-5.yaml
+kubectl get pods
+kubectl describe pods myapp | less
+kubectl logs myapp
+kubectl logs myapp -c myapp-logs
+kubectl delete -f lab5-5.yaml
+```
+</details>
+
+
+https://kubernetes.io/docs/concepts/cluster-administration/logging/#sidecar-container-with-logging-agent
 
 ### Using namespaces
 
 ```sh
-# create namespace
-kubectl create namespace [namespaceName]
-# run command in a specific namespace, add `-n [namespaceName]`
+# create namespace called `myns`
+kubectl create namespace myns
+# run command in the `myns` namespace with `-n myns`
 kubectl run mypod --image=imageName -n namespaceName
-# view resources in a namespaces
-kubectl get [resourceType=pods,etc] -n namespaceName
-# view resources in all namespaces
-kubectl get [resourceType=pods,etc] --all-namespaces
-# view all resources and their namespaces
-kubectl get all -A
-# set a namespace to be used for all subsequent commands
-kubectl config set-context --current --namespace=namespaceName
-# view default namespace
+# view pods in the `myns` namespaces
+kubectl get pods -n myns
+# view pods in all namespaces with `--all-namespaces` or `-A`
+kubectl get pods --all-namespaces
+# view all resources in all namespaces
+kubectl get all --all-namespaces
+# view the current namespace in use for commands
 kubectl config view --minify | grep namespace:
+# set `myns` namespace to be the namespace used for subsequent commands
+kubectl config set-context --current --namespace=myns
 ```
 
-### Lab 5.3 Namespaces
+### Lab 5.6 Namespaces
 
-- Create a namespace with a YAML file, see [create namespace docs](https://kubernetes.io/blog/2015/08/using-kubernetes-namespaces-to-manage/#creating-a-new-namespace)
-- Create an nginx Pod in the namespace using the YAML file
+1. Create a namespace, see [create namespace docs](https://kubernetes.io/blog/2015/08/using-kubernetes-namespaces-to-manage/#creating-a-new-namespace)
+2. Create a webserver Pod in the namespace
+3. Review created resources to confirm namespace assigned to the Pod
+4. Delete resources created
+
+<details>
+<summary>lab5.6 solution</summary>
+
+```sh
+kubectl create ns myns --dry-run=client -o yaml > lab5-6.yaml
+echo --- >> lab5-6.yaml
+kubectl run mypod --image=httpd -n myns --dry-run=client -o yaml >> lab5-6.yaml
+kubectl apply -f lab5-6.yaml
+kubectl get pods
+kubectl describe -f lab5-6.yaml | less
+kubectl delete -f lab5-6.yaml
+```
+</details>
 
 > You can save the output of `--dry-run=client -o yaml` in a single file for both namespace and Pod creation
 
@@ -1333,7 +1590,7 @@ Use Minikube locally
 
 ### Ingress rules
 
-This is similar to defining API routes on a backend application, except that each defined route points to an application/deployment.
+This is similar to defining API routes on a backend application, except that each defined route points to a deployment.
 
 > `kubectl create ingress myingress --rule="/=app1:80" --rule="/about=app2:3000" --rule="/contact=app3:8080"`
 
@@ -2101,7 +2358,7 @@ kubectl kustomize /path/to/directory/containing/kustomization.yaml
 kubectl kustomize /path/to/directory/containing/kustomization.yaml
 ```
 
-We can take advantage of Kustomization's "composing and customising" feature to create deployment pipelines by using a directory layout where multiple [__overlay__](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#overlay) kustomizations ([variants](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant)) refer to a [__base__](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#base) kustomization:
+We can take advantage of Kustomization's "composing and customising" feature to create deployment pipelines by using a directory layout where multiple [_overlay_](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#overlay) kustomizations ([variants](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant)) refer to a [_base_](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#base) kustomization:
 
 <details>
   <summary>pipeline layout example</summary>
@@ -2189,9 +2446,9 @@ Canary deployment is an update strategy where updates are deployed to a subset o
 
 ### Custom Resource Definition (CRD)
 
-A __Resource__ is an endpoint in the Kubernetes API that stores a collection of [API objects](https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/) of a certain kind; for example, the Pods resource contains a collection of Pod objects.
+A _Resource_ is an endpoint in the Kubernetes API that stores a collection of [API objects](https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/) of a certain kind; for example, the Pods resource contains a collection of Pod objects.
 
-A [__Custom Resource__](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) is an extension of the Kubernetes API that is not necessarily available in a default Kubernetes installation. Many core Kubernetes functions are now built using custom resources, making Kubernetes more modular.
+A [_Custom Resource_](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) is an extension of the Kubernetes API that is not necessarily available in a default Kubernetes installation. Many core Kubernetes functions are now built using custom resources, making Kubernetes more modular.
 
 Although, we only focus on one, there are [two ways to add custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#comparing-ease-of-use) to your cluster:
 
