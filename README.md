@@ -15,7 +15,7 @@ In summary, you will be learning cloud-native application development, which is 
 <details>
   <summary>CKAD exam objectives</summary>
 
-  <a width="100%" align="center" href="https://github.com/cncf/curriculum" alt="CKAD exam curriculum">![image](https://user-images.githubusercontent.com/17856665/186679939-ea79ce57-f277-45c8-8d02-6595d02d9f85.png)</a>
+  <a target="_blank" width="100%" align="center" href="https://github.com/cncf/curriculum" alt="CKAD exam curriculum">![image](https://user-images.githubusercontent.com/17856665/186679939-ea79ce57-f277-45c8-8d02-6595d02d9f85.png)</a>
 </details>
 
 ## Requirements
@@ -892,26 +892,30 @@ Although, _Naked Pods_ are not recommended in live environments, they are crucia
 ```sh
 # run a pod, see `kubectl run --help`
 kubectl run $POD_NAME $IMAGE_NAME
-# run a nginx pod with custom args, NOTE anything after ` -- ` is processed by the pod not kubectl
+# run a nginx pod with custom args, args are passed to the pod's container's `ENTRYPOINT`
 kubectl run mypod --image=nginx -- <arg1> <arg2> ... <argN>
+# run a command in an nginx pod
+kubectl run mypod --image=nginx --command -- <command>
 # run a busybox pod interactively and delete after task completion
 kubectl run -it mypod --image=busybox --rm --restart=Never -- date
 # display running pods, see `kubectl get --help`
 kubectl get pods # using `pod` or `pods` will work
-# display specific pod in YAML form
+# display full details of pod in YAML form
 kubectl get pods $POD_NAME -o yaml | less
-# show details of pod, see `kubectl describe --help`
+# show details of pod in readable form, see `kubectl describe --help`
 kubectl describe pods $POD_NAME | less
 ```
 
-> When adding commands or arguments to a `kubectl` command, anything after ` -- ` is processed by the pod not by kubectl \
-> Note that you can prepend [`https://k8s.io/examples/`](https://kubernetes.io/docs/concepts/workloads/pods/#using-pods) to any example files in the official docs for direct download of the YAML file
+> With `kubectl`, everything after the ` -- ` flag is passed to the Pod \
+> 💡 `-- <args>` corresponds to Dockerfile `CMD` while `--command -- <args>` corresponds to `ENTRYPOINT` \
+> See [answer to `kubectl run --command vs -- arguments`](https://stackoverflow.com/a/66078726) for more details
 
 ### Lab 5.1. Creating Pods
 
 1. Create an nginx Pod and confirm creation
-2. Display details of the Pod and review the Node, IP, container start date/time and Events
-3. Delete the Pod
+2. Review full details of the Pod in YAML form
+3. Display details of the Pod in readable form and review the Node, IP, container start date/time and Events
+4. Delete the Pod
 
 <details>
 <summary>lab5.1 solution</summary>
@@ -932,7 +936,7 @@ Example of a Pod manifest file with a `busybox` image and mounted _empty-directo
 apiVersion: v1 # api version
 kind: Pod # type of resource, pod, deployment, configmap, etc
 metadata:
-  name: box # extra attributes for admin use, not used by kubernetes
+  name: box # metadata information, including labels, namespace, etc
 spec:
   containers:
   - name: box
@@ -1048,7 +1052,7 @@ kubectl logs mypod
 kubectl logs mypod -c mypod-container-1
 ```
 
-1. Create a Pod that logs `App is running|` to STDOUT
+1. Create a Pod that logs `App is running!` to STDOUT
    - the application should `Never` restart
    - the application should use a _Init Container_ to wait for 60secs before starting
    - the _Init Container_ should log `App is initialising...` to STDOUT
@@ -1112,6 +1116,8 @@ wget -q https://url/of/file.extension
 wget -O- https://url/of/file.extension
 ```
 
+> Note that you can prepend [`https://k8s.io/examples/`](https://kubernetes.io/docs/concepts/workloads/pods/#using-pods) to any example files in the official docs for direct download of the YAML file
+
 1. Create a `busybox` Pod that logs `date` to a file every second
    - expose the logs with a _sidecar container_'s STDOUT to prevent direct access to the main application
    - see example _sidecar container_ manifest `https://k8s.io/examples/admin/logging/two-files-counter-pod-streaming-sidecar.yaml`
@@ -1167,15 +1173,12 @@ kubectl delete -f lab5-5.yaml
 ```
 </details>
 
-
-https://kubernetes.io/docs/concepts/cluster-administration/logging/#sidecar-container-with-logging-agent
-
 ### Using namespaces
 
 ```sh
 # create namespace called `myns`
 kubectl create namespace myns
-# run command in the `myns` namespace with `-n myns`
+# run a pod in the `myns` namespace with `-n myns`
 kubectl run mypod --image=imageName -n namespaceName
 # view pods in the `myns` namespaces
 kubectl get pods -n myns
@@ -1209,8 +1212,6 @@ kubectl describe -f lab5-6.yaml | less
 kubectl delete -f lab5-6.yaml
 ```
 </details>
-
-> You can save the output of `--dry-run=client -o yaml` in a single file for both namespace and Pod creation
 
 ## 6. Exploring Pods
 
