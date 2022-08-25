@@ -827,8 +827,8 @@ minikube addons enable [addonName]
 
 ### Lab 4.1. Setup minikube and kubectl
 
-1. confirm minikube running `minikube status`
-2. create `kubectl` alias in `.bashrc`
+1. Confirm minikube running `minikube status`
+2. Create `kubectl` alias in `.bashrc`
    ```sh
    printf "
    # minikube kubectl
@@ -836,24 +836,29 @@ minikube addons enable [addonName]
    " >> ~/.bashrc
    exec bash
    ```
-3. start using the alias
+3. Start using the alias
    ```sh
    kubectl version
    kubectl get all
    ```
-4. enable kubectl autocompletion, see `kubectl completion --help`
+4. Enable kubectl autocompletion, see `kubectl completion --help`
    ```sh
    echo "source <(kubectl completion bash)" >> ~/.bashrc # macos replace bash with zsh
    exec bash
    ```
-5. open the kubernetes dashboard with `minikube dashboard`
-6. use the Kubernetes Dashboard to deploy a webserver with three replicas
+5. The default `kubectl edit` text editor is `vi`. To change this:
+   ```sh
+   export KUBE_EDITOR="nano" # use nano
+   export KUBE_EDITOR="vim" # use vim
+   ```
+6. Open the kubernetes dashboard with `minikube dashboard`
+7. Use the Kubernetes Dashboard to deploy a webserver with three replicas
    - visit url provided in browser
    - click on top right plus "+" icon
    - select `Create from form`
    - enter App name: `app`, Container image: `nginx`, Number of pods: `3`
    - click `Deploy`
-7. Return to the terminal and delete created resources
+8. Return to the terminal and delete created resources
    ```sh
    ctrl+c # to terminate dashboard
    kubectl get all
