@@ -227,6 +227,8 @@ docker rm webserver1 webserver2 webserver3
 ```
 </details>
 
+> Containers may not usually have `bash` shell, but will usually have the dash shell `sh`
+
 ### Lab 1.4. Container arguments
 
 1. Run a `busybox` container with command `sleep 30` as argument, see `sleep --help`
@@ -1003,7 +1005,69 @@ kubectl delete -f lab5-2.yaml
 
 > Practice managing resources mainly with YAML file for all Labs going forward
 
-### Lab 5.3. Multi-container Pod
+### Lab 5.3. Init Containers
+
+Note that the main container will only be started after the _init container_ enters `STATUS=completed`
+
+```sh
+# view logs of pod `mypod`
+kubectl logs mypod
+# view logs of specific container `mypod-container-1` in pod `mypod`
+kubectl logs mypod -c mypod-container-1
+```
+
+1. Create a Pod that logs `App is running!` to STDOUT
+   - the application should `Never` restart
+   - the application should use a _Init Container_ to wait for 60secs before starting
+   - the _Init Container_ should log `App is initialising...` to STDOUT
+   - see [init container docs](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/#init-containers-in-use).
+2. List created resources and note Pod `STATUS`
+3. View the logs of the main container
+4. View the logs of the _init container_
+5. View more details of the Pod and note the `State` of both containers.
+6. List created resources and confirm Pod `STATUS`
+7. Delete Pod
+
+<details>
+<summary>lab5.3 solution</summary>
+
+```sh
+# partially generate pod manifest
+kubectl run myapp --image=busybox --restart=Never --dry-run=client -o yaml --command -- sh -c "echo App is running!" > lab5-3.yaml
+```
+
+```yaml
+# edit lab5-3.yaml to add init container spec
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: myapp
+  name: myapp
+spec:
+  containers:
+  - name: myapp
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo App is running!']
+  initContainers:
+  - name: myapp-init
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo "App is initialising..." && sleep 60']
+  restartPolicy: Never
+```
+
+```sh
+kubectl apply -f lab5-3.yaml
+kubectl get pods
+kubectl logs myapp # not created until after 60secs
+kubectl logs myapp -c myapp-logs
+kubectl describe -f lab5-3.yaml | less
+kubectl get pods
+kubectl delete -f lab5-3.yaml
+```
+</details>
+
+### Lab 5.4. Multi-container Pod
 
 1. Create a Pod with 2 containers and a volumne shared by both containers, see [multi-container docs](https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containers-same-pod-shared-volume/#creating-a-pod-that-runs-two-containers).
 2. List created resources
@@ -1011,10 +1075,10 @@ kubectl delete -f lab5-2.yaml
 5. Delete the Pod
 
 <details>
-<summary>lab5.3 solution</summary>
+<summary>lab5.4 solution</summary>
 
 ```yaml
-# lab5-3.yaml
+# lab5-4.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -1037,76 +1101,16 @@ spec:
 ```
 
 ```sh
-kubectl apply -f lab5-3.yaml
+kubectl apply -f lab5-4.yaml
 kubectl get pods
 kubectl describe pods myapp | less
 kubectl logs myapp
 kubectl logs myapp -c myapp-logs
-kubectl delete -f lab5-3.yaml
+kubectl delete -f lab5-4.yaml
 ```
 </details>
 
 > Always create single container Pods!
-
-### Lab 5.4. Init Containers
-
-```sh
-# view logs of pod `mypod`
-kubectl logs mypod
-# view logs of specific container `mypod-container-1` in pod `mypod`
-kubectl logs mypod -c mypod-container-1
-```
-
-1. Create a Pod that logs `App is running!` to STDOUT
-   - the application should `Never` restart
-   - the application should use a _Init Container_ to wait for 60secs before starting
-   - the _Init Container_ should log `App is initialising...` to STDOUT
-   - see [init container docs](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/#init-containers-in-use).
-2. List created resources and note Pod `STATUS`
-3. View the logs of the main container
-4. View the logs of the _init container_
-5. View more details of the Pod and note the `State` of both containers.
-6. List created resources and confirm Pod `STATUS`
-7. Delete Pod
-
-<details>
-<summary>lab5.4 solution</summary>
-
-```sh
-# partially generate pod manifest
-kubectl run myapp --image=busybox --restart=Never --dry-run=client -o yaml --command -- sh -c "echo App is running!" > lab5-4.yaml
-```
-
-```yaml
-# edit lab5-4.yaml to add init container spec
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    run: myapp
-  name: myapp
-spec:
-  containers:
-  - name: myapp
-    image: busybox:1.28
-    command: ['sh', '-c', 'echo App is running!']
-  initContainers:
-  - name: myapp-init
-    image: busybox:1.28
-    command: ['sh', '-c', 'echo "App is initialising..." && sleep 60']
-  restartPolicy: Never
-```
-
-```sh
-kubectl apply -f lab5-4.yaml
-kubectl get pods
-kubectl logs myapp # not created until after 60secs
-kubectl logs myapp -c myapp-logs
-kubectl describe -f lab5-4.yaml | less
-kubectl get pods
-kubectl delete -f lab5-4.yaml
-```
-</details>
 
 ### Lab 5.5. Sidecar Containers
 
@@ -1220,33 +1224,67 @@ kubectl delete -f lab5-6.yaml
 
 ## 6. Exploring Pods
 
-### Troubleshooting a Pod 
+Whilst a Pod is running, the _kubelet_ is able to restart containers to handle some faults. Within a Pod, Kubernetes tracks different container states and determines what action to take to make the Pod healthy again.
+
+Kubernetes tracks the _phase_ of a Pod
+
+- Pending - Pod starts here and waits to be scheduled, image download, etc
+- Running - at least one container running
+- Succeeded - all containers terminated successfully
+- Failed - all containers have terminated, at least one terminated in failure
+- Unknown - pod state cannot be obtained, either node communication breakdown or other
+
+Kubernetes also tracks the _state_ of containers running in a Pod
+
+- Waiting - startup not complete
+- Running - executing without issues
+- Terminated - ran into issues whilst executing
+
+### Debugging Pods
+
+The first step in debugging a Pod is taking a look at it. Check the current state of the Pod and recent events with:
 
 ```sh
-# get pod information in readable format
-kubectl get pods [podName] -o yaml | less
-# get definition of any field from manifest file
-kubectl explain pods.field[.field] # e.g. pods.apiVersion, pods.spec.containers, etc
-# get detailed information on a pod
-kubectl describe pods [podName]
-# connect to containers in a pod, add `-c [containerName]` if multiple containers
-kubectl exec -it [podName] -- sh
-# within a container, you always have access to `sh` and the `proc` filesystem
-cd /proc
-cat 1/cmdline
-# view cluster logs for a pod
-kubectl logs [podName]
+kubectl describe pods $POD_NAME
 ```
 
-> `OOMKilled` is linux term for terminated due to out-of-memory
+> See the [official debug pods tutorial](https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/) for more details on Pod debugging
+
+When running commands locally in a Terminal, you can immediately see the output `STDOUT`. However, applications running in a cloud-native environment have their own way of showing their outputs - for Kubernetes, you can view a Pod `STDOUT` with:
+
+```sh
+kubectl logs $POD_NAME
+```
+
+> You will usually find more clues in the logs when a Pod shows a _none-zero_ `Exit Code`
 
 ### Lab 6.1 Troubleshoot failing Pod
 
-- Create a Pod with mysql image and confirm Pod is in 'Running' state
-- Get detailed information on the Pod and review Events (any multiple attempts?), 'State', 'Last State' and their Exit codes.
-- Note that States might continue to change for containers in error states due to retries, so review detailed information on the Pod a few times
-- Review cluster logs for the Pod
-- Apply relevant fixes until you have a mysql Pod in 'Running' state
+1. Create a Pod with mysql image and confirm Pod state
+2. Get detailed information on the Pod and review Events (any multiple attempts?), 'State', 'Last State' and their Exit codes.
+   - Note that Pod `STATES` might continue to change for containers in error due to default `restartPolicy=Always`
+3. Review cluster logs for the Pod
+4. Apply relevant fixes until you have a mysql Pod in 'Running' state
+5. Delete created resources
+
+<details>
+<summary>lab6.1 solution</summary>
+
+```sh
+kubectl run mydb --image=mysql --dry-run=client -o yaml > lab6-1.yaml
+kubectl apply -f lab6-1.yaml
+kubectl get pods
+kubectl describe -f lab6-1.yaml | less
+kubectl delete -f lab6-1.yaml
+kubectl run mydb --image=mysql --env="MYSQL_ROOT_PASSWORD=secret" --dry-run=client -o yaml > lab6-1.yaml
+kubectl apply -f lab6-1.yaml
+kubectl get pods
+kubectl describe -f lab6-1.yaml | less
+kubectl delete -f lab6-1.yaml
+```
+</details>
+
+> A Pod `STATUS=CrashLoopBackOff` means the Pod is in the cool off period, around 10secs, following a container termination. The container will be restarted after cool off
 
 ### Port forwarding
 
