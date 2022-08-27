@@ -33,6 +33,8 @@ A Unix-based environment running docker (Docker Engine or Docker Desktop).
 > Docker Desktop has certain network limitations affecting some network related labs. \
 > Consider using Docker Engine if you are **not** on macOS
 
+### Docker engine installation
+
 <details>
   <summary><b>docker engine install steps on Ubuntu/WSL2</b></summary>
 
@@ -475,26 +477,16 @@ CMD ["-sn", "172.17.0.0/16"] # nmap will scan docker network subnet `172.17.0.0/
 ### Dockerfile overview
 
 ```sh
-# specify base image
-FROM
-# execute commands
-RUN
-# specify environment variables used by container
-ENV
-# copy files from project directory to the image
-ADD
-# copy files from local project directory to the image - ADD is recommended
-COPY
-# specify commands in shell form - space separated
-ADD /path/to/local/file /path/to/container/directory
-# specify commands in exec form - as array (recommended)
-ADD ["/path/to/local/file", "/path/to/container/directory"]
-# specify username for RUN, CMD and ENTRYPOINT commands
-USER
-# specify default command - cannot be overwritten, so CMD is recommended for flexibility
-ENTRYPOINT ["command"] # `/bin/sh -c` is used if not specified
-# specfify arguments to the entrypoint command, array form is recommended
-CMD ["arg1", "arg2"] # if ENTRYPOINT is not specified, args will be passed to `/bin/sh -c`
+FROM # specify base image
+RUN # execute commands
+ENV # specify environment variables used by container
+ADD # copy files from project directory to the image
+COPY # copy files from local project directory to the image - ADD is recommended
+ADD /path/to/local/file /path/to/container/directory # specify commands in shell form - space separated
+ADD ["/path/to/local/file", "/path/to/container/directory"] # specify commands in exec form - as array (recommended)
+USER # specify username (or UID) for RUN, CMD and ENTRYPOINT commands
+ENTRYPOINT ["command"] # specify default command, `/bin/sh -c` is used if not specified - cannot be overwritten, so CMD is recommended for flexibility
+CMD ["arg1", "arg2"] # specfify arguments to the ENTRYPOINT - if ENTRYPOINT is not specified, args will be passed to `/bin/sh -c`
 ```
 
 ### Lab 2.2. Create image from Dockerfile
@@ -652,6 +644,159 @@ cd ..
 rm -rf test-app
 ```
 </details>
+
+### Docker container access control
+
+Before we finally go into Kubernetes, it would be advantageous to have a basic understanding of unix-based systems file permissions and access control.
+
+#### UID and GID
+
+A _user identifier (UID)_ is a unique number assigned to each user. This is how the system identifies each user. The root user has UID of 0, UID 1-500 are often reserved for system users and UID for new users commonly start at 1000. UIDs are stored in the plain-text `/etc/passwd` file: each line represents a user account, and has seven fields delimited by colons `account:password:UID:GID:GECOS:directory:shell`.
+
+A _group identifier (GID)_ is similar to UIDs - used by the system to identify _groups_. A _group_ consists of several users and the root group has GID of 0. GIDs are stored in the plain-text `/etc/group` file: each line represents a group, and has four fields delimited by colons `group:password:GID:comma-separated-list-of-members`. An example of creating and assigning a group was covered in [step 4 - docker engine installation](#docker-engine-installation) where we created and assigned the `docker` group.
+
+UIDs and GIDs are used to implement _Discretionary Access Control (DAC)_ in unix-based systems by assigning them to files and processes to denote ownership - _left at owner's discretion_. This can be seen by running `ls -l` or `ls -ln`: the output has seven fields delimited by spaces `file_permisions number_of_links user group size date_time_created file_or_folder_name`. See [unix file permissions](https://www.guru99.com/file-permissions.html) for more details.
+
+<details>
+<summary><code>ls -l</code> in detail</summary>
+
+![output of commandline list](https://user-images.githubusercontent.com/17856665/187016629-e6c4f17f-f06a-4aeb-98c4-0cfc4d371be2.png)
+</details>
+
+```sh
+# show current user
+whoami
+# view my UID and GID, and my group memberships
+id
+# view the local user database on system
+cat /etc/passwd
+# output - `account:password:UID:GID:GECOS:directory:shell`
+root:x:0:0:root:/root:/bin/bash
+piouson:x:1000:1000:,,,:/home/dev:/bin/bash
+# view the local group database on system
+cat /etc/group
+# output - `group:password:GID:comma-separated-list-of-member`
+root:x:0:
+piouson:x:1000:
+docker:x:1001:piouson
+# list folder contents and their owner (user/group) names 
+ls -l 
+# show ownership by ids, output - `permision number_of_links user group size date_time_created file_or_folder_name`
+ls -ln
+```
+
+#### Capabilities
+
+In the context of permission checks, processes running on unix-based systems are traditionally categorised as:
+
+- _privileged_ processes: effective UID is 0 (root) - bypass all kernel permission checks
+- _unprivileged_ processes: effective UID is nonzero - subject to permission checks
+
+Starting with kernel 2.2, Linux further divides traditional root privileges into distinct units known as _capabilities_ as a way to control root user powers. Each root _capability_ can be independently enabled and disabled, and uses a naming convention prefix `CAP_`. \
+See the [overview of Linux _capabilities_](https://man7.org/linux/man-pages/man7/capabilities.7.html) for more details, including a comprehensive list of capabilities.
+
+> `CAP_SYS_ADMIN` is an overloaded capability that grants privileges similar to traditional root privileges \
+> By default, Docker containers are **_unprivileged_** and root in a docker container uses [_restricted capabilities_](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) \
+> ❌ `docker run --privileged` gives all capabilities to the container, allowing nearly all the same access to the host as processes running on the host
+
+#### Running containers as non-root
+
+For practical reasons, most containers run as root by default. However, in a security context, this is bad practice:
+
+- it voilates the [_principle of least privilege_](https://en.wikipedia.org/wiki/Principle_of_least_privilege)
+- an attacker might take advantage of an application vulnerability to gain root access to the container
+- an attacker might take advantage of a container-runtime, or kernel, vulnerability to gain root access to the host after gaining access to the container
+
+We can control the users containers run with by:
+
+- omitting the `USER` command in Dockerfile assigns root
+- specify a user in the `Dockerfile` with the `USER` command
+- override the UID at runtime with `docker run --user $UID`
+
+```Dockerfile
+# Dockerfile
+FROM ubuntu
+# create group `piouson`, and create user `piouson` as member of group `piouson`, see `groupadd -h` and `useradd -h`
+RUN groupadd piouson && useradd piouson --gid piouson
+# specify GID/UID when creating/assigning a group/user
+RUN groupadd --gid 1004 piouson && useradd --uid 1004 piouson --gid piouson
+# assign user `piouson` for subsequent commands
+USER piouson
+# create system-group `myapp`, and create system-user `myapp` as member of group `myapp`
+RUN groupadd --system myapp && useradd --system --no-log-init myapp --gid myapp
+# assign system-user `myapp` for subsequent commands
+USER myapp
+```
+
+### Lab 2.4. Container privileges
+
+1. Display your system's current user
+2. Display the current user's UID, GID and group memberships
+3. Run a `ubuntu` container interactively, and in the container shell:
+   - display the current user
+   - display the current user's UID, GID and group memberships
+   - list existing user accounts
+   - list existing groups
+   - create a file called `test-file` and display the file ownership info
+   - exit the container
+4. Run a new `ubuntu` container interactively with UID 1004, and in the container shell:
+   - display the current user
+   - display the current user's UID, GID and group memberships
+   - exit the container
+5. Create a docker image based on `ubuntu` with a non-root user as default user
+6. Run a container interactively using the image, and in the container shell:
+   - display the current user
+   - display the current user's UID, GID and group memberships
+   - exit the container
+7. Delete created resources
+
+<details>
+<summary>lab2.4 solution</summary>
+
+```sh
+# host terminal
+whoami
+id
+docker run -it --rm ubuntu
+# container terminal
+whoami
+id
+cat /etc/passwd
+cat /etc/group
+touch test-file
+ls -l
+ls -ln
+exit
+# host terminal
+docker run -it --rm --user 1004 ubuntu
+# container terminal
+whoami
+id
+exit
+```
+
+```Dockerfile
+# test/Dockerfile
+FROM ubuntu
+RUN groupadd --gid 1000 piouson && useradd --uid 1000 piouson --gid 1000
+USER piouson
+```
+
+```sh
+# host terminal
+docker build -t test-image test/
+docker run -it --rm test-image
+# container terminal
+whoami
+id
+exit
+# host terminal
+docker image rm test-image
+```
+</details>
+
+> If a containerized application can run without privileges, change to a non-root user \
+> It is recommended to explicitly specify GID/UID when creating a group/user
 
 ## 3. Understanding Kubernetes
 
@@ -1248,15 +1393,15 @@ The first step in debugging a Pod is taking a look at it. Check the current stat
 kubectl describe pods $POD_NAME
 ```
 
-> See the [official debug pods tutorial](https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/) for more details on Pod debugging
-
 When running commands locally in a Terminal, you can immediately see the output `STDOUT`. However, applications running in a cloud-native environment have their own way of showing their outputs - for Kubernetes, you can view a Pod `STDOUT` with:
 
 ```sh
 kubectl logs $POD_NAME
 ```
 
-> You will usually find more clues in the logs when a Pod shows a _none-zero_ `Exit Code`
+> A Pod `STATUS=CrashLoopBackOff` means the Pod is in a cool off period following container failure. The container will be restarted after cool off \
+> You will usually find more clues in the logs when a Pod shows a _none-zero_ `Exit Code` \
+> See the [official _debug running pods_ tutorial](https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/) for more details
 
 ### Lab 6.1 Troubleshoot failing Pod
 
@@ -1275,6 +1420,9 @@ kubectl run mydb --image=mysql --dry-run=client -o yaml > lab6-1.yaml
 kubectl apply -f lab6-1.yaml
 kubectl get pods
 kubectl describe -f lab6-1.yaml | less
+# use the `watch` program to rerun kubectl command every 2secs, see `watch --help`
+watch minikube kubectl -- get pods # if not using alias `watch kubectl get pods`
+ctrl+c
 kubectl delete -f lab6-1.yaml
 kubectl run mydb --image=mysql --env="MYSQL_ROOT_PASSWORD=secret" --dry-run=client -o yaml > lab6-1.yaml
 kubectl apply -f lab6-1.yaml
@@ -1284,24 +1432,77 @@ kubectl delete -f lab6-1.yaml
 ```
 </details>
 
-> A Pod `STATUS=CrashLoopBackOff` means the Pod is in the cool off period, around 10secs, following a container termination. The container will be restarted after cool off
+### Ephemeral containers
+
+[Ephemeral containers](https://kubernetes.io/docs/concepts/workloads/pods/ephemeral-containers/) are useful for interactive troubleshooting when kubectl exec is insufficient because a container has crashed or a container image doesn't include debugging utilities, such as with [distroless images](https://github.com/GoogleContainerTools/distroless).
+
+```sh
+# create a `mysql` Pod called `mypod` (assume the pod fails to start)
+kubectl run mydb --image=mysql
+# add ephemeral container to Pod `mypod`
+kubectl debug -it ephemeral-pod --image=busybox:1.28 --target=ephemeral-demo
+```
+
+> The `EphemeralContainers` feature must be enabled in the cluster and the `--target` parameter must be supported by the _container runtime_ \
+> When not supported, the _Ephemeral Container_ may not be started, or started without revealing processes
 
 ### Port forwarding
 
 Port forwarding in Kubernetes should only be used for testing purposes.
 
 ```sh
-# forward port from local host to container, requires `ctrl+c` to exit
-kubectl port-forwarding [podName] [hostPort:containerPort]
+# get a list of pods with extra information, including IP Address
+kubectl get pods -o wide
+# forward host computer's port 8080 to container `mypod` port 80, requires `ctrl+c` to terminate
+kubectl port-forwarding mypod 8080:80
+```
+
+> When a program runs in a unix-based environment, it starts a process. A _foreground process_ prevents further execution of commands, e.g. `sleep`
+
+```sh
+# run any foreground command in the background by adding an ampersand &
+sleep 60 &
+# view running background processes and their ids
+jobs
+# bring a background process to the foreground
+fg $ID
+# run the `kubectl port-forwarding` command in the background
+kubectl port-forwarding mypod 8080:80 &
 ```
 
 ### Lab 6.2. Expose container port
 
-Create a webserve Pod and access the webpage from host device using port forwarding
+1. Create a webserver Pod
+2. View created resources and determine Pod IP address
+3. Access the webserver with the IP address (you can use `curl`)
+4. Use port forwarding to access the webserver on http://localhost:5000
+5. Terminate port forwarding and delete created resources
+
+<details>
+<summary>lab6.2 solution</summary>
+
+```sh
+kubectl run webserver --image=httpd
+kubectl get pods -o wide
+curl $POD_IP_ADDRESS
+kubectl port-forward webserver 5000:80 &
+curl localhost:5000
+fg 1
+ctrl+c
+kubectl delete pods webserver
+```
+</details>
 
 ### Security context
 
-See [security context docs](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod) for sample YAML file.
+A [security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/) defines privilege and access control settings for a Pod or Container. There is a [comprehensive list of security context settings](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/), but we only focus on the following:
+
+- `runAsUser`: specifies the user ID that all processes running in Pod containers should run with
+- `runAsGroup` field specifies the primary group ID of 3000 for all processes within any containers of the Pod. Default is root(0)
+- `fsGroup` field is specified, all processes of the container are also part of the supplementary group ID 2000. The owner for volume /data/demo and any files created in that volume will be Group ID 2000.
+- `privileged`: Running as privileged or unprivileged.
+- `allowPrivilegeEscalation`: Controls whether a process can gain more privileges than its parent process. This is always true when the container is run as privileged, or has `CAP_SYS_ADMIN` (root)
+- `readOnlyRootFilesystem`: Mounts the container's root filesystem as read-only.
 
 ```sh
 # show details of pod-level security context
@@ -1309,6 +1510,11 @@ kubectl explain pod.spec.securityContext | less
 # show details of container-level security context
 kubectl explain pod.spec.containers.securityContext | less
 ```
+
+### Lab 6.3. Set Pod security context
+
+1. `allowPrivilegeEscalation`, `privileged`, `readOnlyRootFilesystem`, `runAsGroup`, `runAsNonRoot` and `runAsUser`
+1. Use the official docs security context example manifest `pods/security/security-context.yaml` as base to 
 
 ### Lab 6.3. RBAC
 runAsUser: 1000
