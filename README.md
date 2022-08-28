@@ -1331,38 +1331,41 @@ kubectl delete -f lab5-5.yaml
 
 ### Using namespaces
 
-[Namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) are a way to divide/isolate cluster resources between multiple users. Names of resources need to be unique within a namespace, but not across namespaces.
-
+[Namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) are a way to divide/isolate cluster resources between multiple users. Names of resources need to be unique within a namespace, but not across namespaces. \
 Not all Kubernetes resources are in a Namespace and Namespace-based scoping is only applicable for namespaced objects.
 
+> Namespaces should be used sensibly, you can read more about [understanding the motivation for using namespaces](https://kubernetes.io/docs/tasks/administer-cluster/namespaces/#understanding-the-motivation-for-using-namespaces)
+
 ```sh
-# view kubernetes resources in a namespace
-kubectl api-resources --namespaced=true
-# view kubernetes resources not in a namespace
-kubectl api-resources --namespaced=false
-# create namespace called `myns`
+# create namespace called `myns`, see `kubectl create namespace -h`
 kubectl create namespace myns
 # run a pod in the `myns` namespace with `-n myns`
-kubectl run mypod --image=imageName -n namespaceName
+kubectl run mypod --image=imageName -n myns
 # view pods in the `myns` namespaces
 kubectl get pods -n myns
-# view pods in all namespaces with `--all-namespaces` or `-A`
+# list pods in all namespaces with `--all-namespaces` or `-A`
 kubectl get pods --all-namespaces
-# view all resources in all namespaces
+# list all resources in all namespaces
 kubectl get all --all-namespaces
 # view the current namespace in use for commands
 kubectl config view --minify | grep namespace:
 # set `myns` namespace to be the namespace used for subsequent commands
 kubectl config set-context --current --namespace=myns
+# view kubernetes api resources in a namespace
+kubectl api-resources --namespaced=true
+# view kubernetes api resources not in a namespace
+kubectl api-resources --namespaced=false
 # view the namespace spec
 kubectl explain namespace --recursive | less
 ```
 
 ### Lab 5.6 Namespaces
 
-1. Create a namespace, see [create namespace docs](https://kubernetes.io/blog/2015/08/using-kubernetes-namespaces-to-manage/#creating-a-new-namespace)
-2. Create a webserver Pod in the namespace
-3. Review created resources to confirm namespace assigned to the Pod
+You can also follow the [admin guide doc for namespaces](https://kubernetes.io/docs/tasks/administer-cluster/namespaces/)
+
+1. Create a namespace `myns`
+2. Create a webserver Pod in the `myns` namespace
+3. Review created resources and confirm `myns` namespace is assigned to the Pod
 4. Delete resources created
 5. Review the `NAMESPACED` column of the Kubernetes API resources
 
@@ -1380,6 +1383,10 @@ kubectl delete -f lab5-6.yaml
 kubectl api-resources | less
 ```
 </details>
+
+> Remember that namespaced resources are not visible by default unless the namespace is specified \
+> ⁉️ `kubectl get pods` - only shows resources in the `default` namespace \
+> ‼️ `kubectl get pods -n mynamespace` - only shows resources in the `mynamespace` namespace
 
 ## 6. Exploring Pods
 
