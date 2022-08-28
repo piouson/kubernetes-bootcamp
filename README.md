@@ -1033,7 +1033,7 @@ kubectl get all # pod gone
 </details>
 
 > Pods started without a deployment are called _Naked Pods_ - these are not managed by a replicaset, therefore, are not rescheduled on failure, not eligible for rolling updates, cannot be scaled, cannot be replaced automatically. \
-Although, _Naked Pods_ are not recommended in live environments, they are crucial for learning how to manage Pods, which is a big part of CKAD.
+Although, _Naked Pods_ are not recommended in live environments, they are crucial for learning how to manage Pods, which is a big part of [CKAD](https://www.cncf.io/certification/ckad/).
 
 ## 5. Pods
 
@@ -1056,6 +1056,8 @@ kubectl get pods # using `pod` or `pods` will work
 kubectl get pods $POD_NAME -o yaml | less
 # show details of pod in readable form, see `kubectl describe --help`
 kubectl describe pods $POD_NAME | less
+# view the pod spec
+kubectl explain pod.spec | less
 ```
 
 > With `kubectl`, everything after the ` -- ` flag is passed to the Pod \
@@ -1329,7 +1331,15 @@ kubectl delete -f lab5-5.yaml
 
 ### Using namespaces
 
+[Namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) are a way to divide/isolate cluster resources between multiple users. Names of resources need to be unique within a namespace, but not across namespaces.
+
+Not all Kubernetes resources are in a Namespace and Namespace-based scoping is only applicable for namespaced objects.
+
 ```sh
+# view kubernetes resources in a namespace
+kubectl api-resources --namespaced=true
+# view kubernetes resources not in a namespace
+kubectl api-resources --namespaced=false
 # create namespace called `myns`
 kubectl create namespace myns
 # run a pod in the `myns` namespace with `-n myns`
@@ -1344,6 +1354,8 @@ kubectl get all --all-namespaces
 kubectl config view --minify | grep namespace:
 # set `myns` namespace to be the namespace used for subsequent commands
 kubectl config set-context --current --namespace=myns
+# view the namespace spec
+kubectl explain namespace --recursive | less
 ```
 
 ### Lab 5.6 Namespaces
@@ -1352,6 +1364,7 @@ kubectl config set-context --current --namespace=myns
 2. Create a webserver Pod in the namespace
 3. Review created resources to confirm namespace assigned to the Pod
 4. Delete resources created
+5. Review the `NAMESPACED` column of the Kubernetes API resources
 
 <details>
 <summary>lab5.6 solution</summary>
@@ -1364,6 +1377,7 @@ kubectl apply -f lab5-6.yaml
 kubectl get pods
 kubectl describe -f lab5-6.yaml | less
 kubectl delete -f lab5-6.yaml
+kubectl api-resources | less
 ```
 </details>
 
@@ -1473,7 +1487,7 @@ kubectl port-forwarding mypod 8080:80 &
 ### Lab 6.2. Expose container port
 
 1. Create a webserver Pod
-2. View created resources and determine Pod IP address
+2. List created resources and determine Pod IP address
 3. Access the webserver with the IP address (you can use `curl`)
 4. Use port forwarding to access the webserver on http://localhost:5000
 5. Terminate port forwarding and delete created resources
@@ -1497,7 +1511,7 @@ kubectl delete pods webserver
 
 > This section requires a basic understanding of unix-based systems file permissions and access control covered in [ch2 - container access control](#docker-container-access-control)
 
-A [security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/) defines privilege and access control settings for a Pod or Container. Security context can be controlled at Pod-level `pod.spec.securityContext` as well as at container-level `pod.spec.containers.securityContext`. A detailed explanation of security context is provided in the linked docs, however, for CKAD, we will only focus on the following:
+A [security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/) defines privilege and access control settings for a Pod or Container. Security context can be controlled at Pod-level `pod.spec.securityContext` as well as at container-level `pod.spec.containers.securityContext`. A detailed explanation of security context is provided in the linked docs, however, for [CKAD](https://www.cncf.io/certification/ckad/), we will only focus on the following:
 
 - `runAsGroup: $GID` - specifies the GID of logged-in user in pod containers (pod and container level)
 - `runAsNonRoot: $boolean` - specifies whether the containers run as a non-root user at image level - containers will not start if set to `true` while image uses root (pod and container)
@@ -1554,16 +1568,25 @@ Using the official docs manifest example `pods/security/security-context.yaml` a
 kubectl explain pod.spec.securityContext | less
 kubectl explain pod.spec.containers.securityContext | less
 wget -qO lab6-3.yaml https://k8s.io/examples/pods/security/security-context.yaml
-nano lab6-3.yaml # edit file as below
-#spec:
-#  securityContext:
-#    runAsUser: 1010
-#    runAsGroup: 1020
-#    fsGroup: 1110
-#  containers:
-#  - name: sec-ctx-demo
-#    securityContext:
-#      allowPrivilegeEscalation: false
+nano lab6-3.yaml
+```
+
+```yaml
+# lab6-3.yaml
+spec:
+  securityContext:
+    runAsUser: 1010
+    runAsGroup: 1020
+    fsGroup: 1110
+  containers:
+  - name: sec-ctx-demo
+    securityContext:
+      allowPrivilegeEscalation: false
+# etc
+```
+
+```sh
+# host terminal
 kubectl apply -f lab6-3.yaml
 kubectl describe pods security-context-demo | less
 kubectl get pods security-context-demo -o yaml | grep -A 4 -E "spec:|securityContext:" | less
@@ -1579,14 +1602,23 @@ sudo su # sudo not found - an attacker might try other ways to gain root privile
 exit
 # host terminal
 nano lab6-3.yaml
-#spec:
-#  securityContext:
-#    runAsNonRoot: true
-#    fsGroup: 1110
-#  containers:
-#  - name: sec-ctx-demo
-#    securityContext:
-#      allowPrivilegeEscalation: false
+```
+
+```yaml
+# lab6-3.yaml
+spec:
+  securityContext:
+    runAsNonRoot: true
+    fsGroup: 1110
+  containers:
+  - name: sec-ctx-demo
+    securityContext:
+      allowPrivilegeEscalation: false
+# etc
+```
+
+```sh
+# host terminal
 kubectl delete -f lab6-3.yaml
 kubectl apply -f lab6-3.yaml
 kubectl get pods security-context-demo
@@ -1597,69 +1629,291 @@ kubectl describe pods security-context-demo | less
 
 ### Jobs
 
-Pods always restarts their containers on failure and maintain a 'Running' status. A Job is a way to run a Pod until certain tasks are complete, a 'Completed' status, without restarting their containers, e.g. backup. Jobs creates Pods for the task. \
-Job types are determined by the `completions` and `parallelism` values:
+A [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) creates one or more Pods and will continue to retry execution of the Pods until a specified number of them successfully terminate - a _Completed_ status. Deleting a Job will clean up the Pods it created. Suspending a Job will delete its active Pods until the Job is resumed again. The default `restartPolicy` for Pods is _Always_, while the default `restartPolicy` for Jobs is _Never_. \
+
+A Job type is determined by the values of the `completions` and `parallelism` fields - you can view all Job fields with `kubectl explain job.spec`:
+
+- `completions=1; parallelism=1` - one pod started per job, unless failure
+- `completions=1; parallelism=x` - multiple pods started, until one successfully completes task
+- `completions=n; parallelism=x` - multiple pods started, until `n` successful task completions
+- `ttlSecondsAfterFinished=x` - automatically delete a job after `x` seconds
 
 ```sh
-# one pod started per job, unless failure
-completions=1; parallelism=1
-# multiple pods started, until one successfully completes task
-completions=1; parallelism=x
-# multiple pods started, until n successful task completions
-completions=n; parallelism=x
-# clean up jobs automatically
-spec.ttlSecondsAfterFinished
-# explore jobs doc
-kubectl create job -h
-# create a job
-kubectl create job datejob --image=busybox -- date
+# view resource types you can create in kubernetes
+kubectl create -h
+# create a job `myjob` that runs `date` command, see `kubectl create job -h`
+kubectl create job myjob --image=busybox -- date
+# generate a job manifest
+kubectl create job myjob --image=busybox --dry-run=client -o yaml -- date
+# list jobs
+kubectl get jobs
+# list jobs and pods
+kubectl get jobs,pods
+# view the manifest of an existing job `myjob`
+kubectl get jobs myjob -o yaml
+# view details of a job `myjob`
+kubectl describe job myjob
+# view the job spec
+kubectl explain job.spec | less
 ```
+
+### Lab 6.4. Working with Jobs
+
+1. Review the Job spec to understand fields related to working with jobs
+2. Create a Job `myjob1` with a suitable image that runs the command `echo Lab 6.4. Jobs!`
+3. List jobs and pods
+4. Review the details of `myjob1`
+5. Review the yaml form of `myjob1`
+6. Create another Job `myjob2` with a suitable image that runs the command `date`
+7. List jobs and pods
+8. Repeat [4] using a manifest file with name `myjob3`
+9. List jobs and pods
+10. Delete all jobs created
+11. List jobs and pods
+12. Edit the manifest file and add the following:
+   - 5 pods successfully run the command
+   - pods are auto deleted after 30secs
+13. Apply the new manifest and:
+   - confirm the new changes work as expected
+   - note the total number of resources created
+   - note the behaviour after 30secs
+
+<details>
+<summary>lab6.4 solution</summary>
+
+```sh
+kubectl explain job.spec | less
+kubectl create job myjob1 --image=busybox -- echo Lab 6.4. Jobs!
+kubectl get jobs,pods
+kubectl describe job myjob1
+kubectl get jobs myjob1 -o yaml
+kubectl create job myjob2 --image=busybox -- date
+kubectl get jobs,pods
+kubectl create job myjob3 --image=busybox --dry-run=client -o yaml -- date >> lab6-4.yaml
+kubectl apply -f lab6-4.yaml
+kubectl get jobs,pods # so many pods!
+kubectl delete jobs myjob1 myjob2 myjob3
+kubectl get jobs,pods # pods auto deleted!
+nano lab6-4.yaml
+```
+
+```yaml
+# lab6-4.yaml
+kind: Job
+spec:
+  template:
+    spec:
+      completions: 5
+      ttlSecondsAfterFinished: 30
+      containers:
+# etc
+```
+
+```sh
+kubectl apply -f lab6-4.yaml
+watch minikube kubectl -- get jobs,pods # use this if only minikube installed and using alias
+watch kubectl get jobs,pods # use this if minikube and kubectl installed
+# watch the command for 30secs
+```
+</details>
 
 ### CronJobs
 
-CronJobs are used to run recurring tasks for `n` number of times. CronJobs creates Jobs to run the tasks.
+A [CronJob](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/) creates Jobs on a repeating schedule. It runs a job periodically on a given schedule, written in Cron format. This isn't very different from the Linux/Unix crontab (cron table).
+
+> Note that 1 minute is the lowest you can set a crontab schedule. Anything lower will require additional logic or hack
+> If you are not familiar with Linux/Unix crontab, have a look at [this beginner guide](https://ostechnix.com/a-beginners-guide-to-cron-jobs/) or [this beginner tutorial](https://linuxhint.com/cron_jobs_complete_beginners_tutorial/)
 
 ```sh
 # cronjob time syntax: * * * * * - minute hour day_of_month month day_of_week
 kubectl create cronjob -h
-# create a cronjob
+# create a cronjob `cj` that run a job every minute
 kubectl create cronjob cj --image=busybox --schedule="* * * * *" -- date
-# view details on autocleanup of jobs created by cronjobs
+# view the cronjob spec
+kubectl explain cronjob.spec | less
+# view the job spec of cronjobs
 kubectl explain cronjobs.spec.jobTemplate.spec
 ```
 
-### Lab 6.4. Working with jobs
+### Lab 6.5. Working with CronJobs
 
-- Create a job that uses a busybox image to run the `date` command. Review output of the job.
-- Create a recurring job that uses busybox to run the `date` command every 10s. Cleanup jobs after 1min of completion. Review output of jobs.
+1. Review the CronJob spec to understand fields related to working with cronjobs
+2. Review the Job spec of a CronJob and compare this to a standard Job spec
+3. Create a job with a suitable image that runs the `date` command every minute
+4. Review details of the created CronJob
+5. Review the YAML form of the created CronJob
+6. List created resources and compare results before and after 1 minute
+7. Delete created resources
 
-### Limits and Requests
-
-Request is the initial/minimum value of resources provided to a Pod, while Limit is the maximum value of resources available to a Pod. See [container resource management](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) for more details.
-
-> A Pod remains in "Pending" status until a Node with sufficient resources becomes available
+<details>
+<summary>lab6.5 solution</summary>
 
 ```sh
-# limit types
-spec.containers[].resources.limits.cpu # in cores and millicores, 500m = 0.5 CPU
-spec.containers[].resources.limits.memory # Ki (1024) | Mi | Gi | Ti | Pi | Ei | m | "" | k (1000) | M | G | T | P | E
-spec.containers[].resources.limits.hugepages-<size>
-# request types
-spec.containers[].resources.requests.cpu
-spec.containers[].resources.requests.memory
-spec.containers[].resources.requests.hugepages-<size>
+kubectl explain cronjob.spec | less
+kubectl explain cronjob.spec.jobTemplate.spec | less
+kubectl create cronjob mycj --image=busybox --schedule="* * * * *" -- date
+kubectl describe cj mycj | less
+kubectl get cj mycj -o yaml | less
+watch minikube kubectl -- get all # watch for changes after 1 minute
+kubectl delete cj mycj # deletes associated jobs and pods!
+```
+</details>
+
+> All CronJob `schedule` times are based on the timezone of the [_kube-controller-manager_](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/) \
+> Since a CronJob runs a Job periodically, the Job spec auto delete feature `ttlSecondsAfterFinished` is quite handy
+
+### Requests and Limits
+
+By default, Linux will not limit resources available to processes - containers are processes running on Linux. However, when creating Pod, you can optionally specify how much of each resource a container needs. The most common resources to specify are CPU and RAM, but there are others.
+
+_Request_ is the initial/minimum amount of a particular resource provided to a container, while _Limit_ is the maximum amount of the resource available - the container cannot exceed this value. See [resource management for pods and containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) for more details.
+
+> A Pod resource request/limit is the sum of the resource requests/limits of containers in the Pod
+> A Pod remains in "Pending" status until a Node with sufficient resources becomes available \
+> Note that _Requests and Limits_ management at the Namespace-level is not for CKAD but covered in [CKA](https://www.cncf.io/certification/cka/)
+
+#### Resource requests and limits of Pod and container
+
+- `spec.containers[].resources.limits.cpu` - in cores and millicores, 500m = 0.5 CPU
+- `spec.containers[].resources.limits.memory` - Ki (1024) / k (1000) | Mi/M | Gi/G | Ti/T | Pi/P | Ei/E
+- `spec.containers[].resources.limits.hugepages-<size>`
+- `spec.containers[].resources.requests.cpu`
+- `spec.containers[].resources.requests.memory`
+- `spec.containers[].resources.requests.hugepages-<size>`
+
+```sh
+# view the pod spec
+kubectl explain pod.spec
+# view the containers object within the pod spec
+kubectl explain pod.spec
+# view container resources object within the pod spec
+kubectl explain pod.spec.containers.resources
+# available limit types
 ```
 
-### Lab 6.5. Resource limitation
+### Lab 6.6. Resource limitation
 
-- Create a Pod manifest file Pod with the following:
-  - runs in `dev` namespace
-  - assign environment variable `NODE_ENV=development`
-  - uses `busybox` image that runs command `printenv` with arguments `NODE_ENV`
-  - restart only on failure
-  - initial - 0.25 CPU, 64 mebibytes
-  - maximum - 0.5 CPU, 128 mebibytes
-- View created pod details, status and output
+1. Using the [official container resource example manifest](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#example-1), Create a Pod with the following spec:
+   - runs in `dev` namespace
+   - runs two containers, MongoDB database and webserver frontend
+   - restart only on failure, see `pod.spec.restartPolicy`
+   - both containers starts with 0.25 CPU, 64 mebibytes RAM
+   - both containers does not exceed 1 CPU, 256 mebibytes RAM
+2. List created pods
+3. Review pod details and confirm the specified resource quotas are applied
+4. Edit the Pod manifest as follows:
+   - both containers starts with an insufficient amount RAM, e.g 4 mebibytes
+   - both containers does not exceed 8 mebibytes RAM
+5. Apply the manifest and review behaviour
+6. Review logs for both containers
+7. Compare the logs output in [6] to details from `kubectl describe`
+8. Edit the Pod manifest as follows:
+   - both containers starts with an amount of RAM equal to host RAM (run `cat /proc/meminfo` or `free -h`)
+   - both containers starts with an amount CPU equal to host CPU (run `cat /proc/cpuinfo` or `lscpu`)
+   - both containers does not exceed x2 the amount of host RAM
+9. Apply the manifest and review behaviour
+10. Delete created resources
+
+<details>
+<summary>lab6.6 solution</summary>
+
+```sh
+kubectl create ns dev --dry-run=client -o yaml >> lab6-6.yaml
+echo --- >> lab6-6.yaml
+# add the contents of the example manifest to lab6-6.yaml and modify accordingly
+nano lab6-6.yaml
+```
+
+```yaml
+# lab6-6.yaml
+kind: Namespace
+metadata:
+  name: dev
+# etc
+---
+kind: Pod
+metadata:
+  name: webapp
+  namespace: dev
+spec:
+  restartPolicy: OnFailure
+  containers:
+  - image: mongo
+    name: database
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "256Mi"
+        cpu: 1
+  - image: nginx
+    name: frontend
+    resources: # same as above
+# etc
+```
+
+```sh
+kubectl apply -f lab6-6.yaml
+kubectl get pods -n dev
+kubectl describe pods webapp -n dev | less
+kubectl describe pods webapp -n dev | grep -A 4 -E "Containers:|State:|Limits:|Requests:" | less
+nano lab6-6.yaml
+```
+
+```yaml
+# lab6-6.yaml
+kind: Pod
+spec:
+  containers:
+  - resources:
+      requests:
+        memory: "4Mi"
+        cpu: "250m"
+      limits:
+        memory: "8Mi"
+        cpu: 1
+# etc - use above resources for both containers
+```
+
+```sh
+kubectl delete -f lab6-6.yaml
+kubectl apply -f lab6-6.yaml
+watch minikube kubectl -- get pods -n dev # OOMKilled | CrashLoopBackOff
+kubectl get logs webapp -n dev -c database # not very helpful logs
+kubectl get logs webapp -n dev -c frontend
+kubectl describe pods webapp -n dev | less # helpful logs - Last State: Terminated, Reason: OutOfMemory (OOMKilled)
+kubectl describe pods webapp -n dev | grep -A 4 -E "Containers:|State:|Limits:|Requests:" | less
+cat /proc/cpuinfo # check for host memory
+cat /proc/meminfo # check for host ram
+nano lab6-6.yaml
+```
+
+```yaml
+# lab6-6.yaml
+kind: Pod
+spec:
+  containers:
+  - resources:
+      requests:
+        memory: "8Gi" # use value from `cat /proc/meminfo`
+        cpu: 2 # use value from `cat /proc/cpuinfo`
+      limits:
+        memory: "16Gi"
+        cpu: 4
+# etc - use above resources for both containers
+```
+
+```sh
+kubectl delete -f lab6-6.yaml
+kubectl apply -f lab6-6.yaml
+watch minikube kubectl -- get pods -n dev # Pending - waits forever until enough resource available
+kubectl describe pods webapp
+kubectl delete -f lab6-6.yaml
+```
+</details>
+
+> Remember a multi-container Pod is not recommended in live environments but only used here for learning purposes
 
 ## 7. Deployments
 
@@ -1839,7 +2093,7 @@ Create a DaemonSet by using a [template from official docs](https://kubernetes.i
 
 ### Lab 7.6. Autoscaling
 
-Autoscaling is used in real clusters but not covered in CKAD. See [Kubernetes Metrics Server](https://github.com/kubernetes-sigs/metrics-server) for more details and see [HorizontalPodAutoscaler Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#run-and-expose-php-apache-server) for complete lab.
+Autoscaling is used in real clusters but not covered in [CKAD](https://www.cncf.io/certification/ckad/). See [Kubernetes Metrics Server](https://github.com/kubernetes-sigs/metrics-server) for more details and see [HorizontalPodAutoscaler Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#run-and-expose-php-apache-server) for complete lab.
 
 ```sh
 # install metrics server
@@ -1865,8 +2119,8 @@ Kube-proxy agent listens for new Services and Endpoints on a random port and red
 
 - ClusterIP service type is the default, exposes the service on an internal Cluster IP address
 - NodePort service type provides public access to the application through host port forwarding
-- LoadBalancer for cloud service (not for CKAD)
-- ExternalName for DNS names (not for CKAD)
+- LoadBalancer for cloud service (not for [CKAD](https://www.cncf.io/certification/ckad/))
+- ExternalName for DNS names (not for [CKAD](https://www.cncf.io/certification/ckad/))
 
 ```sh
 # view default services/pods
@@ -1992,7 +2246,7 @@ There are three different identifiers that controls entities that a Pod can comm
 
 - `podSelector`: Pod allows access to other Pods with the matching selector label (note: a Pod cannot block itself)
 - `namespaceSelector`: Pod allows incoming traffic from namespaces with the matching selector label
-- `ipBlock`: specifies a range of cluster-external IPs to allow access (not for CKAD - note: node traffic is always allowed)
+- `ipBlock`: specifies a range of cluster-external IPs to allow access (not for [CKAD](https://www.cncf.io/certification/ckad/) - note: node traffic is always allowed)
 
 ```sh
 apiVersion: networking.k8s.io/v1
@@ -2424,7 +2678,7 @@ curl --cacert $CERT_FILE --header "Authorization: Bearer $TOKEN" https://kuberne
 
 ### RBAC
 
-Role-based access control (RBAC) is a method of regulating access to computer or network resources based on the roles of individual users within your organization. RBAC authorization uses the `rbac.authorization.k8s.io` [API group](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups-and-versioning) for dynamic policy configuration through the Kubernetes API. RBAC is beyond CKAD, however, a basic understanding of RBAC can help understand ServiceAccount permissions.
+Role-based access control (RBAC) is a method of regulating access to computer or network resources based on the roles of individual users within your organization. RBAC authorization uses the `rbac.authorization.k8s.io` [API group](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups-and-versioning) for dynamic policy configuration through the Kubernetes API. RBAC is beyond [CKAD](https://www.cncf.io/certification/ckad/), however, a basic understanding of RBAC can help understand ServiceAccount permissions.
 
 The RBAC API declares four kinds of Kubernetes object: [Role, ClusterRole](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole), [RoleBinding and ClusterRoleBinding](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding).
 
@@ -2619,7 +2873,7 @@ tar -tvf file.tar
 
 [Kustomize](https://github.com/kubernetes-sigs/kustomize) is a Kubernetes standalone tool to customize Kubernetes resources through a [kustomization.yaml file](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#kustomization).
 
-> Kustomize is not currently part of the CKAD curriculum but good to know for general DevOps practice.
+> Kustomize is not currently part of the [CKAD curriculum](https://github.com/cncf/curriculum) but good to know for general DevOps practice.
 
 [Kustomize can manage configuration files in three ways](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize):
 
