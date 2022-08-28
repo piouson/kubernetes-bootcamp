@@ -1263,10 +1263,10 @@ kubectl delete -f lab5-4.yaml
 # download a file
 wget https://url/of/file.extension
 # save downloaded file with a new name
-wget https://url/of/file.extension new-name.extension
+wget https://url/of/file.extension -O new-name.extension
 # hide output while downloading
 wget -q https://url/of/file.extension
-# view contents of a downloaded file without saving, use `-q -O` for quiet mode
+# view contents of a downloaded file without saving, use `-q -O-` for quiet mode
 wget -O- https://url/of/file.extension
 ```
 
@@ -1495,34 +1495,105 @@ kubectl delete pods webserver
 
 ### Security context
 
-A [security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/) defines privilege and access control settings for a Pod or Container. There is a [comprehensive list of security context settings](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/), but we only focus on the following:
+> This section requires a basic understanding of unix-based systems file permissions and access control covered in [ch2 - container access control](#docker-container-access-control)
 
-- `runAsUser`: specifies the user ID that all processes running in Pod containers should run with
-- `runAsGroup` field specifies the primary group ID of 3000 for all processes within any containers of the Pod. Default is root(0)
-- `fsGroup` field is specified, all processes of the container are also part of the supplementary group ID 2000. The owner for volume /data/demo and any files created in that volume will be Group ID 2000.
-- `privileged`: Running as privileged or unprivileged.
-- `allowPrivilegeEscalation`: Controls whether a process can gain more privileges than its parent process. This is always true when the container is run as privileged, or has `CAP_SYS_ADMIN` (root)
-- `readOnlyRootFilesystem`: Mounts the container's root filesystem as read-only.
+A [security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/) defines privilege and access control settings for a Pod or Container. Security context can be controlled at Pod-level `pod.spec.securityContext` as well as at container-level `pod.spec.containers.securityContext`. A detailed explanation of security context is provided in the linked docs, however, for CKAD, we will only focus on the following:
+
+- `runAsGroup: $GID` - specifies the GID of logged-in user in pod containers (pod and container level)
+- `runAsNonRoot: $boolean` - specifies whether the containers run as a non-root user at image level - containers will not start if set to `true` while image uses root (pod and container)
+- `runAsUser: $UID` - specifies the UID of logged-in user in pod containers (pod and container)
+- `fsGroup: $GID` - specifies additional GID used for filesystem (mounted volumes) in pod containers (pod level)
+- `privileged: $boolean` - controls whether containers will run as privileged or unprivileged (container level)
+- `allowPrivilegeEscalation: $boolean` - controls whether a process can gain more privileges than its parent process - always `true` when the container is run as privileged, or has `CAP_SYS_ADMIN` (container level)
+- `readOnlyRootFilesystem: $boolean` - controls whether the container has a read-only root filesystem (container level)
+
+> 
 
 ```sh
-# show details of pod-level security context
+# show pod-level security context options
 kubectl explain pod.spec.securityContext | less
-# show details of container-level security context
+# show container-level security context options
 kubectl explain pod.spec.containers.securityContext | less
+# view pod details for `mypod`
+kubectl get pods mypod -o yaml
 ```
 
 ### Lab 6.3. Set Pod security context
 
-1. `allowPrivilegeEscalation`, `privileged`, `readOnlyRootFilesystem`, `runAsGroup`, `runAsNonRoot` and `runAsUser`
-1. Use the official docs security context example manifest `pods/security/security-context.yaml` as base to 
+Using the official docs manifest example `pods/security/security-context.yaml` as base to:
 
-### Lab 6.3. RBAC
-runAsUser: 1000
-    runAsGroup: 3000
-    fsGroup: 2000
+1. Explore and compare the security context options available at pod-level vs container-level
+2. Use the official manifest example `pods/security/security-context.yaml` as base to create a Pod manifest with these security context options:
+   - all containers have a logged-in user of `UID: 1010, GID: 1020`
+   - all containers set to run as non-root user
+   - mounted volumes for all containers in the pod have group `GID: 1110`
+   - escalating to root privileges is disabled ([more on privilege escalation](https://blog.g0tmi1k.com/2011/08/basic-linux-privilege-escalation/))
+3. Apply the manifest file and review details of created pod
+4. Review pod details and confirm security context applied at pod-level and container-level
+5. Connect an interactive shell to a container in the pod and confirm the following:
+   - current user
+   - group membership of current user
+   - ownership of entrypoint process
+   - ownership of the mounted volume `/data/demo`
+   - create a new file `/data/demo/new-file` and confirm file ownership
+   - escalate to a shell with root privileges `sudo su`
+6. Edit the pod manifest file to the following:
+   - do not set logged-in user UID/GID
+   - do not set root privilege escalation 
+   - all containers set to run as non-root user
+7. Create a new pod with updated manifest
+8. Review pod details and confirm events and behaviour
+   - what were your findings?
+9. Delete created resources
 
-- Create a Pod that runs busybox as user ID `1000`, group ID `3000` and filesystem group ID `2000`, and disable container privilege escalation. Connect to container and elevate access with `sudo`
-- Create a Pod that runs nginx as Non Root. Connect to the container.
+<details>
+<summary>lab6.3 solution</summary>
+
+```sh
+# host terminal
+kubectl explain pod.spec.securityContext | less
+kubectl explain pod.spec.containers.securityContext | less
+wget -qO lab6-3.yaml https://k8s.io/examples/pods/security/security-context.yaml
+nano lab6-3.yaml # edit file as below
+#spec:
+#  securityContext:
+#    runAsUser: 1010
+#    runAsGroup: 1020
+#    fsGroup: 1110
+#  containers:
+#  - name: sec-ctx-demo
+#    securityContext:
+#      allowPrivilegeEscalation: false
+kubectl apply -f lab6-3.yaml
+kubectl describe pods security-context-demo | less
+kubectl get pods security-context-demo -o yaml | grep -A 4 -E "spec:|securityContext:" | less
+kubectl exec -it security-context-demo -- sh
+# container terminal
+whoami
+id # uid=1010 gid=1020 groups=1110
+ps
+ls -l /data # root 1110
+touch /data/demo/new-file
+ls -l /data/demo # 1010 1110
+sudo su # sudo not found - an attacker might try other ways to gain root privileges
+exit
+# host terminal
+nano lab6-3.yaml
+#spec:
+#  securityContext:
+#    runAsNonRoot: true
+#    fsGroup: 1110
+#  containers:
+#  - name: sec-ctx-demo
+#    securityContext:
+#      allowPrivilegeEscalation: false
+kubectl delete -f lab6-3.yaml
+kubectl apply -f lab6-3.yaml
+kubectl get pods security-context-demo
+kubectl describe pods security-context-demo | less
+# found error creating container - avoid conflicting rules, enforcing non-root user `runAsNonRoot: true` requires a non-root user specified `runAsUser: $UID`
+```
+</details>
 
 ### Jobs
 
