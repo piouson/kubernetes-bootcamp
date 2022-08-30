@@ -1,6 +1,8 @@
 # CKAD Bootcamp
 
-This course is a part of my cloud-native application developer bootcamp series. Star this repo to say thank you or buy me coffee with the sponsor button.
+This course is a part of my cloud-native application developer bootcamp series. Star this repo to say thank you!
+
+<a href="https://github.com/sponsors/piouson" target="_blank"><img src="https://img.shields.io/static/v1?message=buy%20me%20coffee&logo=buymeacoffee&labelColor=2E0050&color=4B0083&logoColor=pink&label=%20&style=for-the-badge" alt="buy me coffee to sponsor this project"></a>
 
 ## Learning Outcomes
 
@@ -15,7 +17,8 @@ In summary, you will be learning cloud-native application development, which is 
 <details>
   <summary>CKAD exam objectives</summary>
 
-  <a target="_blank" width="100%" align="center" href="https://github.com/cncf/curriculum" alt="CKAD exam curriculum">![image](https://user-images.githubusercontent.com/17856665/186679939-ea79ce57-f277-45c8-8d02-6595d02d9f85.png)</a>
+<a target="_blank" width="100%" align="center" href="https://github.com/cncf/curriculum" alt="CKAD exam curriculum">![image](https://user-images.githubusercontent.com/17856665/186679939-ea79ce57-f277-45c8-8d02-6595d02d9f85.png)</a>
+
 </details>
 
 ## Requirements
@@ -29,7 +32,7 @@ A Unix-based environment running docker (Docker Engine or Docker Desktop).
 - preferably, have a command-line package manager for your operating system
   - macOS use [Homebrew](https://brew.sh/)
   - Windows use [winget](https://docs.microsoft.com/en-us/windows/package-manager/winget/)
-  
+
 > Docker Desktop has certain network limitations affecting some network related labs. \
 > Consider using Docker Engine if you are **not** on macOS
 
@@ -67,15 +70,16 @@ sudo usermod -aG docker $USER
 # 5. start a new terminal to update group membership
 docker run hello-world
 ```
+
 </details>
 
 ## 1. Understanding and Using Containers
 
-A [container](https://www.docker.com/resources/what-container/) is a standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another.. A **container-runtime**, which relies on the host kernel, is required to run a container.
+A [container](https://www.docker.com/resources/what-container/) is a standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another. A **container-runtime**, which relies on the host kernel, is required to run a container.
 
 [Docker](https://www.docker.com/) is most popular container-runtime and container-solution, but there are other runtimes like [runc](https://github.com/opencontainers/runc#runc), [cri-o](https://cri-o.io/), [containerd](https://containerd.io/), etc, but the only significant container-solutions today are Docker and [Podman](https://podman.io/)
 
-A container image is a lightweight, standalone, executable package of software that includes everything needed to run an application: code, runtime, system tools, system libraries and settings. Container images become containers at runtime. 
+A container image is a lightweight, standalone, executable package of software that includes everything needed to run an application: code, runtime, system tools, system libraries and settings. Container images become containers at runtime.
 
 The [Open Container Initiative (OCI)](https://opencontainers.org/) creates open industry standards around container formats and runtimes.
 
@@ -227,6 +231,7 @@ docker ps
 docker stop webserver3
 docker rm webserver1 webserver2 webserver3
 ```
+
 </details>
 
 > Containers may not usually have `bash` shell, but will usually have the dash shell `sh`
@@ -269,6 +274,7 @@ docker ps -a
 docker stop box2
 docker rm box1 box2 box3
 ```
+
 </details>
 
 > The `Entrypoint` of a container is [the init process](https://en.wikipedia.org/wiki/Init) and allows the container to run as an executable. Commands passed to a container are passed to the container's entrypoint process.
@@ -333,6 +339,7 @@ docker ps -a
 docker stop webserver
 docker rm webserver
 ```
+
 </details>
 
 > Always run containers in detached mode to avoid getting stuck in the container `STDOUT`
@@ -366,6 +373,7 @@ docker ps -a
 docker stop webserver
 docker rm webserver
 ```
+
 </details>
 
 ### Lab 1.7. Container environment variables
@@ -402,6 +410,7 @@ docker system prune --all --volumes
 docker image ls
 docker volume ls
 ```
+
 </details>
 
 > You don't always have to run a new container, we have had to do this to apply new configuration. You can restart an existing container `docker ps -a`, if it meets your needs, with `docker start $CONTAINER`
@@ -455,6 +464,7 @@ docker image history localhost/nginx:1.1 # tagging isn't a change
 docker image rm $IMAGE_ID # error conflict
 docker image rm localhost/nginx:1.1 # deleting removes tag
 ```
+
 </details>
 
 ### Lab 2.2. Custom images
@@ -592,6 +602,7 @@ docker stop alps3 alps5 alps6
 docker rm alps1 alps2 alps3 alps4 alps5 alps6
 docker image rm local/alpine:1.0 local/alpine:1.1
 ```
+
 </details>
 
 > In most cases, building an image goes beyond a successful build. Some installed packages require additional steps to run containers successfully
@@ -643,6 +654,7 @@ docker image rm local/app:1.0
 cd ..
 rm -rf test-app
 ```
+
 </details>
 
 ### Docker container access control
@@ -661,6 +673,7 @@ UIDs and GIDs are used to implement _Discretionary Access Control (DAC)_ in unix
 <summary><code>ls -l</code> in detail</summary>
 
 ![output of commandline list](https://user-images.githubusercontent.com/17856665/187016629-e6c4f17f-f06a-4aeb-98c4-0cfc4d371be2.png)
+
 </details>
 
 ```sh
@@ -679,8 +692,8 @@ cat /etc/group
 root:x:0:
 piouson:x:1000:
 docker:x:1001:piouson
-# list folder contents and their owner (user/group) names 
-ls -l 
+# list folder contents and their owner (user/group) names
+ls -l
 # show ownership by ids, output - `permision number_of_links user group size date_time_created file_or_folder_name`
 ls -ln
 ```
@@ -793,6 +806,7 @@ exit
 # host terminal
 docker image rm test-image
 ```
+
 </details>
 
 > If a containerized application can run without privileges, change to a non-root user \
@@ -851,8 +865,10 @@ kubectl get all, see `kubectl get --help`
 kubectl create deploy myapp --image=nginx
 # create a deployment with six replicas
 kubectl create deploy myapp --image=nginx --replcias=6
-# view complete list of supported API resources
+# view complete list of supported API resources, shows api-versions and their resource types
 kubectl api-resources
+# view api-versions only
+kubectl api-versions
 # delete a deployment, see `kubectl delete --help`
 kubectl delete deploy myapp
 ```
@@ -887,6 +903,7 @@ kubectl get all
 kubectl delete svc kubernetes
 kubectl get all # new kubernetes service is auto created to replace deleted
 ```
+
 </details>
 
 > Remember to delete Google cloud cluster to avoid charges if you wish to use a local environment detailed in the next chapter
@@ -1030,16 +1047,17 @@ kubectl delete pod webserver
 kubectl get all # pod gone
 # see `lab3.2 solution` for remaining steps
 ```
+
 </details>
 
 > Pods started without a deployment are called _Naked Pods_ - these are not managed by a replicaset, therefore, are not rescheduled on failure, not eligible for rolling updates, cannot be scaled, cannot be replaced automatically. \
-Although, _Naked Pods_ are not recommended in live environments, they are crucial for learning how to manage Pods, which is a big part of [CKAD](https://www.cncf.io/certification/ckad/).
+> Although, _Naked Pods_ are not recommended in live environments, they are crucial for learning how to manage Pods, which is a big part of [CKAD](https://www.cncf.io/certification/ckad/).
 
 ## 5. Pods
 
 [Pods](https://kubernetes.io/docs/concepts/workloads/pods/) are the smallest deployable units of computing that you can create and manage in Kubernetes.
 
-###  Managing Pods
+### Managing Pods
 
 ```sh
 # run a pod, see `kubectl run --help`
@@ -1060,7 +1078,7 @@ kubectl describe pods $POD_NAME | less
 kubectl explain pod.spec | less
 ```
 
-> With `kubectl`, everything after the ` -- ` flag is passed to the Pod \
+> With `kubectl`, everything after the `--` flag is passed to the Pod \
 > 💡 `-- <args>` corresponds to Dockerfile `CMD` while `--command -- <args>` corresponds to `ENTRYPOINT` \
 > See [answer to `kubectl run --command vs -- arguments`](https://stackoverflow.com/a/66078726) for more details
 
@@ -1070,6 +1088,8 @@ kubectl explain pod.spec | less
 2. Review full details of the Pod in YAML form
 3. Display details of the Pod in readable form and review the Node, IP, container start date/time and Events
 4. Delete the Pod
+5. Review the Pod spec
+6. Have a look at the Kubernetes API to determine when pods were introduced
 
 <details>
 <summary>lab5.1 solution</summary>
@@ -1079,7 +1099,10 @@ kubectl run mypod --image=nginx
 kubectl get pods
 kubectl describe pods mypod | less
 kubectl delete pods mypod
+kubectl explain pod.spec
+kubectl api-resources # pods were introduced in v1 - the first version of kubernetes
 ```
+
 </details>
 
 ### Pod manifest file
@@ -1093,21 +1116,20 @@ metadata:
   name: box # metadata information, including labels, namespace, etc
 spec:
   containers:
-  - name: box
-    image: busybox:1.28
-    volumeMounts: # mount created volume
-    - name: varlog
-      mountPath: /var/log
+    - name: box
+      image: busybox:1.28
+      volumeMounts: # mount created volume
+        - name: varlog
+          mountPath: /var/log
   volumes: # create an empty-directory volume
-  - name: varlog
-    emptyDir: {}
+    - name: varlog
+      emptyDir: {}
 ```
 
 > Volumes are covered in more detail in [Chapter 10 - Storage](#10-storage). For now it will suffice to know how to create and mount an _empty-directory_ volume
 
 ```sh
-# view fields description of a Kubernetes Object - see `kubectl explain --help`
-kubectl explain <object>[.field]
+# view description of a Kubernetes Object with `kubectl explain <object>[.field]`, see `kubectl explain --help`
 kubectl explain pod
 kubectl explain pod.metadata # or `pod.spec`, `pod.status` etc
 # include nested fields with `--recursive`
@@ -1148,6 +1170,7 @@ kubectl get pods
 kubectl describe pods myapp | less
 kubectl delete -f lab5-2.yaml
 ```
+
 </details>
 
 > Practice managing resources mainly with YAML file for all Labs going forward
@@ -1193,13 +1216,13 @@ metadata:
   name: myapp
 spec:
   containers:
-  - name: myapp
-    image: busybox:1.28
-    command: ['sh', '-c', 'echo App is running!']
+    - name: myapp
+      image: busybox:1.28
+      command: ["sh", "-c", "echo App is running!"]
   initContainers:
-  - name: myapp-init
-    image: busybox:1.28
-    command: ['sh', '-c', 'echo "App is initialising..." && sleep 60']
+    - name: myapp-init
+      image: busybox:1.28
+      command: ["sh", "-c", 'echo "App is initialising..." && sleep 60']
   restartPolicy: Never
 ```
 
@@ -1212,6 +1235,7 @@ kubectl describe -f lab5-3.yaml | less
 kubectl get pods
 kubectl delete -f lab5-3.yaml
 ```
+
 </details>
 
 ### Lab 5.4. Multi-container Pod
@@ -1219,7 +1243,7 @@ kubectl delete -f lab5-3.yaml
 1. Create a Pod with 2 containers and a volumne shared by both containers, see [multi-container docs](https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containers-same-pod-shared-volume/#creating-a-pod-that-runs-two-containers).
 2. List created resources
 3. View details of the Pod.
-5. Delete the Pod
+4. Delete the Pod
 
 <details>
 <summary>lab5.4 solution</summary>
@@ -1232,19 +1256,19 @@ metadata:
   name: myapp
 spec:
   containers:
-  - name: myapp-1
-    image: busybox:1.28  
-    volumeMounts:
-    - name: logs
-      mountPath: /var/log
-  - name: myapp-2
-    image: busybox:1.28
-    volumeMounts:
-    - name: logs
-      mountPath: /var/log
+    - name: myapp-1
+      image: busybox:1.28
+      volumeMounts:
+        - name: logs
+          mountPath: /var/log
+    - name: myapp-2
+      image: busybox:1.28
+      volumeMounts:
+        - name: logs
+          mountPath: /var/log
   volumes:
-  - name: logs
-    emptyDir: {}
+    - name: logs
+      emptyDir: {}
 ```
 
 ```sh
@@ -1255,6 +1279,7 @@ kubectl logs myapp
 kubectl logs myapp -c myapp-logs
 kubectl delete -f lab5-4.yaml
 ```
+
 </details>
 
 > Always create single container Pods!
@@ -1294,29 +1319,29 @@ metadata:
   name: myapp
 spec:
   containers:
-  - name: myapp
-    image: busybox:1.28
-    args:
-    - /bin/sh
-    - -c
-    - >
-      while true;
-      do
-        echo $(date) >> /var/log/date.log;
-        sleep 1;
-      done      
-    volumeMounts:
-    - name: logs
-      mountPath: /var/log
-  - name: myapp-logs
-    image: busybox:1.28
-    args: [/bin/sh, -c, 'tail -F /var/log/date.log']
-    volumeMounts:
-    - name: logs
-      mountPath: /var/log
+    - name: myapp
+      image: busybox:1.28
+      args:
+        - /bin/sh
+        - -c
+        - >
+          while true;
+          do
+            echo $(date) >> /var/log/date.log;
+            sleep 1;
+          done
+      volumeMounts:
+        - name: logs
+          mountPath: /var/log
+    - name: myapp-logs
+      image: busybox:1.28
+      args: [/bin/sh, -c, "tail -F /var/log/date.log"]
+      volumeMounts:
+        - name: logs
+          mountPath: /var/log
   volumes:
-  - name: logs
-    emptyDir: {}
+    - name: logs
+      emptyDir: {}
 ```
 
 ```sh
@@ -1327,6 +1352,7 @@ kubectl logs myapp
 kubectl logs myapp -c myapp-logs
 kubectl delete -f lab5-5.yaml
 ```
+
 </details>
 
 ### Using namespaces
@@ -1382,6 +1408,7 @@ kubectl describe -f lab5-6.yaml | less
 kubectl delete -f lab5-6.yaml
 kubectl api-resources | less
 ```
+
 </details>
 
 > Remember that namespaced resources are not visible by default unless the namespace is specified \
@@ -1451,6 +1478,7 @@ kubectl get pods
 kubectl describe -f lab6-1.yaml | less
 kubectl delete -f lab6-1.yaml
 ```
+
 </details>
 
 ### Ephemeral containers
@@ -1512,6 +1540,7 @@ fg 1
 ctrl+c
 kubectl delete pods webserver
 ```
+
 </details>
 
 ### Security context
@@ -1528,7 +1557,7 @@ A [security context](https://kubernetes.io/docs/tasks/configure-pod-container/se
 - `allowPrivilegeEscalation: $boolean` - controls whether a process can gain more privileges than its parent process - always `true` when the container is run as privileged, or has `CAP_SYS_ADMIN` (container level)
 - `readOnlyRootFilesystem: $boolean` - controls whether the container has a read-only root filesystem (container level)
 
-> 
+>
 
 ```sh
 # show pod-level security context options
@@ -1543,29 +1572,29 @@ kubectl get pods mypod -o yaml
 
 Using the official docs manifest example `pods/security/security-context.yaml` as base to:
 
-1. Explore and compare the security context options available at pod-level vs container-level
-2. Use the official manifest example `pods/security/security-context.yaml` as base to create a Pod manifest with these security context options:
+1. Use the official manifest example `pods/security/security-context.yaml` as base to create a Pod manifest with these security context options:
    - all containers have a logged-in user of `UID: 1010, GID: 1020`
    - all containers set to run as non-root user
    - mounted volumes for all containers in the pod have group `GID: 1110`
    - escalating to root privileges is disabled ([more on privilege escalation](https://blog.g0tmi1k.com/2011/08/basic-linux-privilege-escalation/))
-3. Apply the manifest file and review details of created pod
-4. Review pod details and confirm security context applied at pod-level and container-level
-5. Connect an interactive shell to a container in the pod and confirm the following:
+2. Apply the manifest file and review details of created pod
+3. Review pod details and confirm security context applied at pod-level and container-level
+4. Connect an interactive shell to a container in the pod and confirm the following:
    - current user
    - group membership of current user
    - ownership of entrypoint process
    - ownership of the mounted volume `/data/demo`
    - create a new file `/data/demo/new-file` and confirm file ownership
    - escalate to a shell with root privileges `sudo su`
-6. Edit the pod manifest file to the following:
+5. Edit the pod manifest file to the following:
    - do not set logged-in user UID/GID
-   - do not set root privilege escalation 
+   - do not set root privilege escalation
    - all containers set to run as non-root user
-7. Create a new pod with updated manifest
-8. Review pod details and confirm events and behaviour
+6. Create a new pod with updated manifest
+7. Review pod details and confirm events and behaviour
    - what were your findings?
-9. Delete created resources
+8. Delete created resources
+9. Explore the Pod spec and compare the security context options available at pod-level vs container-level
 
 <details>
 <summary>lab6.3 solution</summary>
@@ -1586,9 +1615,9 @@ spec:
     runAsGroup: 1020
     fsGroup: 1110
   containers:
-  - name: sec-ctx-demo
-    securityContext:
-      allowPrivilegeEscalation: false
+    - name: sec-ctx-demo
+      securityContext:
+        allowPrivilegeEscalation: false
 # etc
 ```
 
@@ -1618,9 +1647,9 @@ spec:
     runAsNonRoot: true
     fsGroup: 1110
   containers:
-  - name: sec-ctx-demo
-    securityContext:
-      allowPrivilegeEscalation: false
+    - name: sec-ctx-demo
+      securityContext:
+        allowPrivilegeEscalation: false
 # etc
 ```
 
@@ -1632,6 +1661,7 @@ kubectl get pods security-context-demo
 kubectl describe pods security-context-demo | less
 # found error creating container - avoid conflicting rules, enforcing non-root user `runAsNonRoot: true` requires a non-root user specified `runAsUser: $UID`
 ```
+
 </details>
 
 ### Jobs
@@ -1666,24 +1696,26 @@ kubectl explain job.spec | less
 
 ### Lab 6.4. Working with Jobs
 
-1. Review the Job spec to understand fields related to working with jobs
-2. Create a Job `myjob1` with a suitable image that runs the command `echo Lab 6.4. Jobs!`
-3. List jobs and pods
-4. Review the details of `myjob1`
-5. Review the yaml form of `myjob1`
-6. Create another Job `myjob2` with a suitable image that runs the command `date`
-7. List jobs and pods
-8. Repeat [4] using a manifest file with name `myjob3`
-9. List jobs and pods
-10. Delete all jobs created
-11. List jobs and pods
-12. Edit the manifest file and add the following:
+1. Create a Job `myjob1` with a suitable image that runs the command `echo Lab 6.4. Jobs!`
+2. List jobs and pods
+3. Review the details of `myjob1`
+4. Review the yaml form of `myjob1`
+5. Create another Job `myjob2` with a suitable image that runs the command `date`
+6. List jobs and pods
+7. Repeat [4] using a manifest file with name `myjob3`
+8. List jobs and pods
+9. Delete all jobs created
+10. List jobs and pods
+11. Edit the manifest file and add the following:
    - 5 pods successfully run the command
    - pods are auto deleted after 30secs
-13. Apply the new manifest and:
+12. Apply the new manifest and:
    - confirm the new changes work as expected
    - note the total number of resources created
    - note the behaviour after 30secs
+13. Delete created resources
+14. Review the Job spec to understand fields related to working with jobs
+15. Review the Kubernetes API Resources to determine when jobs was introduced
 
 <details>
 <summary>lab6.4 solution</summary>
@@ -1722,6 +1754,7 @@ watch minikube kubectl -- get jobs,pods # use this if only minikube installed an
 watch kubectl get jobs,pods # use this if minikube and kubectl installed
 # watch the command for 30secs
 ```
+
 </details>
 
 ### CronJobs
@@ -1740,17 +1773,19 @@ kubectl create cronjob cj --image=busybox --schedule="* * * * *" -- date
 kubectl explain cronjob.spec | less
 # view the job spec of cronjobs
 kubectl explain cronjobs.spec.jobTemplate.spec
+kubectl api-resources # jobs was introduced in batch/v1
 ```
 
 ### Lab 6.5. Working with CronJobs
 
-1. Review the CronJob spec to understand fields related to working with cronjobs
-2. Review the Job spec of a CronJob and compare this to a standard Job spec
-3. Create a job with a suitable image that runs the `date` command every minute
-4. Review details of the created CronJob
-5. Review the YAML form of the created CronJob
-6. List created resources and compare results before and after 1 minute
-7. Delete created resources
+1. Create a job with a suitable image that runs the `date` command every minute
+2. Review details of the created CronJob
+3. Review the YAML form of the created CronJob
+4. List created resources and compare results before and after 1 minute
+5. Delete created resources
+6. Review the CronJob spec to understand fields related to working with cronjobs
+7. Review the Job spec of a CronJob and compare this to a standard Job spec
+8. Review the Kubernetes API Resources to determine when jobs was introduced
 
 <details>
 <summary>lab6.5 solution</summary>
@@ -1763,7 +1798,9 @@ kubectl describe cj mycj | less
 kubectl get cj mycj -o yaml | less
 watch minikube kubectl -- get all # watch for changes after 1 minute
 kubectl delete cj mycj # deletes associated jobs and pods!
+kubectl api-resources # cronjobs was introduced in batch/v1
 ```
+
 </details>
 
 > All CronJob `schedule` times are based on the timezone of the [_kube-controller-manager_](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/) \
@@ -1845,18 +1882,18 @@ metadata:
 spec:
   restartPolicy: OnFailure
   containers:
-  - image: mongo
-    name: database
-    resources:
-      requests:
-        memory: "64Mi"
-        cpu: "250m"
-      limits:
-        memory: "256Mi"
-        cpu: 1
-  - image: nginx
-    name: frontend
-    resources: # same as above
+    - image: mongo
+      name: database
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "250m"
+        limits:
+          memory: "256Mi"
+          cpu: 1
+    - image: nginx
+      name: frontend
+      resources: # same as above
 # etc
 ```
 
@@ -1873,13 +1910,13 @@ nano lab6-6.yaml
 kind: Pod
 spec:
   containers:
-  - resources:
-      requests:
-        memory: "4Mi"
-        cpu: "250m"
-      limits:
-        memory: "8Mi"
-        cpu: 1
+    - resources:
+        requests:
+          memory: "4Mi"
+          cpu: "250m"
+        limits:
+          memory: "8Mi"
+          cpu: 1
 # etc - use above resources for both containers
 ```
 
@@ -1901,13 +1938,13 @@ nano lab6-6.yaml
 kind: Pod
 spec:
   containers:
-  - resources:
-      requests:
-        memory: "8Gi" # use value from `cat /proc/meminfo`
-        cpu: 2 # use value from `cat /proc/cpuinfo`
-      limits:
-        memory: "16Gi"
-        cpu: 4
+    - resources:
+        requests:
+          memory: "8Gi" # use value from `cat /proc/meminfo`
+          cpu: 2 # use value from `cat /proc/cpuinfo`
+        limits:
+          memory: "16Gi"
+          cpu: 4
 # etc - use above resources for both containers
 ```
 
@@ -1918,169 +1955,338 @@ watch minikube kubectl -- get pods -n dev # Pending - waits forever until enough
 kubectl describe pods webapp
 kubectl delete -f lab6-6.yaml
 ```
+
 </details>
 
 > Remember a multi-container Pod is not recommended in live environments but only used here for learning purposes
 
 ## 7. Deployments
 
-[Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) manages Pods with scalability and reliability, this is the standard way to manage Pods in live environments.
+[Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) manages Pods with scalability and reliability. This is the standard way to manage Pods and ReplicaSets in live environments.
 
 ```sh
-# create a deployment with specific replicas (default replicas=1), see `kubectl create deploy --help`
+# create a deployment `myapp` with 1 pod, see `kubectl create deploy --help`
+kubectl create deployment myapp --image=nginx
+# create a deployment `myapp` with 3 pods
 kubectl create deploy myapp --image=nginx --replicas=3
-# show details of deployment, see `kubectl describe deploy --help`
-kubectl describe deploy [deploymentName]
-# scale deployment
-kubectl scale deployment myapp --replicas=4
-# edit deployment (not all fields are edittable), see `kubectl edit deployment -h`
-kubectl edit deployment myapp -o yaml --save-config
+# list existing resources in `default` namespace
+kubectl get all
+# list existing resources filtered by selector `app=myapp`
+kubectl get all --selector="app=myapp" # or `--selector app=myapp`
+# show details of deployment `myapp`, see `kubectl describe deploy --help`
+kubectl describe deploy myapp
+# scale deployment `myapp`, see `kubectl scale deploy --help`
+kubectl scale deploy myapp --replicas=4
+# edit deployment `myapp` (not all fields are edittable), see `kubectl edit deploy --help`
+kubectl edit deploy myapp
+# edit deployment `myapp` with specified editor
+KUBE_EDITOR=nano kubectl edit deploy myapp
+# set deployment image for `webserver` container to `nginx:1.8`, see `kubectl set --help` for editable fields
+kubectl set image deployment/myapp webserver=nginx:1.8
+# set deployment image for all containers to `nginx:1.8`, see `kubectl set image --help`
+kubectl set image deployment/myapp *=nginx:1.8
+# view the deployment spec
+kubectl explain deploy.spec
 ```
 
-### Lab 7.1. Deploy an app
+### Lab 7.1. Deploy an app with a replicaset
 
-- Create a simple deployment
-- Show more details of the deployment and review the following:
-  - namespace, labels, selector, replicas, update strategy type, pod template, conditions, {old|new}replicaset and events
-- Show all the resources created by the deployment - filter by the default selector
-- Delete a pod and confirm behaviour by reviewing resources left, pods and their statuses
-- Delete a replicaset and confirm behaviour by reviewing resources left, pods, replicasets, etc, and their properties
+Deployments can be used to rollout a ReplicaSet which manages the number of Pods. In [CKAD](https://www.cncf.io/certification/ckad/) you will only work with ReplicaSets via Deployments
+
+1. Create a deployment with three replicas using a suitable image
+2. Show more details of the deployment and review available fields:
+   - namespace, labels, selector, replicas, update strategy type, pod template, conditions, replicaset and events
+3. List all created resources
+4. Delete a Pod and monitor results
+5. Compare results to using _naked_ Pods (run a pod and delete it)
+6. Delete the ReplicaSet with `kubectl delete rs $rsName` and monitor results
+7. Delete created resources
+8. Explore the deployment spec
+9. Explore the Kubernetes API Resources to determine when deployments and replicasets was introduced
+
+<details>
+<summary>lab7.1 solution</summary>
+  
+```sh
+kubectl create deploy myapp --image=httpd --replicas=3
+kubectl describe deploy myapp | less
+kubectl get all
+kubectl delete pod $POD_NAME
+watch minikube kubectl -- get all # replicaset creates new pod to replace deleted pod
+kubectl run mypod --image=httpd
+kubectl get all
+kubectl delete pod mypod
+kubectl get all # naked pod not recreated
+kubectl delete replicaset $REPLICASET_NAME # pods and replicaset deleted
+watch minikube kubectl -- get all # deployment creates new replicaset, and replicaset creates new pods
+kubectl delete deploy myapp nginx-deployment
+kubectl explain deploy.spec
+kubectl api-resources # deployments & replicasets were introduced in apps/v1
+# replicasets replaced v1 replicationcontrollers
+```
+</details>
+
+### Lab 7.2. Scale deployment
+
+A deployment creates a ReplicaSet that manages scalability. Do not manage replicasets outside of deployments.
+
+1. Create a deployment using the official deployment manifest example `controllers/nginx-deployment.yaml`
+2. List created resources
+3. Edit the deployment with `kubectl edit` and change the `namespace` to dev
+4. Save the editor and confirm behaviour
+5. Edit the deployment again using a different editor, change the replicas to 12 and upgrade the image version
+6. Save the editor and confirm behaviour, then immediately list all resources and review:
+   - deployment status for `READY`, `UP-TO-DATE` and `AVAILABLE`
+   - replicaset status for `DESIRED`, `CURRENT` and `READY`
+   - pod status for `NAME`, `READY` and `STATUS`
+   - compare the _ID-suffix_ in the Pods name to the ReplicaSets name
+7. View details of deployment to confirm edit applied, including image change
+8. Scale down the deployment back to 3 replicas using `kubectl scale` and review same in [6]
+9. List all resources and confirm scaling applied
+10. Delete created resources
+11. Edit the `apiVersion` of the manifest example file to `apps/v0`
+12. Apply the edited manifest and confirm behaviour
+
+<details>
+<summary>lab7.2 solution</summary>
+  
+```sh
+wget -O lab7-2.yaml https://k8s.io/examples/controllers/nginx-deployment.yaml
+kubectl apply -f lab7-2.yaml
+kubectl get all
+kubectl edit -f lab7-2.yaml
+```
+
+```yaml
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: dev
+# etc (save failed: not all fields are editable - cancel edit)
+```
+
+```sh
+KUBE_EDITOR=nano kubectl edit -f lab7-2.yaml
+```
+
+```yaml
+kind: Deployment
+spec:
+  replicas: 12
+  template:
+    spec:
+      containers:
+        - image: nginx:1.3
+# etc - save successful
+```
+
+```sh
+kubectl get all
+kubectl describe -f lab7-2.yaml | less
+kubectl scale deploy myapp --replicas=3
+kubectl get all
+kubectl delete -f lab7-2.yaml
+nano lab7-2.yaml
+```
+
+```yaml
+apiVersion: apps/v0
+kind: Deployment
+# etc
+```
+
+```sh
+kubectl apply -f lab7-2.yaml # recognise errors related to incorrect manifest fields
+```
+
+</details>
 
 ### Labels, selectors and annotations
 
-Labels are used for groupings, filtering and providing metadata. Selectors are used to group related resources. Annotations are used to provide additional metadata but are not used in queries.
+Labels are used for groupings, filtering and providing metadata. Selectors are used to group related resources. Annotations are used to provide additional metadata but are not used in queries. \
+When a deployment is created, a default Label `app=$appName` is assigned, and a similar Selector is also created. When a pod is created, a default Label `run=$podName` is assigned
 
-When a deployment is created directly, a default label `app=[appName]` is assigned. When a pod is created directly, a default label `run=[podName]` is assigned
-
-> Labels added after creating a deployment are not inherited by the resources 
+> Labels added after creating a deployment are not inherited by the resources
 
 ```sh
-# add label
+# add new label `state: test` to deployment `myapp`, see `kubectl label --help`
 kubectl label deployment myapp state=test
-# show list of created deployments and their labels
+# list deployments and their labels, see `kubectl get deploy --help`
 kubectl get deployments --show-labels
-# show list of all created resources and their labels
+# list all resources and their labels
 kubectl get all --show-labels
-# show deployments filtered by specific label
-kubectl get deployments --selector state=test
-# show all resources filtered by specific label
-kubectl get all --selector app=myapp
-# remove a label by a minus sign after label key
-kubectl label pod [podName] app-
+# list deployments filtered by specific label
+kubectl get deployments --selector="state=test"
+# list all resources filtered by specific label
+kubectl get all --selector="app=myapp"
+# remove the `app` label from deployment `myapp`
+kubectl label deploy myapp app-
+# remove the `run` label from pod `mypod`
+kubectl label pod mypod run-
 ```
 
-### Lab 7.2. Working with labels
+### Lab 7.3. Working with labels
 
-- Create a deployment
-- Add a new label to the deployment
-- Show more details of the deployment and review how labels are assigned
-- Show a list of deployments and their labels
-- Show a list of all resources and their labels, filtered by default label
-- Show a list of all resources and their labels, filtered by new label added, compare with above
-- Remove the default label from pods in the deployment and review behaviour
-  - Show a list of pods and their labels
+1. Create a deployment `myapp` with three replicas using a suitable image
+2. List all deployments and their labels to confirm default labels assigned
+3. Add a new label `pipeline: test` to the deployment
+4. List all deployments and their labels
+5. View more details of the deployment and review labels/selectors
+6. View the YAML form of the deployment to see how labels are added in the manifest
+7. Verify the default label/selector assigned when you created a new Pod
+8. List all resources and their labels filtered by default label of the deployment
+9. List all resources and their labels, filtered by new label added, compare with above
+10. Remove the default label from one of the pods in the deployment and review behaviour
+11. List all pods and their labels
+12. List all pods filtered by the default label
+13. Delete the deployment
+14. Delete the _naked_ Pod from [10]
 
-### Scaling deployments
-
-A deployment creates a ReplicaSet that manages scalability.
-
-> Do not manage replicasets outside of deployments
-
+<details>
+<summary>lab7.3 solution</summary>
+  
 ```sh
-# view api-versions
-kubectl api-versions
-# view api-versions and their resource types
-kubectl api-resources
-# scale deployment manually by specifying number of replicas
-kubectl scale deployment [deploymentName] --replicas=n
-# scale deployment manually by editing YAML file - note not all fields are edittable
-kubectl edit deploy [deploymentName]
+kubectl create deploy myapp --image=httpd --dry-run=client -o yaml >> lab7-3.yaml
+kubectl apply -f lab7-3.yaml
+kubectl get deploy --show-labels
+kubectl label deploy myapp pipeline=test
+kubectl get deploy --show-labels
+kubectl describe -f lab7-3.yaml
+kubectl get -o yaml -f lab7-3.yaml | less
+kubectl run mypod --image=nginx --dry-run=client -o yaml | less
+kubectl get all --selector="app=myapp"
+kubectl get all --selector="pipeline=test"
+kubectl label pod $POD_NAME app- # pod becomes naked/dangling and unmanaged by deployment
+kubectl get pods --show-labels # new pod created to replace one with label removed
+kubectl get pods --selector="app=myapp" # shows 3 pods
+kubectl delete -f lab7-3.yaml # $POD_NAME not deleted! `deploy.spec.selector` is how a deployment find pods to manage!
 ```
-
-### Lab 7.3. Scale an app
-
-- Create a deployment with 3 replicasets
-  - how do you verify the number of replicasets?
-  - show all created resources filtered by default selector
-- Copy a deployment template from [official docs](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
-  - what happens when you create a deployment from manifest file with an incorrect version? Use template with `apiVersion: apps/v0.5`
-  - what happens when you create a deployment from manifest file with an old version? Use template with `apiVersion: v1`
-  - how do you confirm you have the correct versions?
-  - create a deployment with the template
-- Scale the deployment manually by editing the YAML file
-  - change an edittable field and save
-  - change a non-edittable field, save and review behaviour
+</details>
 
 ### Update strategy
 
-[Rolling updates](https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/) is the default deployment strategy and can be used to update any of the fields available to the `kubectl set` command. A new ReplicaSet is created for the update, and the old ReplicaSet is scaled to 0 after successful update. By default, 10 old ReplicaSets will be kept, see [`deployment.spec.revisionHistoryLimit`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit)
+[Rolling updates](https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/) is the default update strategy, triggered when a field in the deployment's Pod template `deployment.spec.template` is changed. A new ReplicaSet is created that creates updated Pods one after the other, and the old ReplicaSet is scaled to 0 after successful update. At some point during the update, both old version and new version of the app will be live. By default, ten old ReplicaSets will be kept, see [`deployment.spec.revisionHistoryLimit`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit)
 
-The other type of update strategy is [Recreate](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#recreate-deployment), where all Pods are killed before nre Pods are created. This is useful when you cannot have different versions of an app running simultaneously, e.g database.
+The other type of update strategy is [Recreate](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#recreate-deployment), where all Pods are killed before new Pods are created. This is useful when you cannot have different versions of an app running simultaneously, e.g database.
 
-Rolling update option [`maxUnavailable`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) is used to control number of Pods upgraded simultaneously, while [`maxSurge`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge) controls the number of Pods in addition to the replicas specified during update. Aim to have a higher `maxSurge` than `maxUnavailable`. These options can be set directly in YAML file `spec.strategy.rollingUpdate`
+- [`deploy.spec.strategy.rollingUpdate.maxUnavailable`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable): control number of Pods upgraded simultaneously
+- [`deploy.spec.strategy.rollingUpdate.maxSurge`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge): controls the number of additional Pods, more than the specified replicas, created during update
 
+> Aim to have a higher `maxSurge` than `maxUnavailable` \
 > Scaling down a deployment to 0 is another way to delete all resources associated while keeping the deployment and ReplicaSet config for a quick scale up when required.
 
 ```sh
-# edit some fields by setting directly, see `kubectl set -h`
-kubectl set image deploy myapp nginx=nginx:1.24
-kubectl set env deploy myapp dept=MAN
-# show recent update history
+# view the update strategy field under deployment spec
+kubectl explain deployment.spec.strategy
+# view update strategy field recursively
+kubectl explain deployment.spec.strategy --recursive
+# edit the image of deployment `myapp` by setting directly, see `kubectl set -h`
+kubectl set image deployment myapp nginx=nginx:1.24
+# edit the environment variable of deployment `myapp` by setting directly
+kubectl set env deployment myapp dept=MAN
+# show recent update history - entries added when fields under `deploy.spec.template` change
 kubectl rollout history deployment myapp -h
 # show update events
 kubectl describe deployment myapp
-# revert an update
-kubectl rollout undo -h
 # view rolling update options
 kubectl get deploy myapp -o yaml
 # view all deployments history, see `kubectl rollout -h`
 kubectl rollout history deployment
-# view specific deployment history
-kubectl rollout history deployment [deploymentName]
-# view specific change revision/log for the deployment
-kubectl rollout history deployment [deploymentName] --revision=n
-# revert deployment to previous version/revision
-kubectl rollout undo deployment [deploymentName] --to-revision=n
+# view `myapp` deployment history
+kubectl rollout history deployment myapp
+# view specific change revision/log for `myapp` deployment (note this shows fields that affect rollout)
+kubectl rollout history deployment myapp --revision=n
+# revert `myapp` deployment to previous version/revision, see `kubectl rollout undo -h`
+kubectl rollout undo deployment myapp --to-revision=n
 ```
 
 ### Lab 7.4. Rolling updates
 
-- Create a YAML file for `nginx:1.23` deployment and 3 replicas, with label `lab=updates`, max 2 Pods can be updated simultaneously
-- Create and review details of the deployment
-  - by default, how many pods can be upgraded simultaneously during update?
-  - by default, how many pods can be created in addition to the number of replicas during update?
-  - show a list of deployments and their labels
-  - show only resouces specific to the deployment
-  - view deployment history
-- Downgrade the image by directly setting a new image version, use `kubectl set`
-- Review details of the deployment
-  - review behaviour by showing only resources specific to the deployment
-  - confirm changes applied
-  - view deployment history specific to this deployment
-  - note that `change-cause` is populated by the record-option which isn't used
-- View first and second change revisions for the deployment
-- View deployment history specific to this deployment
-- Show details of the deployment in YAML format
-  - review `spec.strategy.type` and `spec.strategy.rollingupdate` fields
-- Scale the deployment to 8 replicas and review the following:
-  - pods READY and STATUS fields
-  - deployment READY UP-TO-DATE and AVAILABLE fields
-  - replicaset DESIRED CURRENT READY and AGe fields
-  - view deployment history specific to this deployment
-- Add an environment variable to the deployment
-  - show all resources filtered by label=app and review resource states as above
-  - view deployment history specific to this deployment
-- Revert deployment to the second revision, see `kubectl rollout -h`
-  - view deployment history specific to this deployment
-- Scale the replicasets to 0 and review behaviour
-  - why would you scale to 0 instead of delete?
-  - is the scale down captured by rollout history?
+1. Review the update strategy field under the deployment spec
+2. Create a deployment with a suitable image
+3. View more details of the deployment
+   - by default, how many pods can be upgraded simultaneously during update?
+   - by default, how many pods can be created in addition to the number of replicas during update?
+4. Create a new deployment with the following parameters:
+   - 5 replicas
+   - image `nginx:1.18`
+   - additional deployment label `update: feature`
+   - maximum of 2 Pods can be updated simultaneously
+   - no more than 3 additional Pod created during updates
+5. List all resources filtered by the default label
+6. List all resources filtered by the additional label
+7. List rollout history for all deployments - how many revisions does the new deployment have?
+8. Upgrade/downgrade the image version
+9. List all resources specific to the new deployment
+10. List rollout history specific to the new deployment - how many revisions?
+11. View more details of the deployment and note the image and _Events messages_
+12. Compare the latest change revision of the new deployment's rollout history to the previous revision
+13. Revert the new deployment to its previous revision
+14. List all resources specific to the new deployment twice or more to track changes
+15. List rollout history specific to the new deployment - any new revisions?
+16. Scale the new deployment to 0 Pods
+17. List rollout history specific to the new deployment - any new revisions?
+18. List all resources specific to the new deployment
+19. Delete created resources
 
-### Deployment Types
+<details>
+<summary>lab7.4 solution</summary>
+  
+```sh
+kubectl explain deploy.spec.strategy | less
+kubectl create deploy myapp --image=nginx --dry-run=client -o yaml > lab7-4.yaml
+kubectl apply -f lab7-4.yaml
+kubectl describe -f lab7-4.yaml
+kubectl get deploy myapp -o yaml | less # for manifest example to use in next step
+nano lab7-4.yaml # edit to new parameters
+```
 
-There are two kinds of deployments, DaemonSet and StatefulSet.
+```yaml
+kind: Deployment
+metadata:
+  labels: # labels is `map` not `array` so no `-` like containers
+    app: myapp
+    updates: feature
+  name: myapp
+spec:
+  replicas: 5
+  strategy:
+    rollingUpdate:
+      maxSurge: 3
+      maxUnavailable: 2
+  template:
+    spec:
+      containers:
+        - image: nginx:1.18
+          name: webserver
+# etc
+```
 
-A DaemonSet ensures that all (or some) Nodes run a copy of a particular Pod. This is useful in a multi-node cluster where specific application is required on all nodes, e.g. running a  - cluster storage, logs collection, node monitoring, network agent - daemon on every node. As nodes are added to the cluster, Pods are added to them. As nodes are removed from the cluster, those Pods are garbage collected. Deleting a DaemonSet will clean up the Pods it created. DaemonSets can only be created by YAML file.
+```sh
+kubectl get all --selector="app=myapp"
+kubectl get all --selector="updates=feature" # extra deployment label not applied on pods
+kubectl rollout history deploy
+kubectl set image deploy myapp nginx=n -f lab7-4.yaml
+kubectl set image deploy myapp webserver=nginx:1.23
+kubectl get all --selector="app=myapp"
+kubectl rollout history deploy myapp # 2 revisions
+kubectl describe deploy myapp
+kubectl rollout history deploy myapp --revision=2
+kubectl rollout history deploy myapp --revision=1
+kubectl rollout undo deploy myapp --to-revision=1
+kubectl get all --selector="app=myapp"
+kubectl rollout history deploy myapp # 2 revisions, but revision count incremented
+kubectl scale deploy myapp --replicas=0
+kubectl rollout history deploy myapp # replicas change does not trigger rollout, only `deploy.spec.template` fields
+kubectl get all --selector="app=myapp"
+kubectl delete -f lab7-4.yaml
+```
+
+</details>
+
+### DaemonSets
+
+A [_DaemonSet_](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/) is a kind of deployment that ensures that all (or some) Nodes run a copy of a particular Pod. This is useful in a multi-node cluster where specific application is required on all nodes, e.g. running a - cluster storage, logs collection, node monitoring, network agent - daemon on every node. As nodes are added to the cluster, Pods are added to them. As nodes are removed from the cluster, those Pods are garbage collected. Deleting a DaemonSet will clean up the Pods it created.
 
 ```sh
 # create daemonset via yaml file
@@ -2089,26 +2295,58 @@ kubectl create -f daemonset.yaml
 kubectl get ds,pods
 # view daemonset in kube system namespace
 kubectl get ds,pods -n kube-system
+# view the daemonset spec
+kubectl explain daemontset.spec | less
+# view the daemonset spec recursively
+kubectl explain daemontset.spec --recursive | less
 ```
 
-### Lab 7.5. DaemonSet
+### Lab 7.5. Exploring DaemonSets
 
-Create a DaemonSet by using a [template from official docs](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
-- Review the `Kind` in the template before creation
-- Review the DaemonSet pods created
-- Review the DaemonSet in kube-system
+DaemonSets can only be created by YAML file, see an official example manifest `controllers/daemonset.yaml`.
+
+1. Compare the DaemonSet manifest to a Deployment manifest - differences/similarities?
+2. Apply the example manifest
+3. List all resources and note resources created by the DaemonSet
+4. View more details of the DaemonSet
+5. Delete created resources
+6. Review the Kubernetes API Resources to determine when DaemonSets was introduced
+7. List existing DaemonSets in the _kube-system_ namespace and their labels
+   - what does Kubernetes use a DaemonSet for?
+8. List all resources in the _kube-system_ namespace matching the DaemonSet label
+9. Review the DaemonSet spec
+
+<details>
+<summary>lab7.5 solution</summary>
+  
+```sh
+kubectl create deploy myapp --image=nginx --dry-run=client -o yaml | less # view fields required
+wget -qO- https://k8s.io/examples/controllers/daemonset.yaml | less # similar to deployment, except Kind and replicas
+kubectl apply -f https://k8s.io/examples/controllers/daemonset.yaml
+kubectl get all # note daemonset and related pod
+kubectl describe -f https://k8s.io/examples/controllers/daemonset.yaml
+kubectl delete -f https://k8s.io/examples/controllers/daemonset.yaml
+kubectl api-resources # introduced in version apps/v1
+kubectl get ds -n=kube-system --show-labels # used to add network agent `kube-proxy` to all cluster nodes
+kubectl get all -n=kube-system --selector="k8s-app=kube-proxy"
+kubectl explain daemonset.spec | less
+kubectl explain daemonset.spec --recursive | less
+```
+</details>
 
 ### Lab 7.6. Autoscaling
 
-Autoscaling is used in real clusters but not covered in [CKAD](https://www.cncf.io/certification/ckad/). See [Kubernetes Metrics Server](https://github.com/kubernetes-sigs/metrics-server) for more details and see [HorizontalPodAutoscaler Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#run-and-expose-php-apache-server) for complete lab.
+Autoscaling is very important in live environments but not covered in [CKAD](https://www.cncf.io/certification/ckad/). Visit [HorizontalPodAutoscaler Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#run-and-expose-php-apache-server) for a complete lab on autoscaling.
+
+> The lab requires a _metrics-server_ so install one via Minikube if you plan to complete the lab
 
 ```sh
-# install metrics server
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-# docker-desktop disable certificate validation using `--kubelet-insecure-tls`
-kubectl patch deployment metrics-server -n kube-system --type 'json' -p '[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
-# delete metrics server
-kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+# list minikube addons
+minikube addons list
+# enable minikube metrics-server
+minikube addons enable metrics-server
+# disable minikube metrics-server
+minikube addons disable metrics-server
 ```
 
 ## 8. Networking
@@ -2140,8 +2378,8 @@ kubectl expose deploy [deploymentName] --port=80
 kubectl describe svc [name]
 # view details of service in yaml
 kubectl get svc [name] -o yaml | less
-				   
-			   
+
+
 # edit service
 kubectl edit svc [name]
 ```
@@ -2223,7 +2461,7 @@ kubectl create ingress nginx-ingress --rule="/web=nginx-app:80"
   - add entries in `/etc/hosts` for `cat.domain.com` and `dog.domain.com` both mapped to `$(minikube ip)`
 - Edit existing Ingress, use YAML file
   - add rules for both deployments using their subdomains on path `/cat` and `/dog` respectively, and `pathType=Prefix` for both
-- Verify access to the new deployments via subdomains	
+- Verify access to the new deployments via subdomains
 
 ### Network policies
 
@@ -2276,7 +2514,7 @@ spec:
 
 Follow the [official declare network policy walkthrough](https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/)
 
-> Note: prepend `https://k8s.io/examples/` to any example files in the official docs to use the file with `kubectl`	
+> Note: prepend `https://k8s.io/examples/` to any example files in the official docs to use the file with `kubectl`
 
 ## 10. Storage
 
@@ -2286,7 +2524,7 @@ PersistentVolumeClaim (PVC) is a request for storage by a user. It is similar to
 
 - Pods connect to the PVC, and a PVC connects to the PV, both in a 1-1 relationship (only one PVC can connect to a PV)
 - PVC can be created from an existing PVC
-- PVC will remain in `STATUS=Pending` until it finds and connects to a matching PV and thus **`STATUS=Bound`** 
+- PVC will remain in `STATUS=Pending` until it finds and connects to a matching PV and thus **`STATUS=Bound`**
 - PV supports a number of [raw block volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#raw-block-volume-support)
 
 ### Access modes
@@ -2299,7 +2537,7 @@ PersistentVolumeClaim (PVC) is a request for storage by a user. It is similar to
 ### PV and PVC attributes
 
 | PV attributes    | PVC attributes   |
-|------------------|------------------|
+| ---------------- | ---------------- |
 | capacity         | resources        |
 | volume modes     | volume modes     |
 | access modes     | access modes     |
@@ -2359,8 +2597,8 @@ You can follow the [official "configure a Pod to use a PersistentVolume for stor
    - uses `hostPath` storage
    - allows multiple pods access the storage
 3. Create a Pod running a webserver to consume the storage, see `https://k8s.io/examples/pods/storage/pv-pod.yaml`
-  - uses PVC, see `https://k8s.io/examples/pods/storage/pv-claim.yaml`
-  - image is `httpd` and default documentroot is `/usr/local/apache2/htdocs` or `/var/www/html`
+   - uses PVC, see `https://k8s.io/examples/pods/storage/pv-claim.yaml`
+   - image is `httpd` and default documentroot is `/usr/local/apache2/htdocs` or `/var/www/html`
 4. Verify all resources created `pod,pv,pvc,storageclass`, and also review each detailed information
    - review `STATUS` for PV and PVC
    - did the PVC in [3] bind to the PV in [2], why or why not?
@@ -2390,6 +2628,7 @@ kubectl describe pod,pv,pvc,storageclass | less
 kubectl exec -it task-pv-pod -- /bin/bash
 kubectl delete -f lab10-2.yaml
 ```
+
 </details>
 
 For further learning, see [mounting the same persistentVolume in two places](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/#mounting-the-same-persistentvolume-in-two-places) and [access control](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/#access-control)
@@ -2462,7 +2701,7 @@ To safely use secrets, ensure to:
 2. [Enable or configure RBAC rules](https://kubernetes.io/docs/reference/access-authn-authz/authorization/) to
    - restrict read/write
    - limit access to create/replace secrets
-   
+
 Uses of secrets
 
 - [as files](https://kubernetes.io/docs/concepts/configuration/secret/?ref=faun#using-secrets-as-files-from-a-pod) which may be mounted in Pods, e.g. accessing secret data in a Pod, TLS, etc
@@ -2655,6 +2894,7 @@ APISERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.serv
 TOKEN=$(kubectl get secret default-token -o jsonpath='{.data.token}' | base64 --decode)
 curl $APISERVER/api --header "Authorization: Bearer $TOKEN" --insecure
 ```
+
 </details>
 
 > Using `curl` with the `--insecure` option [skips TLS certificate validation](https://curl.se/docs/sslcerts.html)
@@ -2681,6 +2921,7 @@ CERT_FILE=$($SA/ca.crt)
 TOKEN=$(cat $SA/token)
 curl --cacert $CERT_FILE --header "Authorization: Bearer $TOKEN" https://kubernetes.default.svc/api
 ```
+
 </details>
 
 ### RBAC
@@ -2753,7 +2994,7 @@ echo --- >> lab12.yaml
 kubectl create configmap test-cm --from-literal="SA=/var/run/secrets/kubernetes.io/serviceaccount" --dry-run=client -o yaml >> lab12.yaml
 echo --- >> lab12.yaml
 # create pod yaml
-kubectl run test-pod --image=nginx --dry-run=client -o yaml >> lab12.yaml 
+kubectl run test-pod --image=nginx --dry-run=client -o yaml >> lab12.yaml
 # review & edit yaml to add configmap and service account in pod spec, see `https://k8s.io/examples/pods/pod-single-configmap-env-variable.yaml`
 nano lab12.yaml
 # create all resources
@@ -2781,6 +3022,7 @@ exit
 # clean up
 kubectl delete -f lab12.yaml
 ```
+
 </details>
 
 ## 13. DevOps
@@ -2838,10 +3080,10 @@ helm uninstall $RELEASE_NAME
 5. View resources created in your cluster by the Helm Chart
 6. Update Helm repo
 7. List installed Helm Charts
-7. List installed Helm repos
-8. View details of installed Chart
-9. View status of installed Chart
-10. Search for available Charts in added Helm repo
+8. List installed Helm repos
+9. View details of installed Chart
+10. View status of installed Chart
+11. Search for available Charts in added Helm repo
 
 ### Helm templates
 
@@ -2888,47 +3130,52 @@ tar -tvf file.tar
    <details>
      <summary>configmap generator example</summary>
 
-   ```sh
-   cat <<EOF >./kustomization.yaml
-   configMapGenerator:
-   - name: example-configmap-2
-     literals:
-     - FOO=Bar
-   EOF
-   ```
+  ```sh
+  cat <<EOF >./kustomization.yaml
+  configMapGenerator:
+  - name: example-configmap-2
+    literals:
+    - FOO=Bar
+  EOF
+  ```
+
    </details>
+
 - composing and customising collections of resources, e.g. composing two resources together or adding a patch, see example:
    <details>
      <summary>composing & customising example</summary>
 
-   ```sh
-   cat <<EOF >./kustomization.yaml
-   resources:
-   - deployment.yaml # uses 1 replica
-   - service.yaml
-   patchesStrategicMerge:
-   - patch.yaml # change Deployment to 3 replicas
-   EOF
-   ```
+  ```sh
+  cat <<EOF >./kustomization.yaml
+  resources:
+  - deployment.yaml # uses 1 replica
+  - service.yaml
+  patchesStrategicMerge:
+  - patch.yaml # change Deployment to 3 replicas
+  EOF
+  ```
+
    </details>
+
 - setting cross-cutting fields for resources, e.g. setting same namespaces, name prefix/suffix, labels or annotations to all resources
    <details>
      <summary>cross-cutting fields example</summary>
 
-   ```sh
-   cat <<EOF >./kustomization.yaml
-   namespace: my-namespace
-   namePrefix: dev-
-   nameSuffix: "-001"
-   commonLabels:
-     app: bingo
-   commonAnnotations:
-     oncallPager: 800-555-1212
-   resources:
-   - deployment.yaml
-   - service.yaml
-   EOF
-   ```
+  ```sh
+  cat <<EOF >./kustomization.yaml
+  namespace: my-namespace
+  namePrefix: dev-
+  nameSuffix: "-001"
+  commonLabels:
+    app: bingo
+  commonAnnotations:
+    oncallPager: 800-555-1212
+  resources:
+  - deployment.yaml
+  - service.yaml
+  EOF
+  ```
+
    </details>
 
 ```sh
@@ -2961,6 +3208,7 @@ We can take advantage of Kustomization's "composing and customising" feature to 
         ├── kustomization.yaml # `bases: ['../../base']`, `namePrefix: staging-`
         └── patch.yaml
 ```
+
 </details>
 
 ### Lab 13.3. Kustomize resources
@@ -3169,3 +3417,5 @@ See the [example manifest](https://kubernetes.io/docs/concepts/workloads/control
 ## 14. Troubleshooting
 
 ## 15. Exam
+
+[kubectl cheat sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
