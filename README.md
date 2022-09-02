@@ -17,7 +17,7 @@ In summary, you will be learning cloud-native application development, which is 
 <details>
   <summary>CKAD exam objectives</summary>
 
-<a target="_blank" width="100%" align="center" href="https://github.com/cncf/curriculum" alt="CKAD exam curriculum">![image](https://user-images.githubusercontent.com/17856665/186679939-ea79ce57-f277-45c8-8d02-6595d02d9f85.png)</a>
+<a target="_blank" width="100%" align="center" href="https://github.com/cncf/curriculum">![CKAD exam curriculum](https://user-images.githubusercontent.com/17856665/186679939-ea79ce57-f277-45c8-8d02-6595d02d9f85.png)</a>
 
 </details>
 
@@ -101,9 +101,9 @@ docker run busybox echo "Hello, World!"
 # run container with specified name
 docker run -d --name webserver httpd
 # use `dash` to execute commands in running container, see `docker exec --help`
-docker exec -it $CONTAINER_NAME sh # `sh` will run in a different shell session
+docker exec -it $CONTAINER_NAME_OR_ID sh # `sh` will run in a different shell session
 # use `bash` to execute commands in running container
-docker exec -it $CONTAINER_NAME bash
+docker exec -it $CONTAINER_NAME_OR_ID bash
 # list running containers
 docker ps
 # list all containers
@@ -279,7 +279,7 @@ docker rm box1 box2 box3
 
 > The `Entrypoint` of a container is [the init process](https://en.wikipedia.org/wiki/Init) and allows the container to run as an executable. Commands passed to a container are passed to the container's entrypoint process.
 >
-> Note that `docker` commands after `imageName` are passed to the container's entrypoint as arguments. \
+> Note that `docker` commands after `$IMAGE_NAME` are passed to the container's entrypoint as arguments. \
 > ❌ `docker run -it mysql -e MYSQL_PASSWORD=hello` will pass `-e MYSQL_PASSWORD=hello` to the container
 > ✔️ `docker run -it -e MYSQL_PASSWORD=hello mysql`
 
@@ -960,7 +960,7 @@ sudo apt install conntrack
 sudo sysctl fs.protected_regular=0
 # 3. start a minikube cluster
 minikube start --driver=docker --kubernetes-version=1.23.9
-# 3b. optional, start a minikube cluster with `--driver=none`
+# 3b. if using docker-engine and [3] doesn't work, e.g. vpn, etc, try `--driver=none`
 sudo minikube start --driver=none --kubernetes-version=1.23.9
 # 4. change the owner of the .kube and .minikube directories
 sudo chown -R $USER $HOME/.kube $HOME/.minikube
@@ -1468,8 +1468,8 @@ kubectl run mydb --image=mysql --dry-run=client -o yaml > lab6-1.yaml
 kubectl apply -f lab6-1.yaml
 kubectl get pods
 kubectl describe -f lab6-1.yaml | less
-# use the `watch` program to rerun kubectl command every 2secs, see `watch --help`
-watch minikube kubectl -- get pods # if not using alias `watch kubectl get pods`
+# watch pods for changes
+kubectl get pods --watch
 ctrl+c
 kubectl delete -f lab6-1.yaml
 kubectl run mydb --image=mysql --env="MYSQL_ROOT_PASSWORD=secret" --dry-run=client -o yaml > lab6-1.yaml
@@ -1750,9 +1750,8 @@ spec:
 
 ```sh
 kubectl apply -f lab6-4.yaml
-watch minikube kubectl -- get jobs,pods # use this if only minikube installed and using alias
-watch kubectl get jobs,pods # use this if minikube and kubectl installed
-# watch the command for 30secs
+kubectl get jobs,pods
+kubectl get pods --watch # watch pods for 30secs
 ```
 
 </details>
@@ -1796,7 +1795,8 @@ kubectl explain cronjob.spec.jobTemplate.spec | less
 kubectl create cronjob mycj --image=busybox --schedule="* * * * *" -- date
 kubectl describe cj mycj | less
 kubectl get cj mycj -o yaml | less
-watch minikube kubectl -- get all # watch for changes after 1 minute
+kubectl get all
+kubectl get pods --watch # watch pods for 60s to see changes
 kubectl delete cj mycj # deletes associated jobs and pods!
 kubectl api-resources # cronjobs was introduced in batch/v1
 ```
@@ -1923,7 +1923,7 @@ spec:
 ```sh
 kubectl delete -f lab6-6.yaml
 kubectl apply -f lab6-6.yaml
-watch minikube kubectl -- get pods -n dev # OOMKilled | CrashLoopBackOff
+kubectl get pods -n dev --watch # watch for OOMKilled | CrashLoopBackOff
 kubectl get logs webapp -n dev -c database # not very helpful logs
 kubectl get logs webapp -n dev -c frontend
 kubectl describe pods webapp -n dev | less # helpful logs - Last State: Terminated, Reason: OutOfMemory (OOMKilled)
@@ -1951,7 +1951,7 @@ spec:
 ```sh
 kubectl delete -f lab6-6.yaml
 kubectl apply -f lab6-6.yaml
-watch minikube kubectl -- get pods -n dev # Pending - waits forever until enough resource available
+kubectl get pods -n dev --watch # remains in Pending until enough resources available
 kubectl describe pods webapp
 kubectl delete -f lab6-6.yaml
 ```
@@ -2012,13 +2012,15 @@ kubectl create deploy myapp --image=httpd --replicas=3
 kubectl describe deploy myapp | less
 kubectl get all
 kubectl delete pod $POD_NAME
-watch minikube kubectl -- get all # replicaset creates new pod to replace deleted pod
+kubectl get all
+kubectl get pods --watch # watch replicaset create new pod to replace deleted
 kubectl run mypod --image=httpd
 kubectl get all
 kubectl delete pod mypod
 kubectl get all # naked pod not recreated
 kubectl delete replicaset $REPLICASET_NAME # pods and replicaset deleted
-watch minikube kubectl -- get all # deployment creates new replicaset, and replicaset creates new pods
+kubectl get all
+kubectl get pods --watch # deployment creates new replicaset, and replicaset creates new pods
 kubectl delete deploy myapp nginx-deployment
 kubectl explain deploy.spec
 kubectl api-resources # deployments & replicasets were introduced in apps/v1
@@ -2353,60 +2355,275 @@ minikube addons disable metrics-server
 
 ### Service
 
-A service provides access to applications by exposing them. Uses round-robin load balancing. Service targets Pods by selector. Services exists independent from deployment, is not deleted during deployment deletion and can provide access to Pods in multiple deployments.
+A [Service](https://kubernetes.io/docs/concepts/services-networking/service/) provides access to applications running on a set of Pods. A Deployment creates and destroys Pods dynamically, so you cannot rely on Pod IP. This is where _Services_ come in, to provide access and load balancing to the Pods.
 
-Kube-proxy agent listens for new Services and Endpoints on a random port and redirects traffic to Pods specified as Endpoints
-
-> Understand the Kubernetes network architecture: Pod Net - Cluster Net - Node Net - Ingress
-> Understand the Kubernetes microservices architecture: Database - Backend - Frontend
+Like Deployments, Services targets Pods by _selector_ but exists independent from a Deployment - not deleted during Deployment deletion and can provide access to Pods in different Deployments.
 
 #### Service Types
 
-- ClusterIP service type is the default, exposes the service on an internal Cluster IP address
-- NodePort service type provides public access to the application through host port forwarding
-- LoadBalancer for cloud service (not for [CKAD](https://www.cncf.io/certification/ckad/))
-- ExternalName for DNS names (not for [CKAD](https://www.cncf.io/certification/ckad/))
+- ClusterIP: this is a service inside a cluster responsible for routing traffic between apps running in the cluster - no external access
+- [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport): as the name implies, a specific port is opened on each _Worker Node_'s IP to allow external access to the cluster at `$NodeIP:$NodePort` - useful for testing purposes
+- [LoadBalancer](https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer): Exposes the Service using a cloud provider (not for [CKAD](https://www.cncf.io/certification/ckad/))
+- [ExternalName](https://kubernetes.io/docs/concepts/services-networking/service/#externalname): Uses DNS records (not for CKAD)
+
+<details>
+<summary><i>ClusterIP</i> and <i>NodePort</i> example</summary>
+
+![ClusterIP and NodePort topology](https://user-images.githubusercontent.com/17856665/187857434-f07e0289-699e-4868-b84e-bd196bdfb4d7.png)
+</details>
+
+#### Discovering services
+
+Kubernetes supports two primary modes of finding a Service - environment variables and DNS.
+
+In the env-vars mode, the [_kubelet_](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) adds a set of env-vars (`{SVCNAME}_SERVICE_HOST` and `{SVCNAME}_SERVICE_PORT`) to each Pod for each active Service. Services must be created before Pods to auto-populate the env-vars. You can disable this mode by setting the `pod.spec` field `enableServiceLinks: false`.
+
+The DNS mode is the recommended discovery method. A cluster-aware DNS server, such as [_CoreDNS_](https://kubernetes.io/docs/tasks/administer-cluster/coredns/#about-coredns), watches the Kubernetes API for new Services and creates a set of DNS records for each one. If DNS has been enabled throughout your cluster, then for a Service called `my-service` in a Kubernetes namespace `my-ns`, Pods in the `my-ns` namespace can find the service by a name lookup for `my-service`, while Pods in other namespaces must qualify the name `my-service.my-ns`.
 
 ```sh
-# view default services/pods
-kubectl get svc,pods -n kube-system
-# create a service by exposing a type, see `kubectl expose -h`
-kubectl expose [type=deploy,svc,rc,rs,etc] [typeName] --port=PORT
-# create a service by expose a deployment on port 80
-kubectl expose deploy [deploymentName] --port=80
-# view more details of the service to confirm properties
-kubectl describe svc [name]
-# view details of service in yaml
-kubectl get svc [name] -o yaml | less
-
-
+# view the service spec
+kubectl explain svc.spec | less
+# create a ClusterIP service by exposing a deployment `myapp` on port 80, see `kubectl expose -h`
+kubectl expose deploy myapp --port=80
+# specify a different service name, the deployment name is used if not specified
+kubectl expose deploy myapp --port=80 --name=myappsvc
+# specify container port 8000
+kubectl expose deploy myapp --port=80 --target-port=8000
+# create a NodePort service
+kubectl expose deploy myapp --type=NodePort --port=80
+# print a pod's service environment variables
+kubectl exec $POD_NAME -- printenv | grep SERVICE
+# view more details of the service exposing deployment `myapp`
+kubectl describe svc myapp
+# view the yaml form of service in yaml
+kubectl get svc myapp -o yaml | less
 # edit service
-kubectl edit svc [name]
+kubectl edit svc myapp
+# list all endpoints
+kubectl get endpoints
+# list pods and their IPs
+kubectl get pods -o wide
 ```
 
-### Lab 8. Exposing your application internally
+### Lab 8.1. Connecting applications with services
 
-Use Minikube locally
+1. Create a simple deployment with name `webserver`
+2. List created resources
+3. List endpoints, and pods with their IPs
+4. Create a Service for the deployment, exposed on port 80
+5. List created resources and note services fields `TYPE`, `CLUSTER-IP`, `EXTERNAL-IP` and `PORT(S)`
+6. View more details of the Service and note fields `IPs`, `Port`, `TargetPort` and `Endpoints`
+7. View the YAML form of the Service and compare info shown with output in [6]
+8. Print the Service env-vars from one of the pods
+9. Scale the deployment down to 0 replicas first, then scale up to 2 replicas
+10. List all pods and their IPs
+11. Print the Service env-vars from one of the pods and compare to results in [3]
+12. List endpoints, and pods with their IPs
+13. Access the app by the Service `$ClusterIP:$Port` using `curl`
+14. Access the app by the Service `$ClusterIP:$Port` from the container host `minikube ssh`
+15. Run a `busybox` Pod with a shell connected interactively and perform the following commands:
+   - run `cat /etc/resolv.conf` and review the output
+   - run `nslookup webserver` (service name) and review the output
+   - what IPs and/or qualified names do these match?
+16. Delete created resources
 
-- Create a single replica nginx deployment called `nginx`
-- Scale the deployment to 3 replicas
-- Confirm all resources created
-- Create a service for the deployment on port 80
-  - Confirm all resources created, note service TYPE, CLUSTER-IP and PORT(S)
-  - View more details of the service, note IPs, Port, TargetPort and Endpoints
-  - Compare with the YAML output of the service
-  - View the endpoints created
-  - Access the app from the container host via `minikube ssh`
-  - Access the app from a browser via `port-forwarding`
-- Change the service type to NodePort of `nodePort=32000`
-  - Can you access the app through the NodePort `$(minikube ip):32000`?
-- Create a naked Pod, e.g. `busybox`
-  - list the pods created
-  - run command inside the Pod `cat /etc/resolv.conf` to compare DNS server IP
-  - run command inside the Pod `nslookup [deploymentName]` to compare Gateway/Domain server IP
-  - what IP addresses do these match?
+<details>
+<summary>lab 8.1 solution</summary>
+
+```sh
+# host terminal
+kubectl create deploy webserver --image=httpd --dry-run=client -o yaml > lab8-1.yaml
+kubectl apply -f lab8-1.yaml
+kubectl get all
+kubectl get endpoints,pods -o wide
+echo --- >> lab8-1.yaml
+kubectl expose deploy webserver --port=80 --dry-run=client -o yaml >> lab8-1.yaml
+kubectl apply -f lab8-1.yaml
+kubectl get svc,pods
+kubectl describe svc webserver | less
+kubectl get svc webserver -o yaml | less # missing endpoints IPs
+kubectl exec $POD_NAME -- printenv | grep SERVICE # no service env-vars
+kubectl scale deploy webserver --replicas=0; kubectl scale deploy webserver --replicas=2
+kubectl get pods -o wide # service env-vars applied to pods created after service
+kubectl exec $POD_NAME -- printenv | grep SERVICE
+kubectl get endpoints,pods -o wide
+curl $CLUSTER_IP # docker-desktop connection error, docker-engine success 
+minikube ssh
+# cluster node terminal
+curl $CLUSTER_IP # success with both docker-desktop and docker-engine
+exit
+# host terminal
+kubectl run mypod --rm -it --image=busybox
+# container terminal
+cat /etc/resolv.conf # shows service ip as dns server
+nslookup webserver # shows dns search results, read more at https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#namespaces-of-services
+exit
+# host terminal
+kubectl delete -f lab8-1.yaml
+```
+</details>
+
+### Lab 8.2. Connect a frontend to a backend using services
+
+In this lab, we will implement a naive example of a _backend-frontend_ microservices architecture - expose frontend to external traffic with `NodePort` Service while keeping backend hidden with `ClusterIP` Service.
+
+> Note that live environments typically use [_Ingress_](#9-ingress) (covered in the next chapter) to expose applications to external traffic
+
+<details>
+<summary><i>Backend-Frontend</i> microservices architecture example</summary>
+
+![backend-frontend microservice architecture](https://user-images.githubusercontent.com/17856665/187857523-8d0fd28f-d540-4453-bae9-ff5481d63e07.png)
+</details>
+
+1. Create a simple Deployment, as our `backend` app, with the following spec:
+   - image `httpd` (for simplicity)
+   - name `backend`
+   - has Labels `app: backend` and `tier: webapp`
+   - has Selectors `app: backend` and `tier: webapp`
+2. Create a Service for the backend app with the following spec:
+   - type `ClusterIP`
+   - port 80
+   - same name, Labels and Selectors as backend Deployment
+3. Confirm you can access the app on the `$CLUSTER-IP`
+4. Create an [nginx _server block_ config file `nginx/default.conf`]() to redirect traffic for the `/` route to the backend service
+   ```sh
+   # nginx/default.conf
+   upstream backend-server {
+       server backend; # dns service discovery within the same namespace use service name
+   }
+
+   server {
+       listen 80;
+
+       location / {
+           proxy_pass http://backend-server;
+       }
+   }
+   ```
+5. Create a simple Deployment, as our `frontend` app, with the following spec:
+   - image `nginx`
+   - name `frontend`
+   - has Labels `app: webapp` and `tier: frontend`
+   - has Selectors `app: webapp` and `tier: frontend`
+   - mounts the nginx config file to `/etc/nginx/conf.d/default.conf` (use fullpath `$(pwd)/nginx/default.conf`)
+   - see example [_hostPath volume mount manifest_](https://kubernetes.io/docs/concepts/storage/volumes/#hostpath-configuration-example)
+6. Create a Service for the frontend app with the following spec:
+   - type `NodePort`
+   - port 80
+   - same name, Labels and Selectors as frontend Deployment
+7. Confirm you can access the backend app from the Minikube Node `$(minikube ip):NodePort`
+8. Delete created resources
+
+<details>
+<summary>lab 8.2 solution</summary>
+
+```sh
+kubectl create deploy backend --image=httpd --dry-run=client -o yaml > lab8-2.yaml
+echo --- >> lab8-2.yaml
+kubectl expose deploy backend --port=80 --dry-run=client -o yaml >> lab8-2.yaml
+nano lab8-2.yaml
+```
+
+```yaml
+# backend deploymemt
+kind: Deployment
+metadata:
+  labels:
+    app: backend
+    tier: webapp
+  name: backend
+spec:
+  selector:
+    matchLabels:
+      app: backend
+      tier: webapp
+  template:
+    metadata:
+      labels:
+        app: backend
+        tier: webapp
+# backend service
+kind: Service
+metadata:
+  labels:
+    app: backend
+    tier: webapp
+  name: backend
+spec:
+  selector:
+    app: backend
+    tier: webapp
+```
+
+```sh
+kubectl apply -f lab8-2.yaml
+curl $CLUSTER_IP # or run in node terminal `minikube ssh`
+mkdir nginx
+nano nginx/default.conf # use snippet from step [4]
+echo --- >> lab8-2.yaml
+kubectl create deploy frontend --image=nginx --dry-run=client -o yaml >> lab8-2.yaml
+echo --- >> lab8-2.yaml
+kubectl expose deploy frontend --port=80 --dry-run=client -o yaml >> lab8-2.yaml
+nano lab8-2.yaml
+```
+
+```yaml
+# frontend deploymemt
+kind: Deployment
+metadata:
+  labels:
+    app: frontend
+    tier: webapp
+  name: frontend
+spec:
+  selector:
+    matchLabels:
+      app: frontend
+      tier: webapp
+  template:
+    metadata:
+      labels:
+        app: frontend
+        tier: webapp
+    spec:
+      containers:
+      - image: nginx
+        volumeMounts:
+        - mountPath: /etc/nginx/conf.d/default.conf
+          name: conf-volume
+      volumes:
+      - name: conf-volume
+        hostPath:
+          path: /full/path/to/nginx/default.conf # `$(pwd)/nginx/default.conf`
+# frontend service
+kind: Service
+metadata:
+  labels:
+    app: frontend
+    tier: webapp
+  name: frontend
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+    tier: webapp
+```
+
+```sh
+kubectl apply -f lab8-2.yaml
+kubectl get svc,pods
+curl $(minikube ip):$NODE_PORT # shows backend httpd page
+kubectl delete -f lab8-2.yaml
+```
+</details>
 
 ## 9. Ingress
+
+<details>
+<summary>ingress-service topology</summary>
+
+![ingress network topology](https://d33wubrfki0l68.cloudfront.net/91ace4ec5dd0260386e71960638243cf902f8206/c3c52/docs/images/ingress.svg)
+</details>
 
 ### Ingress rules
 
