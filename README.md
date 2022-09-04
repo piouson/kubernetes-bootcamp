@@ -2861,13 +2861,15 @@ kubectl delete -f lab9-3.yaml
 
 ### Network policies
 
-In Kubernetes, Pods can always communicate through namespaces. All traffics are allowed until you have a [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/).
+There are two kinds of Pod isolation: isolation for egress (outbound), and isolation for ingress (inbound). By default, all ingress and egress traffic is allowed to and from pods in a namespace, until you have a [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/) in that namespace.
 
-Network policies are implemented by the [network plugin](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/). This requires a networking solution which supports NetworkPolicy, otherwise, will have no effect. Network policies are additive.
+Network policies are implemented by a [_network plugin_](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/). A _NetworkPolicy_ will have no effect if a _network plugin_ that supports _NetworkPolicy_ is not installed in the cluster.
 
-Minikube needs to be started with the `--cni=calico` flag to use the Calico network plugin.
+There are [three different identifiers](https://kubernetes.io/docs/concepts/services-networking/network-policies/#behavior-of-to-and-from-selectors) that controls entities that a Pod can communicate with:
 
-> The Calico plugin conflicts with Ingress and thus should be disabled after this lab.
+- `podSelector`: selects pods within the _NetworkPolicy_ namespace allowed for ingress/egress using _selector_ matching (note: a pod cannot block itself)
+- `namespaceSelector`: selects all pods in specific namespaces allowed for ingress/egress using _selector_ matching
+- `ipBlock`: selects IP CIDR ranges (cluster-external IPs) allowed for ingress/egress (note: node traffic is always allowed - not for CKAD)
 
 ```sh
 minikube stop
@@ -2876,18 +2878,13 @@ minikube delete
 minikube start --kubernetes-version=1.23.9 --cni=calico
 # verify calico plugin running, allow enough time (+5mins) for all pods to enter `running` status
 kubectl get pods -n kube-system --watch
-k
+# create network policy
+kubectl apply -f /path/to/networlpolicy/manifest/file
+# list network policies
+kubectl get networkpolicy
+# view more details of network policies `mynetpol`
+kubectl describe networkpolicy mynetpol
 ```
-
-> Allow plenty of time for kubedns and calico to enter `Running` status
-
-### Network policy identifiers
-
-There are three different identifiers that controls entities that a Pod can communicate with:
-
-- `podSelector`: Pod allows access to other Pods with the matching selector label (note: a Pod cannot block itself)
-- `namespaceSelector`: Pod allows incoming traffic from namespaces with the matching selector label
-- `ipBlock`: specifies a range of cluster-external IPs to allow access (not for [CKAD](https://www.cncf.io/certification/ckad/) - note: node traffic is always allowed)
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -2897,7 +2894,7 @@ spec:
   podSelector: {}
   policyTypes:
   - Ingress # or Egress
-# allow all ingress/egress traffic
+# create allow all ingress/egress traffic
 spec:
   podSelector: {}
   policyTypes:
@@ -2910,22 +2907,24 @@ spec:
 
 You may follow the [official declare network policy walkthrough](https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/)
 
-> Note: prepend `https://k8s.io/examples/` to any example files in the official docs to use the file locally
+> Minikube Calico plugin might conflict with the rest of the labs, so disabled Calico addon after this lab \
+> Prepend `https://k8s.io/examples/` to any example files in the official docs to use the file locally
 
-1. Recreate a kubernetes cluster in minikube with calico
+1. Create a kubernetes cluster in minikube with Calico enabled
 2. Confirm Calico is up and running
 3. Create a Deployment called `webapp` using image `httpd`
 4. Expose the Deployment on port 80
 5. Review created resources and confirm pods running
 6. Create a busybox Pod and connect an interactive shell
 7. Run command in the Pod container `wget --spider --timeout=1 nginx`
-8. Limit access to the Service with a _NetworkPolicy_ so that only Pods with label `tier=frontend` can query it - see official manifest example `service/networking/nginx-policy.yaml`
+8. Limit access to the Service so that only Pods with label `tier=frontend` have access - see official manifest example `service/networking/nginx-policy.yaml`
 9. View more details of the _NetworkPolicy_ created 
 10. Create a busybox Pod and connect an interactive shell
 11. Run command in the Pod container `wget --spider --timeout=1 nginx`
 12. Create another busybox Pod with label `tier=frontend` and connect an interactive shell
 13. Run command in the Pod container `wget --spider --timeout=1 nginx`
 14. Delete created resources
+15. Revert to a cluster without Calico
 
 <details>
 <summary>lab9.4 solution</summary>
@@ -2983,6 +2982,9 @@ wget --spider --timeout=1 webapp # remote file exists
 exit
 # host terminal
 kubectl delete -f lab9-4.yaml
+minikube stop
+minikube delete
+minikube start --kubernetes-version=1.23.9 --driver=docker
 ```
 </details>
 
