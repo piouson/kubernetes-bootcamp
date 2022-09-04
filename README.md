@@ -1357,7 +1357,7 @@ kubectl delete -f lab5-5.yaml
 
 ### Using namespaces
 
-[Namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) are a way to divide/isolate cluster resources between multiple users. Names of resources need to be unique within a namespace, but not across namespaces. \
+[Namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) are a way to divide/isolate cluster resources between multiple users. Names of resources need to be unique within a Namespace, but not across namespaces. \
 Not all Kubernetes resources are in a Namespace and Namespace-based scoping is only applicable for namespaced objects.
 
 > Namespaces should be used sensibly, you can read more about [understanding the motivation for using namespaces](https://kubernetes.io/docs/tasks/administer-cluster/namespaces/#understanding-the-motivation-for-using-namespaces)
@@ -1381,7 +1381,9 @@ kubectl config set-context --current --namespace=myns
 kubectl api-resources --namespaced=true
 # view kubernetes api resources not in a namespace
 kubectl api-resources --namespaced=false
-# view the namespace spec
+# view the namespace object
+kubectl explain namespace | less
+# view the namespace object recursively
 kubectl explain namespace --recursive | less
 ```
 
@@ -1389,11 +1391,12 @@ kubectl explain namespace --recursive | less
 
 You can also follow the [admin guide doc for namespaces](https://kubernetes.io/docs/tasks/administer-cluster/namespaces/)
 
-1. Create a namespace `myns`
-2. Create a webserver Pod in the `myns` namespace
-3. Review created resources and confirm `myns` namespace is assigned to the Pod
+1. Create a Namespace `myns`
+2. Create a webserver Pod in the `myns` Namespace
+3. Review created resources and confirm `myns` Namespace is assigned to the Pod
 4. Delete resources created
 5. Review the `NAMESPACED` column of the Kubernetes API resources
+6. Review the Namespace object and the Namespace spec
 
 <details>
 <summary>lab5.6 solution</summary>
@@ -1407,13 +1410,16 @@ kubectl get pods
 kubectl describe -f lab5-6.yaml | less
 kubectl delete -f lab5-6.yaml
 kubectl api-resources | less
+kubectl explain namespace | less
+kubectl explain namespace --recursive | less
+kubectl explain namespace.spec | less
 ```
 
 </details>
 
 > Remember that namespaced resources are not visible by default unless the namespace is specified \
-> ⁉️ `kubectl get pods` - only shows resources in the `default` namespace \
-> ‼️ `kubectl get pods -n mynamespace` - only shows resources in the `mynamespace` namespace
+> 💡 `kubectl get pods` - only shows resources in the `default` namespace \
+> 💡 `kubectl get pods -n mynamespace` - shows resources in the `mynamespace` namespace
 
 ## 6. Exploring Pods
 
@@ -1519,7 +1525,7 @@ fg $ID
 kubectl port-forwarding mypod 8080:80 &
 ```
 
-### Lab 6.2. Expose container port
+### Lab 6.2. Use port forwarding to access applications
 
 1. Create a webserver Pod
 2. List created resources and determine Pod IP address
@@ -1594,7 +1600,7 @@ Using the official docs manifest example `pods/security/security-context.yaml` a
 7. Review pod details and confirm events and behaviour
    - what were your findings?
 8. Delete created resources
-9. Explore the Pod spec and compare the security context options available at pod-level vs container-level
+9. Explore the Pod spec and compare the `securityContext` options available at pod-level vs container-level
 
 <details>
 <summary>lab6.3 solution</summary>
@@ -1857,6 +1863,7 @@ kubectl explain pod.spec.containers.resources
    - both containers does not exceed x2 the amount of host RAM
 9. Apply the manifest and review behaviour
 10. Delete created resources
+11. Review the Pod spec fields related to limits and requests
 
 <details>
 <summary>lab6.6 solution</summary>
@@ -1954,6 +1961,7 @@ kubectl apply -f lab6-6.yaml
 kubectl get pods -n dev --watch # remains in Pending until enough resources available
 kubectl describe pods webapp
 kubectl delete -f lab6-6.yaml
+kubectl explain pod.spec.containers.resources | less
 ```
 
 </details>
@@ -2370,6 +2378,7 @@ Like Deployments, Services targets Pods by _selector_ but exists independent fro
 <summary><i>ClusterIP</i> and <i>NodePort</i> example</summary>
 
 ![ClusterIP and NodePort topology](https://user-images.githubusercontent.com/17856665/187857434-f07e0289-699e-4868-b84e-bd196bdfb4d7.png)
+
 </details>
 
 #### Discovering services
@@ -2426,6 +2435,7 @@ kubectl get pods -o wide
    - run `nslookup webserver` (service name) and review the output
    - what IPs and/or qualified names do these match?
 16. Delete created resources
+17. Explore the Service object and the Service spec
 
 <details>
 <summary>lab 8.1 solution</summary>
@@ -2447,7 +2457,7 @@ kubectl scale deploy webserver --replicas=0; kubectl scale deploy webserver --re
 kubectl get pods -o wide # service env-vars applied to pods created after service
 kubectl exec $POD_NAME -- printenv | grep SERVICE
 kubectl get endpoints,pods -o wide
-curl $CLUSTER_IP # docker-desktop connection error, docker-engine success 
+curl $CLUSTER_IP # docker-desktop connection error, docker-engine success
 minikube ssh
 # cluster node terminal
 curl $CLUSTER_IP # success with both docker-desktop and docker-engine
@@ -2460,7 +2470,10 @@ nslookup webserver # shows dns search results, read more at https://kubernetes.i
 exit
 # host terminal
 kubectl delete -f lab8-1.yaml
+kubectl explain service | less
+kubectl explain service.spec | less
 ```
+
 </details>
 
 ### Lab 8.2. Connect a frontend to a backend using services
@@ -2473,6 +2486,7 @@ In this lab, we will implement a naive example of a _backend-frontend_ microserv
 <summary><i>Backend-Frontend</i> microservices architecture example</summary>
 
 ![backend-frontend microservice architecture](https://user-images.githubusercontent.com/17856665/187857523-8d0fd28f-d540-4453-bae9-ff5481d63e07.png)
+
 </details>
 
 1. Create a simple Deployment, as our `backend` app, with the following spec:
@@ -2486,6 +2500,7 @@ In this lab, we will implement a naive example of a _backend-frontend_ microserv
    - same name, Labels and Selectors as backend Deployment
 3. Confirm you can access the app on the `$CLUSTER-IP`
 4. Create an [nginx _server block_ config file `nginx/default.conf`]() to redirect traffic for the `/` route to the backend service
+
    ```sh
    # nginx/default.conf
    upstream backend-server {
@@ -2500,6 +2515,7 @@ In this lab, we will implement a naive example of a _backend-frontend_ microserv
        }
    }
    ```
+
 5. Create a simple Deployment, as our `frontend` app, with the following spec:
    - image `nginx`
    - name `frontend`
@@ -2615,70 +2631,233 @@ kubectl get svc,pods
 curl $(minikube ip):$NODE_PORT # shows backend httpd page
 kubectl delete -f lab8-2.yaml
 ```
+
 </details>
 
 ## 9. Ingress
 
+[Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource. Ingress may be configured to give Services externally-reachable URLs, [load balance traffic](https://www.cloudflare.com/en-in/learning/performance/what-is-load-balancing/), [terminate SSL/TLS](https://www.f5.com/services/resources/glossary/ssl-termination), and offer [name-based virtual hosting](https://www.tecmint.com/apache-ip-based-and-name-based-virtual-hosting/).
+
+> 💡 Only creating an Ingress resource has no effect! You must have an [Ingress controller](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) to satisfy an Ingress. In our local lab, we will use the _Minikube Ingress controller_
+
 <details>
 <summary>ingress-service topology</summary>
 
-![ingress network topology](https://d33wubrfki0l68.cloudfront.net/91ace4ec5dd0260386e71960638243cf902f8206/c3c52/docs/images/ingress.svg)
+![ingress network topology](https://user-images.githubusercontent.com/17856665/188259540-a6755ae5-d885-41f3-8e1e-1cee6f5e1bcc.png)
+
 </details>
 
-### Ingress rules
-
-This is similar to defining API routes on a backend application, except that each defined route points to a deployment.
-
-> `kubectl create ingress myingress --rule="/=app1:80" --rule="/about=app2:3000" --rule="/contact=app3:8080"`
-
-- if no host is specified, the rule applies to all inbound HTTP traffic
-- routes/paths can be defined with a POSIX regex
-- `pathType` can be `Exact (default)` or `Prefix` based matching
-- each path points to a service or a resource.
-- a default path can be defined for traffic that doesn't match any specified paths, similar to a 404 route
-
-### Ingress Types
-
-- **single-service ingress** defines a single rule to access a single service
-- **simple fanout ingress** defines two or more rules of different routes/paths to access different services
-- **name-based virtual hosting ingress** defines two or more rules with dynamic routes based on host header, requires a DNS entry for each host header
-
-> name-based example: `kubectl create ingress namebased --rule="app.domain.com/*=appservice:80" --rule="api.domain.com/*=apiservice:80" --rule="db.domain.com/*=dbservice:80"`
-
-### Basic commands
-
 ```sh
-# enable ingress manually
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.44.0/deploy/static/provider/cloud/deploy.yaml
 # list existing minikube addons
 minikube addons list
 # enable ingress on minikube
 minikube addons enable ingress
-# confirm ingress namespace added
+# enable ingress manually
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.44.0/deploy/static/provider/cloud/deploy.yaml
+# list existing namespaces
 kubectl get ns
-# confirm resources in ingress namespace
+# list resources in the ingress namespace
 kubectl get all -n ingress-nginx
-# create ingress, see `kubectl create ingress -h`
-kubectl create ingress [name] --rule="[path]=[deploymentName]:port"
-kubectl create ingress nginx-ingress --rule="/web=nginx-app:80"
+# view ingress spec
+kubectl explain ingress.spec | less
 ```
 
-### Lab 9.1. Managing Ingress
+### Lab 9.1 Enable Ingress
 
-- Enable Ingress
-  - confirm new namespace added
-  - confirm all resources in ingress namespace
-- Create a new `nginx` deployment and expose as NodePort port 80, use YAML file
-  - verify access on `$(minikube ip)`
-- Add `[deploymentName.info` to `/etc/hosts` mapped to `minikube ip`
-- Create an ingress for the `nginx` deployment on path `/`, use YAML file
-  - verify access
-- Create two new deployments of any web server images called `cat` and `dog`, use YAML file
-  - expose both deployments as `Cluster-IP` on port 80
-  - add entries in `/etc/hosts` for `cat.domain.com` and `dog.domain.com` both mapped to `$(minikube ip)`
-- Edit existing Ingress, use YAML file
-  - add rules for both deployments using their subdomains on path `/cat` and `/dog` respectively, and `pathType=Prefix` for both
-- Verify access to the new deployments via subdomains
+1. List existing namespaces
+2. Enable Ingress on minikube
+3. List namespaces and confirm new ingress-related namespace added
+4. List and review resources created by enabling Ingress (namespaced) - can you figure out the relationship?
+5. Review the Ingress spec
+
+<details>
+<summary>lab9.1 solution</summary>
+  
+```sh
+kubectl get ns # not showing ingress-nginx namespace 
+minikube addons list # ingress not enable
+minikube addons enable ingress
+minikube addons list # ingress enabled
+kubectl get ns # shows ingress-nginx namespace
+kubectl get all -n ingress-nginx # shows pods, services, deployment, replicaset and jobs
+kubectl explain ingress.spec | less
+```
+</details>
+
+### Ingress Types
+
+- **single-service ingress** defines a single rule to access a single service
+- **simple fanout ingress** defines two or more rules of different paths to access different services
+- **name-based virtual hosting ingress** defines two or more rules with dynamic routes based on host header - requires a DNS entry for each host header
+
+```sh
+# create ingress with a specified rule, see `kubectl create ingress -h`
+kubectl create ingress $INGRESS_NAME --rule="$PATH=$DEPLOYMENT_NAME:$PORT"
+# create single-service ingress `myingress`
+kubectl create ingress myingress --rule="/=app1:80"
+# create simple-fanout ingress
+kubectl create ingress myingress --rule="/=app1:80" --rule="/about=app2:3000" --rule="/contact=app3:8080"
+# create name-based-virtual-hosting ingress
+kubectl create ingress myingress --rule="api.domain.com/*=apiservice:80" --rule="db.domain.com/*=dbservice:80" --rule="app.domain.com/*=appservice:80"
+```
+
+### Lab 9.2. Simple fanout Ingress
+
+1. Create an Ingress `webapp-ingress` that:
+   - redirects requests for path `/` to a Service `webappsvc:80`
+   - redirects requests for path `/hello` to a Service `hellosvc:8080`
+2. List created resources
+3. View more details of the Ingress and review the notes under _Rules_
+4. Create a Deployment `webapp` with image `httpd`
+5. Expose the `webapp` Deployment as _NodePort_ with service name `webappsvc`
+6. List all created resources - ingress, service, deployment and other resources associated with the deployment
+7. View more details of the Ingress and review the notes under _Rules_
+8. Access `webapp` via Ingress using the minikube Node IP `$(minikube ip)`
+9. View more details of the Ingress and review the notes under _Rules_
+10. Create a second Deployment `hello` with image `gcr.io/google-samples/hello-app:1.0`
+11. Expose `hello` as _NodePort_ with service name `hellosvc`
+12. List newly created resources - service, pods, deployment etc
+13. View more details of the Ingress and review the notes under _Rules_
+14. Access `hello` via the minikube Node `$(minikube ip)/hello`
+15. Add an entry to `/etc/hosts` that maps the minikube Node IP to an hostname `$(minikube ip)  myawesomesite.com`
+16. Access `webapp` via `myawesomesite.com`
+17. Access `hello` via `myawesomesite.com/hello`
+18. Delete created resources
+
+<details>
+<summary>lab9.2 solution</summary>
+  
+```sh
+kubectl create ingress webapp-ingress --rule="/=webappsvc:80" --dry-run=client -o yaml > lab9-2.yaml
+echo --- >> lab9-2.yaml
+kubectl apply -f lab9-2.yaml
+kubectl get ingress
+kubectl describe ingress webapp-ingress | less
+kubectl create deploy webapp --replicas=3 --image=httpd --dry-run=client -o yaml >> lab9-2.yaml
+echo --- >> lab9-2.yaml
+kubectl expose deploy webapp --name=webappsvc --type=NodePort --port=80 --dry-run=client -o yaml >> lab9-2.yaml
+echo --- >> lab9-2.yaml
+kubectl apply -f lab9-2.yaml
+kubectl get ingress,all
+kubectl describe ingress webapp-ingress | less
+curl $(minikube ip)
+kubectl describe ingress webapp-ingress | less
+kubectl create deploy hello --replicas=3 --image=gcr.io/google-samples/hello-app:1.0 --dry-run=client -o yaml >> lab9-2.yaml
+echo --- >> lab9-2.yaml
+kubectl expose deploy hello --name=hellosvc --type=NodePort --port=8080 --dry-run=client -o yaml >> lab9-2.yaml
+echo --- >> lab9-2.yaml
+kubectl apply -f lab9-2.yaml
+kubectl get all --selector="app=hello"
+kubectl describe ingress webapp-ingress | less
+curl $(minikube ip)/hello
+echo "$(minikube ip)  myawesomesite.com" | sudo tee -a /etc/hosts
+curl myawesomesite.com
+curl myawesomesite.com/hello
+kubectl delete -f lab9-2.yaml
+ # note that using NodePort also works `$(minikube ip):$NodePort` cos we have direct access to the Node
+```
+</details>
+
+### Ingress rules
+
+This is similar to defining API routes on a backend application, except each defined route points to a separate application/service/deployment.
+
+- if no host is specified, the rule applies to all inbound HTTP traffic
+- paths can be defined with a [POSIX regex](https://www.gnu.org/software/findutils/manual/html_node/find_html/
+- each path points to a resource backend defined with a `service.name` and a `service.port.name` or `service.port.number`posix_002dextended-regular-expression-syntax.html)
+- both the host and path must match the content of an incoming request before the load balancer directs traffic to the referenced Service
+- a default path `.spec.defaultBackend` can be defined on the Ingress or _Ingress controller_ for traffic that doesn't match any known paths, similar to a 404 route - if `defaultBackend` is not set, the default 404 behaviour will depend on the type of _Ingress controller_ in use
+
+### Path types
+
+Each rule-path in an Ingress must have a [`pathType`](https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types). Paths without a `pathType` will fail validation.
+
+There are three supported path types:
+
+- `ImplementationSpecific` - matching is up to the _IngressClass_
+- `Exact` - matches the URL path exactly and with case sensitivity
+- `Prefix` - matches based on a URL path prefix split by `/`, with case sensitivity and element by element basis
+
+### Ingress Class
+
+Ingresses can be implemented by different controllers, often with different configuration. Each Ingress should specify a class, a reference to an [_IngressClass_](https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class) resource that contains additional configuration including the name of the controller that should implement the class.
+
+Depending on your ingress controller, you may be able to use parameters that you set cluster-wide, or just for one namespace.
+
+- cluster-wide _IngressClass_: this is the default scope configured if you set the `ingressclass.spec.parameters` field without setting `ingressclass.spec.parameters.scope`, or setting `ingressclass.spec.parameters.scope: Cluster`
+- namespace _IngressClass_: if you set the `ingressclass.spec.parameters` field and set `ingressclass.spec.parameters.scope: Namespace`
+
+A particular _IngressClass_ can be configured as default for a cluster by setting the `ingressclass.kubernetes.io/is-default-class` annotation to `true`
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  annotations:
+    ingressclass.kubernetes.io/is-default-class: "true"
+# etc, see https://k8s.io/examples/service/networking/external-lb.yaml
+```
+
+```sh
+# list existing namespaces
+kubectl get ns
+# list ingressclasses in the ingress namespace
+kubectl get ingressclass -n ingress-nginx
+# view ingressclass object
+kubectl explain ingressclass | less
+```
+
+### Lab 9.3. Multiple hosts ingress
+
+1. Review the _IngressClass_ resource object
+2. List the Ingress classes created by the minikube ingress addon
+3. Review the _IngressClass_ to determine why `nginx-ingress` is the default Ingress used when no Ingress is specified
+4. Create two Deployments `nginx` and `httpd`
+5. Expose both deployments as `Cluster-IP` on port 80
+6. Create an Ingress with the following:
+   - redirects requests for `nginx.yourchosenhostname.com` to the `nginx` Service
+   - redirects requests for `httpd.yourchosenhostname.com` to the `httpd` Service
+  - both rules should use a `Prefix` path type
+7. Review created resources
+8. Confirm Ingress `pathType` and `ingressClassName`
+9. Add an entry to `/etc/hosts` that maps the minikube Node IP to a chosen hostname
+   - `$(minikube ip)  nginx.yourchosenhostname.com`
+   - `$(minikube ip)  httpd.yourchosenhostname.com`
+10. Verify you can access both deployments via their subdomains
+11. Delete created resources
+
+<details>
+<summary>lab9.3 solution</summary>
+  
+```sh
+kubectl explain ingressclass | less
+kubectl explain ingressclass --recursive | less
+kubectl get ns # find the ingress namespace - `ingress-nginx`
+kubectl get ingressclass -n ingress-nginx # find ingress class name - `nginx`
+kubectl get ingressclass nginx -n ingress-nginx -o yaml | less # annotation `ingressclass.kubernetes.io/is-default-class: "true"` makes this ingress the default
+kubectl create deploy nginx --image=nginx --dry-run=client -o yaml > lab9-3.yaml
+echo --- >> lab9-3.yaml
+kubectl expose deploy nginx --port=80 --dry-run=client -o yaml >> lab9-3.yaml
+echo --- >> lab9-3.yaml
+kubectl create deploy httpd --image=httpd --dry-run=client -o yaml >> lab9-3.yaml
+echo --- >> lab9-3.yaml
+kubectl expose deploy httpd --port=80 --dry-run=client -o yaml >> lab9-3.yaml
+echo --- >> lab9-3.yaml
+kubectl create ingress myingress --rule="nginx.yourchosenhostname.com/*=nginx:80" --rule="httpd.yourchosenhostname.com/*=httpd:80" --dry-run=client -o yaml > lab9-3.yaml
+echo --- >> lab9-3.yaml
+kubectl apply -f lab9-3.yaml
+kubectl get ingress,all
+kubectl get ingress myingress -o yaml | less # `pathType: Prefix` and `ingressClassName: nginx`
+echo "
+$(minikube ip)  nginx.yourchosenhostname.com
+$(minikube ip)  httpd.yourchosenhostname.com
+" | sudo tee -a /etc/hosts
+curl nginx.yourchosenhostname.com
+curl httpd.yourchosenhostname.com
+kubectl delete -f lab9-3.yaml
+# note that when specifying ingress path, `/*` creates a `Prefix` path type and `/` creates an `Exact` path type
+```
+</details>
 
 ### Network policies
 
@@ -2695,12 +2874,12 @@ minikube stop
 minikube delete
 # start minikube with calico plugin
 minikube start --kubernetes-version=1.23.9 --cni=calico
-# verify calico plugin running
-kubectl get pods -n kube-system
-# allow plenty of time (+5mins) for kubedns and calico to enter `running` status
+# verify calico plugin running, allow enough time (+5mins) for all pods to enter `running` status
+kubectl get pods -n kube-system --watch
+k
 ```
 
-> Allow plenty of time (+5mins) for kubedns and calico to enter `Running` status
+> Allow plenty of time for kubedns and calico to enter `Running` status
 
 ### Network policy identifiers
 
@@ -2710,7 +2889,7 @@ There are three different identifiers that controls entities that a Pod can comm
 - `namespaceSelector`: Pod allows incoming traffic from namespaces with the matching selector label
 - `ipBlock`: specifies a range of cluster-external IPs to allow access (not for [CKAD](https://www.cncf.io/certification/ckad/) - note: node traffic is always allowed)
 
-```sh
+```yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 # create default deny all ingress/egress traffic
@@ -2721,17 +2900,91 @@ spec:
 # allow all ingress/egress traffic
 spec:
   podSelector: {}
-  ingress: # or egress
-  - {}
   policyTypes:
   - Ingress # or Egress
+  ingress: # or egress
+  - {}
 ```
 
-### Lab 9.2. Declare network policy
+### Lab 9.4. Declare network policy
 
-Follow the [official declare network policy walkthrough](https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/)
+You may follow the [official declare network policy walkthrough](https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/)
 
-> Note: prepend `https://k8s.io/examples/` to any example files in the official docs to use the file with `kubectl`
+> Note: prepend `https://k8s.io/examples/` to any example files in the official docs to use the file locally
+
+1. Recreate a kubernetes cluster in minikube with calico
+2. Confirm Calico is up and running
+3. Create a Deployment called `webapp` using image `httpd`
+4. Expose the Deployment on port 80
+5. Review created resources and confirm pods running
+6. Create a busybox Pod and connect an interactive shell
+7. Run command in the Pod container `wget --spider --timeout=1 nginx`
+8. Limit access to the Service with a _NetworkPolicy_ so that only Pods with label `tier=frontend` can query it - see official manifest example `service/networking/nginx-policy.yaml`
+9. View more details of the _NetworkPolicy_ created 
+10. Create a busybox Pod and connect an interactive shell
+11. Run command in the Pod container `wget --spider --timeout=1 nginx`
+12. Create another busybox Pod with label `tier=frontend` and connect an interactive shell
+13. Run command in the Pod container `wget --spider --timeout=1 nginx`
+14. Delete created resources
+
+<details>
+<summary>lab9.4 solution</summary>
+  
+```sh
+# host terminal
+minikube stop
+minikube delete
+minikube start --kubernetes-version=1.23.9 --driver=docker --cni=calico
+kubectl get pods -n kube-system --watch # allow enough time, under 5mins if lucky, more than 10mins if you have bad karma 😼
+kubectl create deploy webapp --image=httpd --dry-run=client -o yaml > lab9-4.yaml
+kubectl apply -f lab9-4.yaml
+echo --- >> lab9-4.yaml
+kubectl expose deploy webapp --port=80 --dry-run=client -o yaml > lab9-4.yaml
+kubectl apply -f lab9-4.yaml
+kubectl get svc,pod
+kubectl get pod --watch # wait if pod not in running status
+kubectl run mypod --rm -it --image=busybox
+# container terminal
+wget --spider --timeout=1 webapp # remote file exists
+exit
+# host terminal
+echo --- >> lab9-4.yaml
+wget -qO- https://k8s.io/examples/service/networking/nginx-policy.yaml >> lab9-4.yaml
+nano lab9-4.yaml
+```
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mynetpol
+spec:
+  podSelector:
+    matchLabels:
+      app: webapp
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: frontend
+```
+
+```sh
+kubectl apply -f lab9-4.yaml
+kubectl describe networkpolicy mynetpol | less
+kubectl run mypod --rm -it --image=busybox
+# container terminal
+wget --spider --timeout=1 webapp # wget: download timed out
+exit
+# host terminal
+kubectl run mypod --rm -it --image=busybox --labels="tier=frontend"
+# container terminal
+wget --spider --timeout=1 webapp # remote file exists
+exit
+# host terminal
+kubectl delete -f lab9-4.yaml
+```
+</details>
 
 ## 10. Storage
 
