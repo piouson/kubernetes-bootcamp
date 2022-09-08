@@ -27,32 +27,30 @@ A Unix-based environment running docker (Docker Engine or Docker Desktop).
 
 - macOS [install Docker Desktop](https://docs.docker.com/desktop/install/mac-install/)
 - Windows [setup WSL2 development environment](https://docs.microsoft.com/en-us/windows/wsl/setup/environment), then:
-  - option 1 install Docker Engine on WSL2, see below
+  - option 1 install Docker Engine in WSL2, see [Ubuntu install steps](#docker-engine-installation) below
   - option 2 [install Docker Desktop with WSL2 backend](https://docs.docker.com/desktop/windows/wsl/) - [`winget install Docker.DockerDesktop`](https://docs.microsoft.com/en-us/windows/package-manager/winget/)
 - preferably, have a command-line package manager for your operating system
   - macOS use [Homebrew](https://brew.sh/)
   - Windows use [winget](https://docs.microsoft.com/en-us/windows/package-manager/winget/)
 
-> Docker Desktop has certain network limitations affecting some network related labs. \
-> Consider using Docker Engine if you are **not** on macOS
+> Docker Desktop for beginners, but certain network limitations may affect [ch8 labs](#8-networking) \
+> Docker Engine for experts but doesn't work on macOS
 
 ### Docker engine installation
 
 <details>
-  <summary><b>docker engine install steps on Ubuntu/WSL2</b></summary>
+  <summary><b>docker engine install steps on Ubuntu</b></summary>
+
+- if using Windows/WSL2, be sure to [disable Docker Desktop integration with WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
 
 ```sh
-# Windows/WSL2 prerequisites
-# a. disable docker desktop integration with WSL2 Ubuntu, see https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png
-# b. enable `systemd` on WSL2
+# Windows/WSL2 prerequisites - enable `systemd` on WSL2
 git clone https://github.com/DamionGans/ubuntu-wsl2-systemd-script.git
 cd ubuntu-wsl2-systemd-script/
 sudo bash ubuntu-wsl2-systemd-script.sh --force
 cd ../ && rm -rf ubuntu-wsl2-systemd-script/
 exec bash
 systemctl # long output confirms systemd up and running
-
-# Docker install steps for Ubuntu/WSL2
 # 1. uninstall old docker versions
 sudo apt-get remove docker docker-engine docker.io containerd runc
 # 2. setup docker repository
@@ -83,7 +81,7 @@ A container image is a lightweight, standalone, executable package of software t
 
 The [Open Container Initiative (OCI)](https://opencontainers.org/) creates open industry standards around container formats and runtimes.
 
-A container registry is a repository, or collection of repositories, used to store and access container images. Container registries are a big player in cloud-native application development, often as part of DevOps processes.
+A container registry is a repository, or collection of repositories, used to store and access container images. Container registries are a big player in cloud-native application development, often as part of [GitOps](https://www.redhat.com/en/topics/devops/what-is-gitops) processes.
 
 ### Container commands
 
@@ -293,7 +291,7 @@ docker run -d -p 8080:80 -v ~/html:/usr/local/apache2/htdocs httpd
 # run container with environment variable
 docker run -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=secret mongo
 # inspect container, see `docker container inspect --help | docker inspect --help`
-docker inspect $CONTAINER_NAME_OR_ID | less
+docker inspect $CONTAINER_NAME_OR_ID | less # press Q key to quit from less
 docker container inspect $CONTAINER_NAME_OR_ID
 # format inspect output to view container network information
 docker inspect --format="{{.NetworkSettings.IPAddress}}" $CONTAINER_NAME_OR_ID
@@ -1068,8 +1066,10 @@ kubectl run mypod --image=nginx -- <arg1> <arg2> ... <argN>
 kubectl run mypod --image=nginx --command -- <command>
 # run a busybox pod interactively and delete after task completion
 kubectl run -it mypod --image=busybox --rm --restart=Never -- date
-# display running pods, see `kubectl get --help`
+# list pods, see `kubectl get --help`
 kubectl get pods # using `pod` or `pods` will work
+# only show resource names when listing pods
+kubectl get pods -o name | less
 # display full details of pod in YAML form
 kubectl get pods $POD_NAME -o yaml | less
 # show details of pod in readable form, see `kubectl describe --help`
@@ -1087,9 +1087,10 @@ kubectl explain pod.spec | less
 1. Create an nginx Pod and confirm creation
 2. Review full details of the Pod in YAML form
 3. Display details of the Pod in readable form and review the Node, IP, container start date/time and Events
-4. Delete the Pod
-5. Review the Pod spec
-6. Have a look at the Kubernetes API to determine when pods were introduced
+4. List pods but only show resource names
+5. Delete the Pod
+6. Review the Pod spec
+7. Have a look at the Kubernetes API to determine when pods were introduced
 
 <details>
 <summary>lab5.1 solution</summary>
@@ -1098,6 +1099,7 @@ kubectl explain pod.spec | less
 kubectl run mypod --image=nginx
 kubectl get pods
 kubectl describe pods mypod | less
+kubectl get pods -o name
 kubectl delete pods mypod
 kubectl explain pod.spec
 kubectl api-resources # pods were introduced in v1 - the first version of kubernetes
@@ -1154,10 +1156,25 @@ kubectl run mynginx --image=nginx -o yaml --dry-run=client > pod.yaml
 
 ### Lab 5.2. Managing Pods with YAML file
 
+> In the official k8s docs, you will often find example code with a URL, e.g. `pods/commands.yaml`. The file can be downloaded by appending `https://k8s.io/examples` to the URL, thus: `https://k8s.io/examples/pods/commands.yaml`
+
+```sh
+# download file `pods/commands.yaml`
+wget https://k8s.io/examples/pods/commands.yaml
+# save downloaded file with a new name `comm.yaml`
+wget https://k8s.io/examples/pods/commands.yaml -O comm.yaml
+# hide output while downloading
+wget -q https://k8s.io/examples/pods/commands.yaml
+# view contents of a downloaded file without saving
+wget -O- https://k8s.io/examples/pods/commands.yaml
+# view contents quietly without saving
+wget -qO- https://k8s.io/examples/pods/commands.yaml
+```
+
 1. Generate a YAML file of a `busybox` Pod that runs the command `sleep 60`, see [create Pod with command and args docs](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#define-a-command-and-arguments-when-you-create-a-pod)
 2. Apply the YAML file.
 3. List created resources
-4. View details of the Pod.
+4. View details of the Pod
 5. Delete the Pod
 
 <details>
@@ -1173,7 +1190,7 @@ kubectl delete -f lab5-2.yaml
 
 </details>
 
-> Practice managing resources mainly with YAML file for all Labs going forward
+> Some images, like busybox, do not remain in running state by default. An extra command is required, e.g. `sleep 60`, to keep containers using these images in running state for as long as you need. In the CKAD exam, make sure your Pods remain in running states unless stated otherwise
 
 ### Lab 5.3. Init Containers
 
@@ -1242,7 +1259,7 @@ kubectl delete -f lab5-3.yaml
 
 1. Create a Pod with 2 containers and a volumne shared by both containers, see [multi-container docs](https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containers-same-pod-shared-volume/#creating-a-pod-that-runs-two-containers).
 2. List created resources
-3. View details of the Pod.
+3. View details of the Pod
 4. Delete the Pod
 
 <details>
@@ -1286,18 +1303,7 @@ kubectl delete -f lab5-4.yaml
 
 ### Lab 5.5. Sidecar Containers
 
-```sh
-# download a file
-wget https://url/of/file.extension
-# save downloaded file with a new name
-wget https://url/of/file.extension -O new-name.extension
-# hide output while downloading
-wget -q https://url/of/file.extension
-# view contents of a downloaded file without saving, use `-q -O-` for quiet mode
-wget -O- https://url/of/file.extension
-```
-
-> Note that you can prepend [`https://k8s.io/examples/`](https://kubernetes.io/docs/concepts/workloads/pods/#using-pods) to any example files in the official docs for direct download of the YAML file
+> Remember you can prepend [`https://k8s.io/examples/`](https://kubernetes.io/docs/concepts/workloads/pods/#using-pods) to any example manifest names from the official docs for direct download of the YAML file
 
 1. Create a `busybox` Pod that logs `date` to a file every second
    - expose the logs with a _sidecar container_'s STDOUT to prevent direct access to the main application
@@ -2180,10 +2186,10 @@ kubectl delete -f lab7-3.yaml # $POD_NAME not deleted! `deploy.spec.selector` is
 The other type of update strategy is [Recreate](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#recreate-deployment), where all Pods are killed before new Pods are created. This is useful when you cannot have different versions of an app running simultaneously, e.g database.
 
 - [`deploy.spec.strategy.rollingUpdate.maxUnavailable`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable): control number of Pods upgraded simultaneously
-- [`deploy.spec.strategy.rollingUpdate.maxSurge`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge): controls the number of additional Pods, more than the specified replicas, created during update
+- [`deploy.spec.strategy.rollingUpdate.maxSurge`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge): controls the number of additional Pods, more than the specified replicas, created during update. Aim to have a higher `maxSurge` than `maxUnavailable`.
 
-> Aim to have a higher `maxSurge` than `maxUnavailable` \
-> Scaling down a deployment to 0 is another way to delete all resources associated while keeping the deployment and ReplicaSet config for a quick scale up when required.
+> A Deployment's rollout is only triggered if a field within the Pod template `deploy.spec.template` is changed \
+> Scaling down a Deployment to 0 is another way to delete all resources, saving costs, while keeping the config for a quick scale up when required
 
 ```sh
 # view the update strategy field under deployment spec
