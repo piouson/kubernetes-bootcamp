@@ -3894,6 +3894,59 @@ See the [example manifest](https://kubernetes.io/docs/concepts/workloads/control
 
 ## 14. Troubleshooting
 
+<details>
+<summary><i>kubectl</i> flow diagram</summary>
+
+<a href="https://medium.com/jorgeacetozi/kubernetes-master-components-etcd-api-server-controller-manager-and-scheduler-3a0179fc8186">![kubectl flow diagram from medium.com](https://user-images.githubusercontent.com/17856665/188337178-851605cc-838e-4c0c-987c-c1f43a42abd0.png)</a>
+
+<ol>
+  <li>kubectl forwards command to the API Server</li>
+  <li>API Server validates the request and persists it to etcd</li>
+  <li>etcd notifies the API Server</li>
+  <li>API Server invokes the Scheduler</li>
+  <li>Scheduler will lookup eligible nodes to run the pod and return that to the API Server</li>
+  <li>API Server persists it to etcd</li>
+  <li>etcd notifies the API Server</li>
+  <li>API Server invokes the Kubelet in the corresponding node</li>
+  <li>Kubelet talks to the Docker daemon using the API over the Docker socket to create the container</li>
+  <li>Kubelet updates the pod status to the API Server (success or failure, failure invokes RestartPolicy)</li>
+  <li>API Server persists the new state in etcd</li>
+</ol>
+
+</details>
+
+### Pod states
+
+This can be viewed with `kubectl get pods` under `STATUS` column.
+
+- Pending - Pod starts here and waits to be scheduled, image download, etc
+- Running - at least one container running
+- Completed - all containers terminated successfully
+- Failed - all containers have terminated, at least one terminated in failure
+- CrashLoopbackOff - the Pod had failed and was restarted
+- Unknown - pod state cannot be obtained, either node communication breakdown or other
+
+### Container probes
+
+A [_probe_](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes) is a diagnostic performed periodically by the kubelet on a container, either by executing code within the container, or by network request. A probe will either return: `Success | Failure | Unknown`. There are four different ways to check a container using a probe:
+
+- `exec`: executes a specified command within the container, status code 0 means `Success`.
+- `grpc`: performs a remote procedure call using gRPC, this feature is in `alpha` stage (not for CKAD)
+- `httpGet`: performs HTTP GET request against the Pod's IP on a specified port and path, status code greater than or equal to 200 and less than 400 means `Success`.
+- `tcpSocket`: performs a TCP check against the Pod's IP on a specified port, port is open means `Success`, even if connection is closed immediately.
+
+The kubelet can optionally perform and react to three kinds of probes on running containers:
+
+- `livenessProbe`: indicates if container is running, On failure, the kubelet kills the container which triggers restart policy. Defaults to `Success` if not set.
+- `readinessProbe`: indicates if container is ready to respond to requests. On failure, the endpoints controller removes the Pod's IP address from the endpoints of all Services that match the Pod. Defaults to `Success` if not set. If set, starts as `Failure`.
+- `startupProbe`: indicates if application within container is started. All other probes are disabled if a startup probe is set, until it succeeds. On failure, the kubelet kills the container which triggers restart policy. Defaults to `Success` if not set.
+
+For more details, see [when to use liveness probe](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#when-should-you-use-a-liveness-probe), [when to use readiness probe?](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#when-should-you-use-a-readiness-probe), [when to use startup probe?](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#when-should-you-use-a-startup-probe), and [configuring Liveness, Readiness and Startup Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
+
+### Troubleshooting failing applications
+
+
+
 ## 15. Exam
 
 [kubectl cheat sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
