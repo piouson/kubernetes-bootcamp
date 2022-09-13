@@ -71,11 +71,13 @@ docker run hello-world
 
 </details>
 
+<div style="page-break-after: always;"></div>
+
 ## 1. Understanding and Using Containers
 
 A [container](https://www.docker.com/resources/what-container/) is a standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another. A **container-runtime**, which relies on the host kernel, is required to run a container.
 
-[Docker](https://www.docker.com/) is most popular container-runtime and container-solution, but there are other runtimes like [runc](https://github.com/opencontainers/runc#runc), [cri-o](https://cri-o.io/), [containerd](https://containerd.io/), etc, but the only significant container-solutions today are Docker and [Podman](https://podman.io/)
+[Docker](https://www.docker.com/) is the most popular container-runtime and container-solution, but there are other runtimes like [runc](https://github.com/opencontainers/runc#runc), [cri-o](https://cri-o.io/), [containerd](https://containerd.io/), etc, However, the only significant container-solutions today are Docker and [Podman](https://podman.io/)
 
 A container image is a lightweight, standalone, executable package of software that includes everything needed to run an application: code, runtime, system tools, system libraries and settings. Container images become containers at runtime.
 
@@ -418,6 +420,8 @@ docker volume ls
 Explore [Docker Hub](https://hub.docker.com/) and search for images you've used so far or images/applications you use day-to-day, like databases, environment tools, etc.
 
 > Container images are created with instructions that determine the default container behaviour at runtime. A familiarity with specific images/applications may be required to understand their default behaviours
+
+<div style="page-break-after: always;"></div>
 
 ## 2. Managing Container Images
 
@@ -810,6 +814,8 @@ docker image rm test-image
 > If a containerized application can run without privileges, change to a non-root user \
 > It is recommended to explicitly specify GID/UID when creating a group/user
 
+<div style="page-break-after: always;"></div>
+
 ## 3. Understanding Kubernetes
 
 [K8s](kubernetes.io) is an open-source system for automating deployment, scaling and containerized applications management, currently owned by the [Cloud Native Computing Foundation (CNCF)](https://www.cncf.io/). \
@@ -862,7 +868,7 @@ kubectl get all, see `kubectl get --help`
 # create a deployment, see `kubectl create deploy -h`
 kubectl create deploy myapp --image=nginx
 # create a deployment with six replicas
-kubectl create deploy myapp --image=nginx --replcias=6
+kubectl create deploy myapp --image=nginx --replicas=6
 # view complete list of supported API resources, shows api-versions and their resource types
 kubectl api-resources
 # view api-versions only
@@ -905,6 +911,8 @@ kubectl get all # new kubernetes service is auto created to replace deleted
 </details>
 
 > Remember to delete Google cloud cluster to avoid charges if you wish to use a local environment detailed in the next chapter
+
+<div style="page-break-after: always;"></div>
 
 ## 4. Kubernetes Lab Environment
 
@@ -1051,6 +1059,8 @@ kubectl get all # pod gone
 > Pods started without a deployment are called _Naked Pods_ - these are not managed by a replicaset, therefore, are not rescheduled on failure, not eligible for rolling updates, cannot be scaled, cannot be replaced automatically. \
 > Although, _Naked Pods_ are not recommended in live environments, they are crucial for learning how to manage Pods, which is a big part of [CKAD](https://www.cncf.io/certification/ckad/).
 
+<div style="page-break-after: always;"></div>
+
 ## 5. Pods
 
 [Pods](https://kubernetes.io/docs/concepts/workloads/pods/) are the smallest deployable units of computing that you can create and manage in Kubernetes.
@@ -1184,7 +1194,7 @@ wget -qO- https://k8s.io/examples/pods/commands.yaml
 kubectl run mypod --image=busybox --dry-run=client -o yaml --command -- sleep 60 > lab5-2.yaml
 kubectl apply -f lab5-2.yaml
 kubectl get pods
-kubectl describe pods myapp | less
+kubectl describe pods mypod | less
 kubectl delete -f lab5-2.yaml
 ```
 
@@ -1247,7 +1257,7 @@ spec:
 kubectl apply -f lab5-3.yaml
 kubectl get pods
 kubectl logs myapp # not created until after 60secs
-kubectl logs myapp -c myapp-logs
+kubectl logs myapp -c myapp-init
 kubectl describe -f lab5-3.yaml | less
 kubectl get pods
 kubectl delete -f lab5-3.yaml
@@ -1292,8 +1302,8 @@ spec:
 kubectl apply -f lab5-4.yaml
 kubectl get pods
 kubectl describe pods myapp | less
-kubectl logs myapp
-kubectl logs myapp -c myapp-logs
+kubectl logs myapp -c myapp-1
+kubectl logs myapp -c myapp-2
 kubectl delete -f lab5-4.yaml
 ```
 
@@ -1354,7 +1364,7 @@ spec:
 kubectl apply -f lab5-5.yaml
 kubectl get pods
 kubectl describe pods myapp | less
-kubectl logs myapp
+kubectl logs myapp -c myapp
 kubectl logs myapp -c myapp-logs
 kubectl delete -f lab5-5.yaml
 ```
@@ -1426,6 +1436,8 @@ kubectl explain namespace.spec | less
 > Remember that namespaced resources are not visible by default unless the namespace is specified \
 > 💡 `kubectl get pods` - only shows resources in the `default` namespace \
 > 💡 `kubectl get pods -n mynamespace` - shows resources in the `mynamespace` namespace
+
+<div style="page-break-after: always;"></div>
 
 ## 6. Exploring Pods
 
@@ -1974,6 +1986,8 @@ kubectl explain pod.spec.containers.resources | less
 
 > Remember a multi-container Pod is not recommended in live environments but only used here for learning purposes
 
+<div style="page-break-after: always;"></div>
+
 ## 7. Deployments
 
 [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) manages Pods with scalability and reliability. This is the standard way to manage Pods and ReplicaSets in live environments.
@@ -2365,6 +2379,8 @@ minikube addons enable metrics-server
 minikube addons disable metrics-server
 ```
 
+<div style="page-break-after: always;"></div>
+
 ## 8. Networking
 
 ### Service
@@ -2640,6 +2656,8 @@ kubectl delete -f lab8-2.yaml
 
 </details>
 
+<div style="page-break-after: always;"></div>
+
 ## 9. Ingress
 
 [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource. Ingress may be configured to give Services externally-reachable URLs, [load balance traffic](https://www.cloudflare.com/en-in/learning/performance/what-is-load-balancing/), [terminate SSL/TLS](https://www.f5.com/services/resources/glossary/ssl-termination), and offer [name-based virtual hosting](https://www.tecmint.com/apache-ip-based-and-name-based-virtual-hosting/).
@@ -2698,7 +2716,7 @@ kubectl explain ingress.spec | less
 
 ```sh
 # create ingress with a specified rule, see `kubectl create ingress -h`
-kubectl create ingress $INGRESS_NAME --rule="$PATH=$DEPLOYMENT_NAME:$PORT"
+kubectl create ingress $INGRESS_NAME --rule="$PATH=$SERVICE_NAME:$PORT"
 # create single-service ingress `myingress`
 kubectl create ingress myingress --rule="/=app1:80"
 # create simple-fanout ingress
@@ -2994,6 +3012,8 @@ minikube start --kubernetes-version=1.23.9 --driver=docker
 ```
 </details>
 
+<div style="page-break-after: always;"></div>
+
 ## 10. Storage
 
 [PersistentVolume (PV)](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#introduction) is a piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using Storage Classes, with a lifecycle independent of any individual Pod that uses the PV.
@@ -3110,6 +3130,8 @@ kubectl delete -f lab10-2.yaml
 </details>
 
 For further learning, see [mounting the same persistentVolume in two places](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/#mounting-the-same-persistentvolume-in-two-places) and [access control](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/#access-control)
+
+<div style="page-break-after: always;"></div>
 
 ## 11. ConfigMaps and Secrets
 
@@ -3240,6 +3262,8 @@ Repeat [lab 11.3](#lab113-mounting-configmaps) with secrets.
 4. Decode the contents of the `.dockerconfigjson` key with `jsonpath`
 
 > See the [official "create an `imagePullSecret`" docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#create-an-imagepullsecret)
+
+<div style="page-break-after: always;"></div>
 
 ## 12. K8s API
 
@@ -3502,6 +3526,8 @@ kubectl delete -f lab12.yaml
 ```
 
 </details>
+
+<div style="page-break-after: always;"></div>
 
 ## 13. DevOps
 
@@ -3892,6 +3918,8 @@ See the [example manifest](https://kubernetes.io/docs/concepts/workloads/control
 2. Verify resources created and compare to a regular deployment
 3. Confirm persistent volume claims created
 
+<div style="page-break-after: always;"></div>
+
 ## 14. Troubleshooting
 
 <details>
@@ -3946,6 +3974,8 @@ For more details, see [when to use liveness probe](https://kubernetes.io/docs/co
 ### Troubleshooting failing applications
 
 
+
+<div style="page-break-after: always;"></div>
 
 ## 15. Exam
 
