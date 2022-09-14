@@ -85,7 +85,7 @@ The [Open Container Initiative (OCI)](https://opencontainers.org/) creates open 
 
 A container registry is a repository, or collection of repositories, used to store and access container images. Container registries are a big player in cloud-native application development, often as part of [GitOps](https://www.redhat.com/en/topics/devops/what-is-gitops) processes.
 
-### Commands to run a container
+### Basic docker commands
 
 ```sh
 # run busybox container, see `docker run --help`
