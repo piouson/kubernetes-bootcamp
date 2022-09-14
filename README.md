@@ -85,7 +85,7 @@ The [Open Container Initiative (OCI)](https://opencontainers.org/) creates open 
 
 A container registry is a repository, or collection of repositories, used to store and access container images. Container registries are a big player in cloud-native application development, often as part of [GitOps](https://www.redhat.com/en/topics/devops/what-is-gitops) processes.
 
-### Container commands
+### Commands to run a container
 
 ```sh
 # run busybox container, see `docker run --help`
@@ -96,38 +96,18 @@ docker run -it busybox
 docker run -it --rm busybox
 # run in detached mode
 docker run -d busybox
-# run a command in a new container
-docker run busybox echo "Hello, World!"
-# run container with specified name
-docker run -d --name webserver httpd
-# use `dash` to execute commands in running container, see `docker exec --help`
-docker exec -it $CONTAINER_NAME_OR_ID sh # `sh` will run in a different shell session
-# use `bash` to execute commands in running container
-docker exec -it $CONTAINER_NAME_OR_ID bash
-# list running containers
-docker ps
-# list all containers
-docker ps -a
-# view kernel details from inside a container
-uname -r
-cat /proc/version
-hostnamectl
-# view os version
-cat /etc/redhat-release # for redhat, centos, fedora
-cat /etc/os-release # other unix-based os
-cat /etc/*-release # works on all popular unix-based os
-# view container processes from inside a container
-ps aux # view all user-oriented processes, see `ps --help a`
-# view container processes, alternative to `ps`
-ls /proc # to find PID, then
-cat /proc/$PID/cmdline
-# exit running container
-exit # container is stopped if connected to entrypoint
-# exit running container without stopping container
+# start a stopped container, see `docker container start --help`
+docker container start $CONTAINER_NAME_OR_ID
+# stop a running container, see `docker container stop --help`
+docker container start $CONTAINER_NAME_OR_ID
+# restart a running container, see `docker container restart --help`
+docker container restart $CONTAINER_NAME_OR_ID
+# delete a stopped container, see `docker container rm --help`
+docker container rm $CONTAINER_NAME_OR_ID
+# exit running container - container is stopped if connected to entrypoint
+exit
+# exit running container without stopping it
 ctrl-p ctrl-q
-# start, stop, delete containers, see `docker {start|stop|etc} --help`
-docker {start|stop|restart|rm} $CONTAINER_NAME_OR_ID
-# see `docker container --help` for complete sub-commands
 ```
 
 > See [possible container statuses](https://www.baeldung.com/ops/docker-container-states#possible-states-of-a-docker-container) to understand more about container states
@@ -138,6 +118,18 @@ docker {start|stop|restart|rm} $CONTAINER_NAME_OR_ID
 2. Run `docker run hello-world`
 
 ### Lab 1.2. First container interaction
+
+```sh
+## view kernel details
+uname -r # or `cat /proc/version` or `hostnamectl`
+# view os version
+cat /etc/*-release # or redhat `/etc/redhat-release`, other unix-based os `/etc/os-release`
+# view running processes, see `ps --help`
+ps aux
+# view processes, alternative to `ps`
+ls /proc # to find PID, then
+cat /proc/$PID/cmdline
+```
 
 1. Run `ps aux` to review running processes on your host device
 2. Run a `busybox` container in interactive mode `docker run -it busybox`
@@ -186,6 +178,19 @@ docker rm box1 box2
 
 ### Lab 1.3. Entering and exiting containers
 
+```sh
+# run container with specified name
+docker run -d --name webserver httpd
+# run command `date` in a new container
+docker run busybox date
+# get a "dash" shell to a running container, see `docker exec --help`
+docker exec -it $CONTAINER_NAME_OR_ID sh
+# get a "bash" shell to a running container
+docker exec -it $CONTAINER_NAME_OR_ID bash
+# view open ports, see `netstat --help` - t tcp, u udp, p program-names, l listening, n port-numbers-only
+netstat -tupln
+```
+
 1. Run a `nginx` container
 2. List running containers (use another terminal if stuck)
 3. Exit the container
@@ -197,9 +202,10 @@ docker rm box1 box2
 9. Run another `nginx` container in detached mode
 10. List running containers
 11. Connect a shell to the new container interactively
-12. Exit the container
-13. List running containers
-14. Delete all containers
+12. View open ports in the container
+13. Exit the container
+14. List running containers
+15. Delete all containers
 
 <details>
 <summary>lab1.3 solution</summary>
@@ -225,6 +231,7 @@ docker run --name webserver3 -d nginx
 docker ps
 docker exec -it webserver3 bash
 # container terminal
+netstat -tupln
 exit
 # host terminal
 docker ps
@@ -234,7 +241,7 @@ docker rm webserver1 webserver2 webserver3
 
 </details>
 
-> Containers may not usually have `bash` shell, but will usually have the dash shell `sh`
+> Containers may not always have `bash` shell, but will usually have the dash shell `sh`
 
 ### Lab 1.4. Container arguments
 
@@ -499,6 +506,7 @@ ADD ["/path/to/local/file", "/path/to/container/directory"] # specify commands i
 USER # specify username (or UID) for RUN, CMD and ENTRYPOINT commands
 ENTRYPOINT ["command"] # specify default command, `/bin/sh -c` is used if not specified - cannot be overwritten, so CMD is recommended for flexibility
 CMD ["arg1", "arg2"] # specfify arguments to the ENTRYPOINT - if ENTRYPOINT is not specified, args will be passed to `/bin/sh -c`
+EXPOSE $PORT # specify container should listen on port $PORT
 ```
 
 ### Lab 2.2. Create image from Dockerfile
@@ -707,7 +715,7 @@ In the context of permission checks, processes running on unix-based systems are
 - _privileged_ processes: effective UID is 0 (root) - bypass all kernel permission checks
 - _unprivileged_ processes: effective UID is nonzero - subject to permission checks
 
-Starting with kernel 2.2, Linux further divides traditional root privileges into distinct units known as _capabilities_ as a way to control root user powers. Each root _capability_ can be independently enabled and disabled, and uses a naming convention prefix `CAP_`. \
+Starting with kernel 2.2, Linux further divides traditional root privileges into distinct units known as _capabilities_ as a way to control root user powers. Each root _capability_ can be independently enabled and disabled. \
 See the [overview of Linux _capabilities_](https://man7.org/linux/man-pages/man7/capabilities.7.html) for more details, including a comprehensive list of capabilities.
 
 > `CAP_SYS_ADMIN` is an overloaded capability that grants privileges similar to traditional root privileges \
@@ -979,8 +987,8 @@ sudo chown -R $USER $HOME/.kube $HOME/.minikube
 minikube status
 # open K8s dashboard in local browser
 minikube dashboard
-# start, stop, delete cluster, see `minikube {start|stop|delete} --help`
-minikube {start|stop|delete}
+# start a minikube cluster with latest k8s version and default driver, see `minikube --help`
+minikube start
 # start minikube with a specified driver and specified kubernetes version
 minikube start --driver=docker --kubernetes-version=1.23
 # show current IP address
@@ -992,7 +1000,11 @@ minikube ssh
 # list addons
 minikube addons list
 # enable addons
-minikube addons enable [addonName]
+minikube addons enable $ADDON_NAME
+# stop running minikube cluster
+minikube stop
+# delete stopped minikube cluster
+minikube delete
 ```
 
 ### Lab 4.1. Setup minikube and kubectl
@@ -1690,7 +1702,7 @@ kubectl describe pods security-context-demo | less
 
 ### Jobs
 
-A [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) creates one or more Pods and will continue to retry execution of the Pods until a specified number of them successfully terminate - a _Completed_ status. Deleting a Job will clean up the Pods it created. Suspending a Job will delete its active Pods until the Job is resumed again. The default `restartPolicy` for Pods is _Always_, while the default `restartPolicy` for Jobs is _Never_. \
+A [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) creates one or more Pods and will continue to retry execution of the Pods until a specified number of them successfully terminate - a _Completed_ status. Deleting a Job will clean up the Pods it created. Suspending a Job will delete its active Pods until the Job is resumed again. The default `restartPolicy` for Pods is _Always_, while the default `restartPolicy` for Jobs is _Never_.
 
 A Job type is determined by the values of the `completions` and `parallelism` fields - you can view all Job fields with `kubectl explain job.spec`:
 
@@ -2787,7 +2799,7 @@ kubectl delete -f lab9-2.yaml
 This is similar to defining API routes on a backend application, except each defined route points to a separate application/service/deployment.
 
 - if no host is specified, the rule applies to all inbound HTTP traffic
-- paths can be defined with a [POSIX regex](https://www.gnu.org/software/findutils/manual/html_node/find_html/
+- paths can be defined with a [POSIX regex](https://www.gnu.org/software/findutils/manual/html_node/find_html/)
 - each path points to a resource backend defined with a `service.name` and a `service.port.name` or `service.port.number`posix_002dextended-regular-expression-syntax.html)
 - both the host and path must match the content of an incoming request before the load balancer directs traffic to the referenced Service
 - a default path `.spec.defaultBackend` can be defined on the Ingress or _Ingress controller_ for traffic that doesn't match any known paths, similar to a 404 route - if `defaultBackend` is not set, the default 404 behaviour will depend on the type of _Ingress controller_ in use
@@ -2799,8 +2811,10 @@ Each rule-path in an Ingress must have a [`pathType`](https://kubernetes.io/docs
 There are three supported path types:
 
 - `ImplementationSpecific` - matching is up to the _IngressClass_
-- `Exact` - matches the URL path exactly and with case sensitivity
-- `Prefix` - matches based on a URL path prefix split by `/`, with case sensitivity and element by element basis
+- `Exact` - case sensitive matching of exact URL path
+- `Prefix` - case sensitive matching of URL path prefix, split into elements by `/`, on element by element basis
+
+> Please read the official docs on [path matching examples](https://kubernetes.io/docs/concepts/services-networking/ingress/#examples) and [using wildcards](https://kubernetes.io/docs/concepts/services-networking/ingress/#hostname-wildcards)
 
 ### Ingress Class
 
