@@ -2694,17 +2694,23 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 kubectl get ns
 # list resources in the ingress namespace
 kubectl get all -n ingress-nginx
+# list ingressclass resource in the ingress namespace
+kubectl get ingressclass -n ingress-nginx
 # view ingress spec
 kubectl explain ingress.spec | less
 ```
+
+> You can remove the need for a trailing slash `/` in urls by adding annotation `nginx.ingress.kubernetes.io/rewrite-target: /` to ingress spec `ingress.metadata.annotations`
 
 ### Lab 9.1 Enable Ingress
 
 1. List existing namespaces
 2. Enable Ingress on minikube
-3. List namespaces and confirm new ingress-related namespace added
-4. List and review resources created by enabling Ingress (namespaced) - can you figure out the relationship?
-5. Review the Ingress spec
+3. List Namespaces and confirm new Ingress Namespace added
+4. List all resources in the Ingress Namespace, including the _ingressclass_
+5. Review the _ingress-nginx-controller_ Service in YAML form, note service type and ports
+6. Review the _ingressclass_ in YAML form, is this marked as the default?
+7. Review the Ingress spec
 
 <details>
 <summary>lab9.1 solution</summary>
@@ -2715,7 +2721,9 @@ minikube addons list # ingress not enable
 minikube addons enable ingress
 minikube addons list # ingress enabled
 kubectl get ns # shows ingress-nginx namespace
-kubectl get all -n ingress-nginx # shows pods, services, deployment, replicaset and jobs
+kubectl get all,ingressclass -n ingress-nginx # shows pods, services, deployment, replicaset, jobs and ingressclass
+kubectl get svc ingress-nginx-controller -o yaml | less
+kubectl get ingressclass nginx -o yaml | less # annotations - ingressclass.kubernetes.io/is-default-class: "true"
 kubectl explain ingress.spec | less
 ```
 </details>
@@ -2737,60 +2745,186 @@ kubectl create ingress myingress --rule="/=app1:80" --rule="/about=app2:3000" --
 kubectl create ingress myingress --rule="api.domain.com/*=apiservice:80" --rule="db.domain.com/*=dbservice:80" --rule="app.domain.com/*=appservice:80"
 ```
 
-### Lab 9.2. Simple fanout Ingress
+### Lab 9.2 Understanding ingress
 
-1. Create an Ingress `webapp-ingress` that:
-   - redirects requests for path `/` to a Service `webappsvc:80`
-   - redirects requests for path `/hello` to a Service `hellosvc:8080`
-2. List created resources
-3. View more details of the Ingress and review the notes under _Rules_
-4. Create a Deployment `webapp` with image `httpd`
-5. Expose the `webapp` Deployment as _NodePort_ with service name `webappsvc`
-6. List all created resources - ingress, service, deployment and other resources associated with the deployment
-7. View more details of the Ingress and review the notes under _Rules_
-8. Access `webapp` via Ingress using the minikube Node IP `$(minikube ip)`
-9. View more details of the Ingress and review the notes under _Rules_
-10. Create a second Deployment `hello` with image `gcr.io/google-samples/hello-app:1.0`
-11. Expose `hello` as _NodePort_ with service name `hellosvc`
-12. List newly created resources - service, pods, deployment etc
-13. View more details of the Ingress and review the notes under _Rules_
-14. Access `hello` via the minikube Node `$(minikube ip)/hello`
-15. Add an entry to `/etc/hosts` that maps the minikube Node IP to an hostname `$(minikube ip)  myawesomesite.com`
-16. Access `webapp` via `myawesomesite.com`
-17. Access `hello` via `myawesomesite.com/hello`
-18. Delete created resources
+1. Create a Deployment called `web` using a `httpd` image
+2. Expose the deployment with a _Cluster-IP_ Service called `web-svc`
+3. Create an Ingress called `web-ing` with a _Prefix_ rule to redirect `/` requests to the Service
+4. List all created resources - what is the value of Ingress `CLASS`, `HOSTS` & `ADDRESS`?
+   - think about why the `CLASS` and `HOSTS` have such values..
+5. Access the app `web` via ingress `curl $(minikube ip)`
+   - note that unlike Service, a _NodePort_ isn't specified
+6. What if we want another application on `/test` path, will this work? Repeat steps 3-7 to confirm:
+   - create a new deployment `web2` with image `httpd`
+   - expose the new deployment `web2-svc`
+   - add new _Prefix_ path to existing ingress rule to redirect `/test` to `web2-svc`
+   - are you able to access the new `web2` app via `curl $(minikube ip)/test`?
+   - are you still able to access the old `web` app via `curl $(minikube ip)`?
+   - what's missing?
+7. Let's fix this by adding the correct _Annotation_ to the Ingress config, `kubectl edit ingress web-ing`:
+   <details>
+   <summary>fix ingress</summary>
+
+   ```yaml
+   metadata:
+     name: web-ing
+     annotations:
+       nginx.ingress.kubernetes.io/rewrite-target: /
+   ```
+   </details>
+8. Try to access both apps via URLs `curl $(minikube ip)/test` and `curl $(minikube ip)`
+9. Can you access both apps using HTTPS?
+10. Review the _ingress-nginx-controller_ by running: `kubectl get svc -n ingress-nginx`
+   - what is the _ingress-nginx-controller_ Service type?
+   - what are the ports related to HTTP `80` and HTTPS `443`?
+11. Can you access both apps via the _ingress-nginx-controller_ NodePorts for HTTP and HTTPS?
+12. Delete all created resources
 
 <details>
 <summary>lab9.2 solution</summary>
   
 ```sh
-kubectl create ingress webapp-ingress --rule="/=webappsvc:80" --dry-run=client -o yaml > lab9-2.yaml
-echo --- >> lab9-2.yaml
-kubectl apply -f lab9-2.yaml
+kubectl create deploy web --image=httpd --dry-run=client -oyaml > lab9-2.yml
+kubectl apply -f lab9-2.yml
+echo --- >> lab9-2.yml
+kubectl expose deploy web --name=web-svc --port=80 --dry-run=client -oyaml >> lab9-2.yml
+echo --- >> lab9-2.yml
+kubectl create ingress web-ing --rule="/*=web-svc:80" --dry-run=client -oyaml >> lab9-2.yml
+kubectl apply -f lab9-2.yml
+kubectl get deploy,po,svc,ing,ingressclass # CLASS=nginx, HOSTS=*, ADDRESS starts empty then populated later
+curl $(minikube ip) # it works
+echo --- >> lab9-2.yml
+kubectl create deploy web2 --image=httpd --dry-run=client -oyaml > lab9-2.yml
+kubectl apply -f lab9-2.yml
+echo --- >> lab9-2.yml
+kubectl expose deploy web2 --name=web2-svc --port=80 --dry-run=client -oyaml >> lab9-2.yml
+KUBE_EDITOR=nano kubectl edit ingress web-ing
+```
+
+```yaml
+Kind: Ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        ...
+      - path: /test
+        pathType: Prefix
+        backend:
+          service:
+            name: web2-svc
+            port:
+              number: 80
+# etc
+```
+
+```sh
+curl $(minikube ip)/test # 404 not found ???
+curl $(minikube ip) # it works
+KUBE_EDITOR=nano kubectl edit ingress web-ing
+```
+
+```yaml
+Kind: Ingress
+metadata:
+  name: web-ing
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+# etc
+```
+
+```sh
+curl $(minikube ip)/test # it works
+curl $(minikube ip) # it works
+curl https://$(minikube ip)/test --insecure # it works, see `curl --help`
+curl https://$(minikube ip) --insecure # it works
+kubectl get svc -n ingress-nginx # NodePort, 80:$HTTP_NODE_PORT/TCP,443:$HTTPS_NODE_PORT/TCP
+curl $(minikube ip):$HTTP_NODE_PORT
+curl $(minikube ip):$HTTP_NODE_PORT/test
+curl https://$(minikube ip):$HTTPS_NODE_PORT --insecure
+curl https://$(minikube ip):$HTTPS_NODE_PORT/test --insecure
+kubectl delete deploy web web2
+kubectl delete svc web-svc web2-svc
+kubectl delete ingress web-ing web2-ing
+```
+</details>
+
+> Ingress relies on Annotations to specify additional configuration. The supported Annotations depends on the Ingress controller type in use - in this case _Ingress-Nginx_ \
+> Please visit the [_Ingress-Nginx_ official _Rewrite_ documentation](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/rewrite/README.md) for more details
+
+### Lab 9.3. Simple fanout Ingress
+
+1. Create an Ingress `webapp-ingress` that:
+   - redirects requests for path `myawesomesite.com/` to a Service `webappsvc:80`
+   - redirects requests for path `myawesomesite.com/hello` to a Service `hellosvc:8080`
+   - remember to add the _Rewrite_ Annotation
+2. List created resources - compare the value of Ingress `HOSTS` to the previous lab
+3. View more details of the Ingress and review the notes under _Rules_
+4. View the Ingress in YAML form and review the structure of the Rules
+5. Create a Deployment `webapp` with image `httpd`
+6. Expose the `webapp` Deployment as _NodePort_ with service name `webappsvc`
+7. List all created resources - ingress, service, deployment and other resources associated with the deployment
+8. View more details of the Ingress and review the notes under _Rules_
+9. Can you access `webapp` via the minikube Node `curl $(minikube ip)` or `curl myawesomesite.com`?
+10. Create a second Deployment `hello` with image `gcr.io/google-samples/hello-app:1.0`
+11. Expose `hello` as _NodePort_ with service name `hellosvc`
+12. List newly created resources - service, pods, deployment etc
+13. View more details of the Ingress and review the notes under _Rules_
+14. Can you access `hello` via `curl $(minikube ip)/hello` or `myawesomesite.com/hello`?
+15. Add an entry to `/etc/hosts` that maps the minikube Node IP to an hostname `$(minikube ip) myawesomesite.com`
+16. Can you access `webapp` via `curl $(minikube ip)` or `myawesomesite.com` with HTTP and HTTPS 
+17. Can you access `hello` via `curl $(minikube ip)/hello` or `myawesomesite.com/hello` with HTTP and HTTPS
+18. Can you access `webapp` and `hello` on `myawesomesite.com` via the NodePorts specified by the `ingress-nginx-controller`, `webappsvc` and `hellosvc` Services?
+19. Delete created resources
+
+<details>
+<summary>lab9.3 solution</summary>
+  
+```sh
+kubectl create ingress webapp-ingress --rule="myawesomesite.com/*=webappsvc:80" --rule="myawesomesite.com/hello/*=hellosvc:8080" --dry-run=client -oyaml > lab9-3.yaml
+echo --- >> lab9-3.yaml
+kubectl apply -f lab9-3.yaml
 kubectl get ingress
-kubectl describe ingress webapp-ingress | less
-kubectl create deploy webapp --replicas=3 --image=httpd --dry-run=client -o yaml >> lab9-2.yaml
-echo --- >> lab9-2.yaml
-kubectl expose deploy webapp --name=webappsvc --type=NodePort --port=80 --dry-run=client -o yaml >> lab9-2.yaml
-echo --- >> lab9-2.yaml
-kubectl apply -f lab9-2.yaml
+kubectl describe ingress webapp-ingress | less # endpoints not found
+kubectl get ingress webapp-ingress -oyaml | less
+kubectl create deploy webapp --image=httpd --dry-run=client -oyaml >> lab9-3.yaml
+echo --- >> lab9-3.yaml
+kubectl apply -f lab9-3.yaml
+kubectl expose deploy webapp --name=webappsvc --type=NodePort --port=80 --dry-run=client -o yaml >> lab9-3.yaml
+echo --- >> lab9-3.yaml
+kubectl apply -f lab9-3.yaml
 kubectl get ingress,all
-kubectl describe ingress webapp-ingress | less
-curl $(minikube ip)
-kubectl describe ingress webapp-ingress | less
-kubectl create deploy hello --replicas=3 --image=gcr.io/google-samples/hello-app:1.0 --dry-run=client -o yaml >> lab9-2.yaml
-echo --- >> lab9-2.yaml
-kubectl expose deploy hello --name=hellosvc --type=NodePort --port=8080 --dry-run=client -o yaml >> lab9-2.yaml
-echo --- >> lab9-2.yaml
-kubectl apply -f lab9-2.yaml
+kubectl describe ingress webapp-ingress | less # only webappsvc endpoint found
+curl $(minikube ip) # 404 not found
+curl myawesomesite.com # 404 not found
+kubectl create deploy hello --image=gcr.io/google-samples/hello-app:1.0 --dry-run=client -o yaml >> lab9-3.yaml
+echo --- >> lab9-3.yaml
+kubectl apply -f lab9-3.yaml
+kubectl expose deploy hello --name=hellosvc --type=NodePort --port=8080 --dry-run=client -o yaml >> lab9-3.yaml
+echo --- >> lab9-3.yaml
+kubectl apply -f lab9-3.yaml
 kubectl get all --selector="app=hello"
-kubectl describe ingress webapp-ingress | less
-curl $(minikube ip)/hello
-echo "$(minikube ip)  myawesomesite.com" | sudo tee -a /etc/hosts
-curl myawesomesite.com
-curl myawesomesite.com/hello
-kubectl delete -f lab9-2.yaml
- # note that using NodePort also works `$(minikube ip):$NodePort` cos we have direct access to the Node
+kubectl describe ingress webapp-ingress | less # both endpoints found
+curl $(minikube ip)/hello # 404 not found
+curl myawesomesite.com/hello # 404 not found
+echo "$(minikube ip) myawesomesite.com" | sudo tee -a /etc/hosts # see `tee --help`
+curl $(minikube ip) # 404 not found
+curl $(minikube ip)/hello # 404 not found
+curl myawesomesite.com # it works
+curl myawesomesite.com/hello # hello world
+curl https://myawesomesite.com --insecure # it works
+curl https://myawesomesite.com/hello --insecure # hello world
+kubectl get svc -A # find NodePorts for ingress-nginx-controller, webappsvc and hellosvc
+curl myawesomesite.com:$NODE_PORT_FOR_WEBAPPSVC # it works
+curl myawesomesite.com:$NODE_PORT_FOR_HELLOSVC # hello world
+curl myawesomesite.com:$HTTP_NODE_PORT_FOR_NGINX_CONTROLLER # it works
+curl myawesomesite.com:$HTTP_NODE_PORT_FOR_NGINX_CONTROLLER/hello # hello world
+curl https://myawesomesite.com:$HTTPS_NODE_PORT_FOR_NGINX_CONTROLLER --insecure
+curl https://myawesomesite.com:$HTTPS_NODE_PORT_FOR_NGINX_CONTROLLER/hello --insecure
+kubectl delete -f lab9-3.yaml
 ```
 </details>
 
@@ -2841,58 +2975,58 @@ metadata:
 kubectl get ns
 # list ingressclasses in the ingress namespace
 kubectl get ingressclass -n ingress-nginx
+# list ingressclasses in the default namespace - present in all namespaces
+kubectl get ingressclass
 # view ingressclass object
 kubectl explain ingressclass | less
 ```
 
-### Lab 9.3. Multiple hosts ingress
+### Lab 9.4. Multiple hosts ingress
 
 1. Review the _IngressClass_ resource object
 2. List the Ingress classes created by the minikube ingress addon
-3. Review the _IngressClass_ to determine why `nginx-ingress` is the default Ingress used when no Ingress is specified
-4. Create two Deployments `nginx` and `httpd`
-5. Expose both deployments as `Cluster-IP` on port 80
-6. Create an Ingress with the following:
+3. Create two Deployments `nginx` and `httpd`
+4. Expose both deployments as `Cluster-IP` on port 80
+5. Create an Ingress with the following:
    - redirects requests for `nginx.yourchosenhostname.com` to the `nginx` Service
    - redirects requests for `httpd.yourchosenhostname.com` to the `httpd` Service
-  - both rules should use a `Prefix` path type
-7. Review created resources
-8. Confirm Ingress `pathType` and `ingressClassName`
-9. Add an entry to `/etc/hosts` that maps the minikube Node IP to a chosen hostname
+   - both rules should use a `Prefix` path type
+6. Review created resources
+7. Confirm Ingress _PathType_ and _IngressClass_
+8. Review the _IngressClass_ resource YAML form to determine why it was assigned by default
+9. Add an entry to `/etc/hosts` that maps the minikube Node IP to hostnames below:
    - `$(minikube ip)  nginx.yourchosenhostname.com`
    - `$(minikube ip)  httpd.yourchosenhostname.com`
 10. Verify you can access both deployments via their subdomains
 11. Delete created resources
 
 <details>
-<summary>lab9.3 solution</summary>
+<summary>lab9.4 solution</summary>
   
 ```sh
 kubectl explain ingressclass | less
 kubectl explain ingressclass --recursive | less
-kubectl get ns # find the ingress namespace - `ingress-nginx`
-kubectl get ingressclass -n ingress-nginx # find ingress class name - `nginx`
-kubectl get ingressclass nginx -n ingress-nginx -o yaml | less # annotation `ingressclass.kubernetes.io/is-default-class: "true"` makes this ingress the default
-kubectl create deploy nginx --image=nginx --dry-run=client -o yaml > lab9-3.yaml
-echo --- >> lab9-3.yaml
-kubectl expose deploy nginx --port=80 --dry-run=client -o yaml >> lab9-3.yaml
-echo --- >> lab9-3.yaml
-kubectl create deploy httpd --image=httpd --dry-run=client -o yaml >> lab9-3.yaml
-echo --- >> lab9-3.yaml
-kubectl expose deploy httpd --port=80 --dry-run=client -o yaml >> lab9-3.yaml
-echo --- >> lab9-3.yaml
-kubectl create ingress myingress --rule="nginx.yourchosenhostname.com/*=nginx:80" --rule="httpd.yourchosenhostname.com/*=httpd:80" --dry-run=client -o yaml > lab9-3.yaml
-echo --- >> lab9-3.yaml
-kubectl apply -f lab9-3.yaml
+kubectl create deploy nginx --image=nginx --dry-run=client -o yaml > lab9-4.yaml
+echo --- >> lab9-4.yaml
+kubectl expose deploy nginx --port=80 --dry-run=client -o yaml >> lab9-4.yaml
+echo --- >> lab9-4.yaml
+kubectl create deploy httpd --image=httpd --dry-run=client -o yaml >> lab9-4.yaml
+echo --- >> lab9-4.yaml
+kubectl expose deploy httpd --port=80 --dry-run=client -o yaml >> lab9-4.yaml
+echo --- >> lab9-4.yaml
+kubectl create ingress myingress --rule="nginx.yourchosenhostname.com/*=nginx:80" --rule="httpd.yourchosenhostname.com/*=httpd:80" --dry-run=client -o yaml > lab9-4.yaml
+echo --- >> lab9-4.yaml
+kubectl apply -f lab9-4.yaml
 kubectl get ingress,all
 kubectl get ingress myingress -o yaml | less # `pathType: Prefix` and `ingressClassName: nginx`
+kubectl get ingressclass nginx -o yaml | less # annotation `ingressclass.kubernetes.io/is-default-class: "true"` makes this class the default
 echo "
 $(minikube ip)  nginx.yourchosenhostname.com
 $(minikube ip)  httpd.yourchosenhostname.com
 " | sudo tee -a /etc/hosts
 curl nginx.yourchosenhostname.com
 curl httpd.yourchosenhostname.com
-kubectl delete -f lab9-3.yaml
+kubectl delete -f lab9-4.yaml
 # note that when specifying ingress path, `/*` creates a `Prefix` path type and `/` creates an `Exact` path type
 ```
 </details>
@@ -2927,6 +3061,8 @@ kubectl describe networkpolicy mynetpol
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
+metadata:
+  name: test-netpol
 # create default deny all ingress/egress traffic
 spec:
   podSelector: {}
@@ -2935,13 +3071,11 @@ spec:
 # create allow all ingress/egress traffic
 spec:
   podSelector: {}
-  policyTypes:
-  - Ingress # or Egress
   ingress: # or egress
   - {}
 ```
 
-### Lab 9.4. Declare network policy
+### Lab 9.5. Declare network policy
 
 You may follow the [official declare network policy walkthrough](https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/)
 
@@ -2965,7 +3099,7 @@ You may follow the [official declare network policy walkthrough](https://kuberne
 15. Revert to a cluster without Calico
 
 <details>
-<summary>lab9.4 solution</summary>
+<summary>lab9.5 solution</summary>
   
 ```sh
 # host terminal
@@ -2973,11 +3107,11 @@ minikube stop
 minikube delete
 minikube start --kubernetes-version=1.23.9 --driver=docker --cni=calico
 kubectl get pods -n kube-system --watch # allow enough time, under 5mins if lucky, more than 10mins if you have bad karma 😼
-kubectl create deploy webapp --image=httpd --dry-run=client -o yaml > lab9-4.yaml
-kubectl apply -f lab9-4.yaml
-echo --- >> lab9-4.yaml
-kubectl expose deploy webapp --port=80 --dry-run=client -o yaml > lab9-4.yaml
-kubectl apply -f lab9-4.yaml
+kubectl create deploy webapp --image=httpd --dry-run=client -o yaml > lab9-5.yaml
+kubectl apply -f lab9-5.yaml
+echo --- >> lab9-5.yaml
+kubectl expose deploy webapp --port=80 --dry-run=client -o yaml > lab9-5.yaml
+kubectl apply -f lab9-5.yaml
 kubectl get svc,pod
 kubectl get pod --watch # wait if pod not in running status
 kubectl run mypod --rm -it --image=busybox
@@ -2985,9 +3119,9 @@ kubectl run mypod --rm -it --image=busybox
 wget --spider --timeout=1 webapp # remote file exists
 exit
 # host terminal
-echo --- >> lab9-4.yaml
-wget -qO- https://k8s.io/examples/service/networking/nginx-policy.yaml >> lab9-4.yaml
-nano lab9-4.yaml
+echo --- >> lab9-5.yaml
+wget -qO- https://k8s.io/examples/service/networking/nginx-policy.yaml >> lab9-5.yaml
+nano lab9-5.yaml
 ```
 
 ```yaml
@@ -3007,7 +3141,7 @@ spec:
 ```
 
 ```sh
-kubectl apply -f lab9-4.yaml
+kubectl apply -f lab9-5.yaml
 kubectl describe networkpolicy mynetpol | less
 kubectl run mypod --rm -it --image=busybox
 # container terminal
@@ -3019,7 +3153,7 @@ kubectl run mypod --rm -it --image=busybox --labels="tier=frontend"
 wget --spider --timeout=1 webapp # remote file exists
 exit
 # host terminal
-kubectl delete -f lab9-4.yaml
+kubectl delete -f lab9-5.yaml
 minikube stop
 minikube delete
 minikube start --kubernetes-version=1.23.9 --driver=docker
@@ -3073,30 +3207,56 @@ A [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/) p
 
 > If a PVC doesn't find a PV with matching access modes and storage, StorageClass may dynamically create a matching PV
 
-### Basic commands
+> `hostPath` volumes is created on the host, in minikube use the `minikube ssh` command to access the host (requires starting the cluster with `--driver=docker`)
+
+### Lab 10.1. PVs and PVCs
 
 ```sh
 # list PVCs, PVs
 kubectl get {pvc|pv|storageclass}
 # view more details of a PVC
-kubectl decribe {pvc|pv|storageclass} [name]
-# hostPath PersistentVolume
-https://k8s.io/examples/pods/storage/pv-volume.yaml
-# hostPath PersistentVolumeClaim
-https://k8s.io/examples/pods/storage/pv-claim.yaml
+kubectl decribe {pvc|pv|storageclass} $NAME
 ```
 
-> `hostPath` volumes is created on the host, in minikube use the `minikube ssh` command to access the host (requires starting the cluster with `--driver=docker`)
+1. Create a PV with 3Gi capacity using official docs `pods/storage/pv-volume.yaml` manifest file as base
+2. Create a PVC requesting 1Gi capacity using official docs `pods/storage/pv-claim.yaml` manifest file as base
+3. List created resources
+   - What `STATUS` and `VOLUME` does the PVC have?
+   - Does the PVC use the existing PV and why or why not?
+4. What happens when a PV and PVC are created without specifying a `StorageClass`?
+   - repeat steps 1-3 after removing `storageClassName` from both YAML files
+   - what was the results?
 
-### Lab 10.1. PVs and PVCs
+<details>
+<summary>lab 10.1 solution</summary>
 
-Use the `hostPath` PV and PVC above as base.
+```sh
+wget -q https://k8s.io/examples/pods/storage/pv-volume.yaml
+wget -q https://k8s.io/examples/pods/storage/pv-claim.yaml
+nano pv-volume.yaml
+nano pv-claim.yaml
+```
 
-- Create a PV from a YAML file with 3Gi capacity
-- Create a PVC from a YAML file requesting 1Gi capacity
-  - What `STATUS` does the PVC have?
-  - Does the PVC use the existing PV and why or why not?
-- What happens when a PVC is created without specifying a `StorageClass` in the YAML file?
+```yaml
+# pv-volume.yaml
+kind: PersistentVolume
+spec:
+  capacity:
+    storage: 3Gi
+# pv-claim.yaml
+kind: PersistentVolumeClaim
+spec:
+  resources:
+    requests:
+      storage: 1Gi
+# etc
+```
+
+```sh
+kubectl get pv,pvc # STATUS=Bound, task-pv-volume uses task-pv-claim
+# when `storageClassName` is not specified, the StorageClass creates a new PV for the PVC
+```
+</details>
 
 ### Lab 10.2. Configuring Pods storage with PVs and PVCs
 
