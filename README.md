@@ -3262,7 +3262,7 @@ kubectl get pv,pvc # STATUS=Bound, task-pv-volume uses task-pv-claim
 
 The benefit of configuring Pods with PVCs is to decouple site-specific details.
 
-You can follow the [official "configure a Pod to use a PersistentVolume for storage" docs walkthrough](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/#create-a-persistentvolume) to complete this lab.
+You can follow the [official _configure a Pod to use a PersistentVolume for storage_ docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/#create-a-persistentvolume) to complete this lab.
 
 1. Create a `/mnt/data/index.html` file on cluster host `minikube ssh` with some message, e.g. "Hello, World!"
 2. Create a PV with the following parameters, see `https://k8s.io/examples/pods/storage/pv-volume.yaml`
@@ -3307,11 +3307,11 @@ For further learning, see [mounting the same persistentVolume in two places](htt
 
 <div style="page-break-after: always;"></div>
 
-## 11. ConfigMaps and Secrets
+## 11. Varibales, ConfigMaps and Secrets
 
 ### Variables
 
-Variables can be specified via the command-line when creating a _naked_ Pod with `kubectl run mypod --image=nginx --env="MY_VARIABLE=myvalue"`. However _naked_ Pods are not recommended in live environments, so our main focus is creating variables for deployments.
+[Variables](https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/) can be specified via the command-line when creating a _naked_ Pod with `kubectl run mypod --image=nginx --env="MY_VARIABLE=myvalue"`. However _naked_ Pods are not recommended in live environments, so our main focus is creating variables for deployments.
 
 The `kubectl create deploy` command does not currently support the `--env` option, thus the easiest way to add variables to a deployment is to use `kubectl set env deploy` command after the deployment is created.
 
@@ -3320,63 +3320,230 @@ The `kubectl create deploy` command does not currently support the `--env` optio
 
 ### Lab 11.1. Deployment variables
 
-1. Create a databse deployment using `MYSQL` image
+1. Create a `db` Deployment using `mysql` image
 2. Troubleshoot and fix any deployment issues to get a running `STATUS`
+3. View more details of the Deployment and note where env-var is specified
+4. Review the Deployment in YAML form and note how the env-var is specified
+5. Create a `db` Pod with an appropriate environment variable specified
+6. Confirm Pod running as expected
+7. View more details of the Pod and note where env-var is specified
+8. Review the Pod in YAML form and note how the env-var is specified
+9. Delete created resources
+
+<details>
+<summary>lab11.1 solution</summary>
+  
+```sh
+kubectl create deploy db --image=mysql
+kubectl get po --watch # status=containercreating->error->crashloopbackoff->error->etc, ctrl+c to quit
+kubectl describe po $POD_NAME # not enough info to find issue, so check logs
+kubectl logs $POD_NAME|less # found issue, must specify one of `MYSQL_ROOT_PASSWORD|MYSQL_ALLOW_EMPTY_PASSWORD|MYSQL_RANDOM_ROOT_PASSWORD`
+kubectl set env deploy db MYSQL_ROOT_PASSWORD=mysecret
+kubectl get po # status=running
+kubectl describe deploy db # review deployment env-var format
+kubectl get deploy db -oyaml|less # review deployment env-var format
+kubectl run db --image=mysql --env=MYSQL_ROOT_PASSWORD=mypwd
+kubectl get po # status=running
+kubectl describe deploy db # review pod env-var format
+kubectl describe deploy,po db | grep -iEA15 "pod template:|containers:" | less # see `grep -h`
+kubectl get po db -oyaml|less # review pod env-var format
+kubectl delete deploy,po db
+```
+</details>
+
+> Note that you can [use Pod fields as env-vars](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/#use-pod-fields-as-values-for-environment-variables), as well as [use container fields as env-vars](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/#use-container-fields-as-values-for-environment-variables)
 
 ### ConfigMaps
 
-ConfigMaps are used to decouple configuration data from application code. The configuration data may be variables, files or command-line args.
+[ConfigMaps](https://kubernetes.io/docs/concepts/configuration/configmap/) are used to decouple configuration data from application code. The configuration data may be variables, files or command-line args.
 
 - ConfigMaps should be created before creating an application that relies on it
 - A ConfigMap created from a directory includes all the files in that directory and the default behaviour is to use the filenames as keys
 
 ```sh
-# create configmap from file or directory (`--from-file` can be used multiple times), see `kubectl create cm -h`
-kubectl create {cm|configmap} [cmName] --from-file=path/to/file/or/directory
+# create configmap `mycm` from file or directory, see `kubectl create cm -h`
+kubectl create configmap mycm --from-file=path/to/file/or/directory
 # create configmap from file with specified key
-kubectl create {cm|configmap} [cmName] --from-file=key=path/to/file
-# create configmap from env-file
-kubectl create {cm|configmap} [cmName] --from-env-file=path/to/file.env
+kubectl create configmap mycm --from-file=key=path/to/file
+# create configmap from a varibales file (file contains KEY=VALUE on each line)
+kubectl create configmap mycm --from-env-file=path/to/file.env
 # create configmap from literal values
-kubectl create cm --from-literal=KEY1=value1 --from-literal=KEY2=value2
-# display configmap details
-kubectl get cm [cmName] -o yaml
-kubectl describe cm [cmName]
-# use configmap in deployment (can be used with `--dry-run=client`), see `kubectl set env -h`
-kubectl set env deploy [deploymentName] --from=configmap/[cmName]
+kubectl create configmap mycm --from-literal=KEY1=value1 --from-literal=KEY2=value2
+# display details of configmap `mycm`
+kubectl describe cm mycm
+kubectl get cm mycm -o yaml
+# use configmap `mycm` in deployment `web`, see `kubectl set env -h`
+kubectl set env deploy web --from=configmap/mycm
+# use specific keys from configmap with mutliple env-vars, see `kubectl set env deploy -h`
+kubectl set env deploy web --keys=KEY1,KEY2 --from=configmap/mycm
+# remove env-var KEY1 from deployment web
+kubectl set env deploy web KEY1-
 ```
 
-### Lab 11.2. ConfigMaps as variables
+### Lab 11.2. ConfigMaps as environment variables
 
-1. Create a `file.env` file with the variables needed for `MYSQL` from [Lab 11.1](#lab-111-deployment-variables)
-2. Create a ConfigMap from the file
-3. Create a `MYSQL` deployment using the ConfigMap and troubleshoot Pod status
-4. Review the deployment as YAML and note how the variables are created
+1. Create a `file.env` file with the following content:
+   ```sh
+   MYSQL_ROOT_PASSWORD=pwd
+   MYSQL_ALLOW_EMPTY_PASSWORD=true
+   ```
+2. Create a File ConfigMap `mycm-file` from the file using `--from-file` option
+3. Create an Env-Var ConfigMap `mycm-env` from the file using `--from-env-file` option
+4. Compare details of both ConfigMaps, what can you find?
+5. Compare the YAML form of both ConfigMaps, what can you find?
+6. Create manifest files for the two Deployments with `mysql` image using the ConfigMaps as env-vars:
+   - a Deployment called `web-file` for ConfigMap `mycm-file`
+   - a Deployment called `web-env` for ConfigMap `mycm-env`
+7. Review both manifest files to confirm if env-vars configured correctly, what did you find?
+   - any Deployment with correctly configured env-var?
+   - which ConfigMap was used for the working Deployment?
+   - Are you aware of the issue here?
+8. Create a Deployment with two env-vars from the working ConfigMap
+9. Connect a shell to a Pod from the Deployment and run `printenv` to confirm env-vars
+10. Create a Pod with env-vars from the working ConfigMap
+   - how will you set the env-vars for the Pod?
+11. Confirm Pod running or troubleshoot/fix any issues
+12. Connect a shell to the new Pod and run `printenv` to confirm env-vars
+13. Delete all created resources
+
+<details>
+<summary>lab11.2 solution</summary>
+  
+```sh
+echo "MYSQL_ROOT_PASSWORD=mypwd
+MYSQL_ALLOW_EMPTY_PASSWORD=true" > file.env
+kubectl create cm mycm-file --keys=MYSQL_ROOT_PASSWORD,MYSQL_ALLOW_EMPTY_PASSWORD --from-file=file.env
+kubectl create cm mycm-env --keys=MYSQL_ROOT_PASSWORD,MYSQL_ALLOW_EMPTY_PASSWORD --from-env-file=file.env
+kubectl describe cm mycm-file mycm-env |less # mycm-file has one filename key while mycm-env has two env-var keys
+kubectl get cm mycm-file mycm-env -oyaml|less
+kubectl create deploy web-file --image=mysql --dry-run=client -oyaml > webfile.yml
+kubectl apply -f webfile.yml # need an existing deployment to generate yaml for env-vars
+kubectl set env deploy web-file --keys=MYSQL_ROOT_PASSWORD,MYSQL_ALLOW_EMPTY_PASSWORD --from=configmap/mycm-file --dry-run=client -oyaml
+kubectl create deploy web-env --image=mysql --dry-run=client -oyaml | less # no output = keys not found in configmap
+kubectl create deploy web-env --image=mysql --dry-run=client -oyaml > webenv.yml
+kubectl apply -f webenv.yml # need an existing deployment to generate yaml for env-vars
+kubectl set env deploy web-env --keys=MYSQL_ROOT_PASSWORD,MYSQL_ALLOW_EMPTY_PASSWORD --from=configmap/mycm-env --dry-run=client -oyaml|less # output OK and two env-var keys set
+# copy the working env-var within the container spec to webenv.yml to avoid adding unnecessary fields
+kubectl apply -f webenv.yml
+kubectl get deploy,po # deployment web-env shows 1/1 READY, copy pod name
+kubectl exec -it $POD_NAME -- printenv # shows MYSQL_ROOT_PASSWORD,MYSQL_ALLOW_EMPTY_PASSWORD
+kubectl run mypod --image=mysql --dry-run=client -oyaml > pod.yml
+kubectl apply -f pod.yml # need existing pod to generate yaml for env-vars
+kubectl set env pod mypod --keys=MYSQL_ROOT_PASSWORD,MYSQL_ALLOW_EMPTY_PASSWORD --from=configmap/mycm-env --dry-run=client -oyaml|less
+# copy env-var from output container spec to pod.yml to avoid clutter
+kubectl delete -f pod.yml # naked pod cannot update env-var, only deployment
+kubectl apply -f pod.yml
+kubectl get all,cm # mypod in running state
+kubectl exec -it mypod -- printenv
+kubectl delete deploy,po,cm mycm-file mycm-env web-file web-env mypod
+rm file.env
+```
+</details>
 
 ### Lab 11.3. Mounting ConfigMaps
 
-You may also follow the [offical "add ConfigMap data to a Volume" docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#add-configmap-data-to-a-volume)
+In the previous lab, only the Env-Var ConfigMap worked for our use-case. In this lab we will see how we can use the File ConfigMap.
 
-1. Create a `index.html` file with some content
-2. Create a ConfigMap from the file and verify resources created
-3. Create a webserver deployment and mount the file to the DocumentRoot via ConfigMap
-   - use `https://k8s.io/examples/pods/pod-configmap-volume.yaml` as base
+You may also follow the [offical _add ConfigMap data to a Volume_ docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#add-configmap-data-to-a-volume)
+
+1. Create a `file.env` file with the following content:
+   ```sh
+   MYSQL_ROOT_PASSWORD=pwd
+   ```
+2. Create a File ConfigMap `mycm` from the file and verify resource details
+3. Create a manifest file for a Pod with the following:
+   - uses `mysql` image
+   - specify an env-var `MYSQL_ROOT_PASSWORD_FILE=/etc/config/file.env`, see the [_Docker Secrets section of MYSQL image_](https://hub.docker.com/_/mysql)
+   - mount ConfigMap `mycm` as a volume to `/etc/config/`, see [Populate a volume with ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#populate-a-volume-with-data-stored-in-a-configmap)
+4. Create the Pod and verify all works and env-var set in container
+5. Create a `html/index.html` file with any content
+6. Create a ConfigMap from the file and verify resource details
+7. Create a `webserver` deployment with an appropriate image and mount the file to the DocumentRoot via ConfigMap
    - option `nginx` DocumentRoot - /usr/share/nginx/html
    - option `httpd` DocumentRoot - /usr/local/apache2/htdocs
-4. Connect a shell to the container and confirm your file is being served
+8. Connect a shell to the container and confirm your file is being served
+9. Delete created resources
+
+<details>
+<summary>lab11.3 solution</summary>
+  
+```sh
+echo "MYSQL_ROOT_PASSWORD=pwd" > file.env
+kubectl create cm mycm --from-file=file.env --dry-run=client -oyaml > lab11-3.yml
+echo --- >> lab11-3.yml
+kubectl run mypod --image=mysql --env=MYSQL_ROOT_PASSWORD_FILE=/etc/config/file.env --dry-run=client -oyaml >> lab11-3.yml
+wget -qO- https://k8s.io/examples/pods/pod-configmap-volume.yaml | less # copy relevant details to lab11-3.yml
+nano lab11-3.yml
+```
+
+```yaml
+kind: Pod
+spec:
+  volumes:
+  - name: config-volume
+    configMap:
+      name: mycm
+  containers:
+  - name: mypod
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/config
+# etc, rest same as generated
+```
+
+```sh
+kubectl apply -f lab11-3.yml
+kubectl get po # mypod in running state
+kubectl exec mypod -it -- printenv # shows MYSQL_ROOT_PASSWORD_FILE
+# part 2 of lab
+mkdir html
+echo "Welcome to Lab 11.3 - Part 2" > html/index.html
+kubectl create cm webcm --from-file=html/index.html
+echo --- >> 11-3.yml
+kubectl create deploy webserver --image=httpd --dry-run=client -oyaml > lab11-3.yml
+nano lab11-3.yml # copy yaml format above and fix indentation
+```
+
+```yaml
+kind: Deployment
+spec:
+  template:
+    spec:
+      volumes:
+      - name: config-volume
+        configMap:
+          name: webcm
+      containers:
+      - name: httpd
+        volumeMounts:
+        - name: config-volume
+          mountPath: /usr/local/apache2/htdocs
+```
+
+```sh
+kubectl get deploy,po # note pod name and running status
+kubectl exec $POD_NAME -it -- ls /usr/local/apache2/htdocs # index.html
+kubectl port-forward pod/$POD_NAME 3000:80 & # bind port 3000 in background
+curl localhost:3000 # Welcome to Lab 11.3 - Part 2
+fg # bring job to fore-ground, then ctrl+c to terminate
+kubectl delete -f lab11-3.yml
+```
+</details>
+
+> Pay attention to the types of ConfigMaps, File vs Env-Var, and also note their YAML form differences
 
 ### Secrets
 
-Secrets are similar to ConfigMaps but specifically intended to hold sensitive data such as passwords, auth tokens, etc. By default, k8s secrets are unencrypted but base64 encoded.
+Secrets are similar to ConfigMaps but specifically intended to hold sensitive data such as passwords, auth tokens, etc. By default, Kubernetes Secrets are not encrypted but base64 encoded.
 
-To safely use secrets, ensure to:
+To safely use Secrets, ensure to:
 
 1. [Enable Encryption at Rest](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/) for Secrets.
 2. [Enable or configure RBAC rules](https://kubernetes.io/docs/reference/access-authn-authz/authorization/) to
    - restrict read/write
    - limit access to create/replace secrets
 
-Uses of secrets
+#### Uses of secrets
 
 - [as files](https://kubernetes.io/docs/concepts/configuration/secret/?ref=faun#using-secrets-as-files-from-a-pod) which may be mounted in Pods, e.g. accessing secret data in a Pod, TLS, etc
   - consider using `defaultMode` when mounting secrets to set file permissions to `user:readonly - 0400`
@@ -3387,46 +3554,78 @@ Uses of secrets
 > Secrets are basically encoded [ConfigMaps](#configmaps) and are both managed with `kubectl` in a similar way, see `kubectl create secret -h` for more details
 
 ```sh
-# secret as file for tls keys, see `kubectl create secret tls -h`
-kubectl create secret tls [secretName] --cert=path/to/file.crt --key=path/to/file.key
-# secret as file for ssh private key, , see `kubectl create secret generic -h`
-kubectl create secret generic [secretName] --from-file=ssh-private-key=path/to/id_rsa
-# secret as env-var for passwords
-kubectl create secret generic [secretName] --from-literal=[PASSWORD_KEY]=passwordvalue
-# secrets as image registry creds (the `docker-registry` option works for all registry types)
-kubectl create secret docker-registry [secretName] --docker-username=[username] --docker-password=[password] --docker-email=[email] --docker-server=[image-registry-url]
-# view details of the secret
-kubectl get secret [secretName] -o yaml
-# view the contents of the secret
-kubectl get secret [secretName] -o jsonpath='{.data}'
-# view the contents of a specified key in the secret, e.g.  '{"game":{".config":"yI6eyJkb2NrZXIua"}}'
-kubectl get secret [secretName] -o jsonpath='{.data.game.\.config}'
-# decode the `base64` encoded secret
-kubectl get secret [secretName] -o jsonpath='{.data.game.\.config}' | base --decode
-echo [base64string] | base64 --decode
+# secret `myscrt` as file for tls keys, see `kubectl create secret tls -h`
+kubectl create secret tls myscrt --cert=path/to/file.crt --key=path/to/file.key
+# secret as file for ssh private key, see `kubectl create secret generic -h`
+kubectl create secret generic myscrt --from-file=ssh-private-key=path/to/id_rsa
+# secret as env-var for passwords, ADMIN_PWD=shush
+kubectl create secret generic myscrt --from-literal=ADMIN_PWD=shush
+# secrets as image registry creds, `docker-registry` works for other registry types
+kubectl create secret docker-registry myscrt --docker-username=dev --docker-password=shush --docker-email=dev@ckad.io --docker-server=localhost:3333
+# view details of the secret, shows base64 encoded value
+kubectl describe secret myscrt
+kubectl get secret myscrt -o yaml
+# view the base64 encoded contents of secret `myscrt`
+kubectl get secret myscrt -o jsonpath='{.data}'
+# for secret with nested data, '{"game":{".config":"yI6eyJkb2NrZXIua"}}'
+kubectl get secret myscrt -o jsonpath='{.data.game.\.config}'
+# decode secret ".config" in '{"game":{".config":"yI6eyJkb2NrZXIua"}}'
+kubectl get secret myscrt -o jsonpath='{.data.game.\.config}' | base --decode
+# get a service account `mysa`
+kubectl get serviceaccount mysa -o yaml
 ```
 
 > See the [Kubernetes JSONPath support docs](https://kubernetes.io/docs/reference/kubectl/jsonpath/) to learn more about using `jsonpath`
 
 ### Lab 11.4. Decoding secrets
 
-You may follow the [official "managing secrets using kubectl" docs](https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kubectl/)
+You may follow the [official _managing secrets using kubectl_ docs](https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kubectl/)
 
-1. Review the `coredns` Pod in `kube-system` namespace in YAML and determine the name of the `ServiceAccount`
-2. Review the `ServiceAccount` in YAML and determine the name of the `Secret`
-3. View the contents of the `Secret` and decode the value of its `namespace` key.
+1. Review the CoreDNS Pod in the `kube-system` namespace and determine its `serviceAccountName`
+2. Review the ServiceAccount and determine the name of the `Secret` in use
+3. View the contents of the `Secret` and decode the value of its keys: `ca.crt` `namespace` and `token`.
+
+<details>
+<summary>lab11.4 solution</summary>
+  
+```sh
+kubectl -nkube-system get po # shows name of coredns pod
+kubectl -nkube-system get po $COREDNS_POD_NAME -oyaml | grep serviceAccountName
+kubectl -nkube-system get sa $SERVICE_ACCOUNT_NAME -oyaml # shows secret name
+kubectl -nkube-system get secret $SECRET_NAME -ojsonpath="{.data}" | less # shows the secret keys
+kubectl -nkube-system get secret $SECRET_NAME -ojsonpath="{.data.ca\.crt}" | base64 -d # decode ca.crt, BEGIN CERTIFICATE... long string
+kubectl -nkube-system get secret $SECRET_NAME -ojsonpath="{.data.namespace}" | base64 -d # decode namespace, kube-system
+kubectl -nkube-system get secret $SECRET_NAME -ojsonpath="{.data.token}" | base64 -d # decode token, ey... long string
+```
+</details>
 
 ### Lab 11.5. Secrets as environment variables
 
-Repeat [lab 11.2](#lab112-configmaps-as-variables) with secrets
+Repeat [lab 11.2](#lab112-configmaps-as-environment-variables) with secrets
 
-> See the [official "secrets as container env-vars" docs](https://kubernetes.io/docs/concepts/configuration/secret/#use-case-as-container-environment-variables)
+> See the [official _secrets as container env-vars_ docs](https://kubernetes.io/docs/concepts/configuration/secret/#use-case-as-container-environment-variables)
+
+<details>
+<summary>lab11.5 solution</summary>
+  
+```sh
+# very similar to configmap solution, create pull-request
+```
+</details>
 
 ### Lab 11.6. Secrets as files
 
 Repeat [lab 11.3](#lab113-mounting-configmaps) with secrets.
 
-> See the [official "using secrets as files" docs](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod)
+> See the [official _using secrets as files_ docs](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod)
+
+<details>
+<summary>lab11.6 solution</summary>
+  
+```sh
+# very similar to configmap solution, create pull-request
+```
+</details>
 
 ### Lab 11.7. Secrets as docker registry credentials
 
@@ -3435,15 +3634,209 @@ Repeat [lab 11.3](#lab113-mounting-configmaps) with secrets.
 3. View details of the secret in `yaml`
 4. Decode the contents of the `.dockerconfigjson` key with `jsonpath`
 
-> See the [official "create an `imagePullSecret`" docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#create-an-imagepullsecret)
+> See the [official _create an `imagePullSecret`_ docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#create-an-imagepullsecret)
+
+<details>
+<summary>lab11.7 solution</summary>
+  
+```sh
+# one-line command can be found in `kubectl create secret -h` examples, create pull-request
+```
+</details>
 
 <div style="page-break-after: always;"></div>
 
-## 12. K8s API
+## 12. Pod Lifecycle and Update Strategies
+
+### Pod states
+
+Whilst a Pod is running, the kubelet is able to restart containers to handle some kind of faults. Within a Pod, Kubernetes tracks different container states and determines what action to take to make the Pod healthy again. See [Pod lifecycle](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle) for more details.
+
+Pod states can be viewed with `kubectl get pods` under `STATUS` column:
+
+- Pending - Pod starts here and waits to be scheduled, image download, etc
+- Running - at least one container running
+- Completed - all containers terminated successfully
+- Failed - all containers have terminated, at least one terminated in failure
+- CrashLoopbackOff - the Pod had failed and was restarted
+- Terminating - the Pod is being deleted
+- Unknown - pod state cannot be obtained, either node communication breakdown or other
+
+### Pod phase
+
+A Pod's `status` field is a [PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#podstatus-v1-core) object, which has a `phase` field that can have the values: `Pending | Running | Succeeded | Failed | Unknown`.
+
+### Container probes
+
+A [_probe_](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes) is a diagnostic performed periodically by the kubelet on a container, either by executing code within the container, or by network request. A probe will either return: `Success | Failure | Unknown`. There are four different ways to check a container using a probe:
+
+- `exec`: executes a specified command within the container, status code 0 means `Success`.
+- `grpc`: performs a remote procedure call using gRPC, this feature is in `alpha` stage (not for CKAD)
+- `httpGet`: performs HTTP GET request against the Pod's IP on a specified port and path, status code greater than or equal to 200 and less than 400 means `Success`.
+- `tcpSocket`: performs a TCP check against the Pod's IP on a specified port, port is open means `Success`, even if connection is closed immediately.
+
+#### Types of probe
+
+The kubelet can optionally perform and react to three kinds of probes on running containers:
+
+- `livenessProbe`: indicates if container is running, On failure, the kubelet kills the container which triggers restart policy. Defaults to `Success` if not set. See [when to use liveness probe](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#when-should-you-use-a-liveness-probe).
+- `readinessProbe`: indicates if container is ready to respond to requests. On failure, the endpoints controller removes the Pod's IP address from the endpoints of all Services that match the Pod. Defaults to `Success` if not set. If set, starts as `Failure`. See [when to use readiness probe?](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#when-should-you-use-a-readiness-probe).
+- `startupProbe`: indicates if application within container is started. All other probes are disabled if a startup probe is set, until it succeeds. On failure, the kubelet kills the container which triggers restart policy. Defaults to `Success` if not set. See [when to use startup probe?](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#when-should-you-use-a-startup-probe).
+
+> For more details, see [configuring Liveness, Readiness and Startup Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
+
+### Lab 12.1. Liveness probe
+
+You may follow the [official _define a liveness command_ tutorial](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-command) to complete this lab.
+
+```sh
+# get events
+kubectl get events
+# get events of a specific resource, pod, deployment, etc
+kubectl get events --field-selector=involvedObject.name=$RESOURCE_NAME
+# watch events for updates
+kubectl get events --watch
+```
+
+1. Create a Deployment `myapp` manifest file with the following:
+   - busybox image
+   - commandline arguments `mkdir /tmp/healthy; sleep 20; rm -d /tmp/healthy; sleep 60; mkdir /tmp/healthy; sleep 600;`
+   - a `livenessProbe` that checks for the presence of `/tmp/healthy` directory
+   - the Probe should be initiated 10secs after container starts
+   - the Probe should perform the checks every 10secs
+2. Apply the manifest file to create the Deployment
+3. Review and monitor created Pod events for 3-5mins
+
+<details>
+<summary>lab12.1 solution</summary>
+  
+```sh
+kubectl create deploy myapp --image=busybox --dry-run=client -oyaml -- /bin/sh -c "touch /tmp/healthy; sleep 20; rm -f /tmp/healthy; sleep 60; touch /tmp/healthy; sleep 600;" >lab12-1.yml
+wget -qO- https://k8s.io/examples/pods/probe/exec-liveness.yaml | less # copy the liveness probe section
+nano lab12-1.yml # paste, edit and fix indentation
+```
+
+```yaml
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+        livenessProbe:
+          exec:
+            command:
+            - ls # `cat` for file
+            - /tmp/healthy
+          initialDelaySeconds: 10
+          periodSeconds: 10
+```
+
+```sh
+kubectl apply -f lab12-1.yml
+kubectl get po # find pod name
+kubectl get events --field-selector=involvedObject.name=$POD_NAME --watch
+```
+</details>
+
+### Configure probes
+
+Probes have a number of fields that you can use to more precisely control the behavior of liveness and readiness checks:
+
+- `initialDelaySeconds`: Seconds to wait after container starts before initiating liveness/readiness probes - default 0, minimum 0.
+- `periodSeconds`: How often (in seconds) to perform the probe - default 10, minimum 1.
+- `timeoutSeconds`: Seconds after which the probe times out - default 1, minimum 1.
+- `successThreshold`: Consecutive successes after a failure for the probe to be considered successful - default 1, minimum 1, must be 1 for liveness/startup Probes
+- `failureThreshold`: Consecutive retries on failure before giving up, liveness probe restarts the container after giving up, readiness probe marks the Pod as Unready - defaults 3, minimum 1.
+
+### Lab 12.2. Readiness probe
+
+### Lab 12.3. Protect slow starting containers with startup probe
+
+### Lab 12.4. Blue/Green deployments
+
+[Blue/green deployment](https://kubernetes.io/blog/2018/04/30/zero-downtime-deployment-kubernetes-jenkins/#blue-green-deployment) is a update-strategy used to accomplish zero-downtime deployments. The current version application is marked blue and the new version application is marked green. In Kubernetes, blue/green deployment can be easily implemented with Services.
+
+<details>
+  <summary><b>blue/green update strategy</b></summary>
+  
+  ![blue-green update strategy from https://engineering-skcc.github.io/performancetest/Cloud-%ED%99%98%EA%B2%BD-%EC%84%B1%EB%8A%A5%EB%B6%80%ED%95%98%ED%85%8C%EC%8A%A4%ED%8A%B8/](https://user-images.githubusercontent.com/17856665/185770858-83a088c2-4701-4fd6-943e-ebfb020aa498.gif)
+</details>
+
+1. Create a webserver application (blue deployment)
+   - three replicas
+   - use an older version of the image
+   - mount the DocumentRoot `index.html` as volume
+2. Make the application accessible via an IP
+3. Verify created resources and test access with `curl`
+4. Create a new application using [1] as base (green deployment)
+   - three replicas
+   - use a newer version of the image
+   - the landing page should look different from the webserver in [1]
+   - mount the DocumentRoot `index.html` as volume
+5. Verify created resources and test access with `curl`
+6. Make green deployment accessible via an IP by replacing the Service for blue deployment
+7. Confirm all working okay with `curl`
+
+### Lab 12.5. Canary deployments
+
+Canary deployment is an update strategy where updates are deployed to a subset of users/servers (canary application) for testing prior to full deployment. This is a scenario where Labels are required to distinguish deployments by release or configuration.
+
+<details>
+  <summary><b>canary update strategy</b></summary>
+  
+  ![canary update strategy from https://life.wongnai.com/project-ceylon-iii-argorollouts-55ec70110f0a](https://user-images.githubusercontent.com/17856665/185770905-7c3901ec-f97a-4046-8411-7a722b0601a4.png)
+</details>
+
+1. Create a webserver application
+   - three replicas
+   - selector `updateType: canary`
+   - use an older version of the image
+   - mount the DocumentRoot `index.html` as volume
+2. Make the application accessible via an IP
+3. Verify created resources and test access with `curl`
+4. Create a new application using [1] as base
+   - one replica
+   - selector `updateType: canary`
+   - use a newer version of the image in [1]
+   - the landing page should look different from the webserver in [1]
+   - mount the DocumentRoot `index.html` as volume
+5. Verify created resources and confirm the Service targets both webservers
+6. Run multiple `curl` requests to the IP in [2] and confirm access to both webservers
+7. Scale up the new webserver to three replicas and confirm all Pods running
+8. Scale down the old webserver to zero and confirm no Pods running
+
+> Scaling down to zero instead of deleting provides an easy option to revert changes when there are issues
+
+<div style="page-break-after: always;"></div>
+
+## 13 K8s API
 
 ### Understanding the API
 
-Use `kubectl api-resources | less` for an overview of the API.
+When you deploy Kubernetes, you get a cluster. See [Kubernetes cluster components](https://kubernetes.io/docs/concepts/overview/components) for more details.
+
+<details>
+<summary><i>kubectl</i> flow diagram</summary>
+
+<a href="https://medium.com/jorgeacetozi/kubernetes-master-components-etcd-api-server-controller-manager-and-scheduler-3a0179fc8186">![kubectl flow diagram from medium.com](https://user-images.githubusercontent.com/17856665/188337178-851605cc-838e-4c0c-987c-c1f43a42abd0.png)</a>
+
+<ol>
+  <li>kubectl forwards command to the API Server</li>
+  <li>API Server validates the request and persists it to etcd</li>
+  <li>etcd notifies the API Server</li>
+  <li>API Server invokes the Scheduler</li>
+  <li>Scheduler will lookup eligible nodes to run the pod and return that to the API Server</li>
+  <li>API Server persists it to etcd</li>
+  <li>etcd notifies the API Server</li>
+  <li>API Server invokes the Kubelet in the corresponding node</li>
+  <li>Kubelet talks to the Docker daemon using the API over the Docker socket to create the container</li>
+  <li>Kubelet updates the pod status to the API Server (success or failure, failure invokes RestartPolicy)</li>
+  <li>API Server persists the new state in etcd</li>
+</ol>
+
+</details>
+
+Use `kubectl api-resources | less` for an overview of available API resources.
 
 - `APIVERSION`
   - `v1` core kubernetes API group
@@ -3453,21 +3846,21 @@ Use `kubectl api-resources | less` for an overview of the API.
 
 > The Kubernetes **release cycle is 3 months** and deprecated features are supported for a minimum of 2 release cycles (6 months).
 > Respond to deprecation message swiftly, you may use **`kubectl api-versions`** to view a short list of API versions and **`kubectl explain --recursive`** to get more details on affected resources. \
-> The current API docs at time of writing is `https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/`
+> The current API docs at time of writing is `https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/`
 
 #### kube-apiserver
 
-The [Kubernetes API server `kube-apiserver`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) is the interface to access all Kubernetes features, which include pods, services, replicationcontrollers, and others. It provides the frontend to the cluster's shared state through which all other components interact. All **requests are secured by TLS certificates in `~/.kube/config`**.
+The [Kubernetes API server `kube-apiserver`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) is the interface to access all Kubernetes features, which include pods, services, replicationcontrollers, and others.
 
 From within a Pod, the API server is accessible via a Service named `kubernetes` in the `default` namespace. Therefore, Pods can use the **`kubernetes.default.svc`** hostname to query the API server.
 
-The Kubernetes API server may authorize a request using one of [several authorization modes: Node, ABAC, RBAC or Webhook](https://kubernetes.io/docs/reference/access-authn-authz/authorization/#authorization-modules).
-
 #### kube-proxy
 
-Working with direct access to a cluster node, like our minikube lab environment, removes the need for `kube-proxy`. When using the Kubernetes CLI `kubectl`, it uses stored TLS certificates in `~/.kube/config` to make secured requests to the `kube-apiserver`. However, direct access is not always possible with K8s in the cloud. The [Kubernetes network proxy `kube-proxy`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) runs on each node and make it possible to access `kube-apiserver` securely by other applications like `curl` or programmatically.
+In our minikube lab so far, we have been working with direct access to a cluster node, which removes the need for `kube-proxy`. When using the Kubernetes CLI `kubectl`, it uses stored TLS certificates in `~/.kube/config` to make secured requests to the `kube-apiserver`.
 
-> See the [official "so many proxies" docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#so-many-proxies) for the different proxies you may encounter when using Kubernetes.
+However, direct access is not always possible with K8s in the cloud. The [Kubernetes network proxy `kube-proxy`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) runs on each node and make it possible to access `kube-apiserver` securely by other applications like `curl` or programmatically.
+
+> See the [official _so many proxies_ docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#so-many-proxies) for the different proxies you may encounter when using Kubernetes.
 
 ```sh
 # view a more verbose pod detais
@@ -3481,9 +3874,9 @@ curl localhost:PORT/version
 # list pods with curl
 curl localhost:PORT/api/v1/namespaces/default/pods
 # get specific pod with curl
-curl localhost:PORT/api/v1/namespaces/default/pods/[podName]
+curl localhost:PORT/api/v1/namespaces/default/pods/$POD_NAME
 # delete specific pod with curl
-curl -XDELETE localhost:PORT/api/v1/namespaces/default/pods/[podName]
+curl -XDELETE localhost:PORT/api/v1/namespaces/default/pods/$POD_NAME
 ```
 
 ### Directly accessing the REST API
@@ -3498,11 +3891,11 @@ Run `kubectl config view` to see the location and credentials configured for `ku
   ![image](https://user-images.githubusercontent.com/17856665/184899506-47878132-dc9b-4a6a-8491-080fe56c6261.png)
 </details>
 
-### Lab 12.1. Using kubectl proxy to access the API
+### Lab 13.1. Using kubectl proxy to access the API
 
 Rather than run `kubectl` commands directly, we can use `kubectl` as a reverse proxy to provide the location and authenticate requests. See [access the API using kubectl proxy](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#using-kubectl-proxy) for more details.
 
-You may follow the [official "accessing the rest api" docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#directly-accessing-the-rest-api)
+You may follow the [official _accessing the rest api_ docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#directly-accessing-the-rest-api)
 
 1. Expose the API with `kube-proxy`
 2. Confirm k8s version information with `curl`
@@ -3539,18 +3932,18 @@ Just as user accounts identifies humans, a service account identifies processes 
   - default namespace `/var/run/secrets/kubernetes.io/serviceaccount/namespace`
 - You can opt out of automounting API credentials for a ServiceAccount by setting `automountServiceAccountToken: false` on the ServiceAccount. Note that the pod spec takes precedence over the service account if both specify a `automountServiceAccountToken` value
 
-### Lab 12.2. Accessing the API without kubectl proxy
+### Lab 13.2. Accessing the API without kubectl proxy
 
 This requires using the token of the default ServiceAccount. The token can be read directly (see [lab 11.4 - decoding secrets](#lab-114-decoding-secrets)), but the recommended way to get the token is via the [TokenRequest API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-request-v1/).
 
-You may follow the [official "access the API **without** kubectl proxy" docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#without-kubectl-proxy).
+You may follow the [official _access the API **without** kubectl proxy_ docs](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#without-kubectl-proxy).
 
 1. Request the ServiceAccount token by YAML. You can also request by [`kubectl create token $SERVICE_ACCOUNT_NAME`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#-em-token-em-) on Kubernetes v1.24+.
 2. Wait for the token controller to populate the Secret with a token
 3. Use `curl` to access the API with the generated token as credentials
 
 <details>
-  <summary><b>lab 12.2 steps</b></summary>
+  <summary><b>lab 13.2 steps</b></summary>
 
 ```sh
 # request token
@@ -3575,9 +3968,9 @@ curl $APISERVER/api --header "Authorization: Bearer $TOKEN" --insecure
 
 > Using `curl` with the `--insecure` option [skips TLS certificate validation](https://curl.se/docs/sslcerts.html)
 
-### Lab 12.3. Accessing the API from a Pod without kubectl
+### Lab 13.3. Accessing the API from inside a Pod
 
-You may follow the [official "access the API from within a Pod" docs](https://kubernetes.io/docs/tasks/run-application/access-api-from-pod/#without-using-a-proxy).
+You may follow the [official _access the API from within a Pod_ docs](https://kubernetes.io/docs/tasks/run-application/access-api-from-pod/#without-using-a-proxy).
 
 > From within a Pod, the Kubernetes API is accessible via the `kubernetes.default.svc` hostname
 
@@ -3586,7 +3979,7 @@ You may follow the [official "access the API from within a Pod" docs](https://ku
 3. Can you access the Pods list at `kubernetes.default.svc/api/v1/namespaces/default/pods`?
 
 <details>
-  <summary><b>lab 12.3 steps</b></summary>
+  <summary><b>lab 13.3 steps</b></summary>
 
 ```sh
 # connect an interactive shell to a container within the Pod
@@ -3641,9 +4034,9 @@ kubectl create rolebinding $ROLE_BINDING_NAME --clusterrole=$CLUSTERROLE_NAME --
 kubectl create rolebinding $ROLE_BINDING_NAME --clusterrole=$CLUSTERROLE_NAME --serviceaccount=$NAMESPACE:default --namespace=$NAMESPACE
 ```
 
-### Lab 12.4. Exploring RBAC
+### Lab 13.4. Exploring RBAC
 
-In [lab 12.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were unable to access the PodList API at `kubernetes.default.svc/api/v1/namespaces/default/pods`. Lets apply the required permissions to make this work.
+In [lab 13.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were unable to access the PodList API at `kubernetes.default.svc/api/v1/namespaces/default/pods`. Lets apply the required permissions to make this work.
 
 1. Create a ServiceAccount and verify
 2. Create a Role with permissions to list pods and verify
@@ -3654,27 +4047,27 @@ In [lab 12.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were una
 7. Can you use a deployment instead of a "naked" Pod?
 
 <details>
-  <summary><b>lab 12.4 steps</b></summary>
+  <summary><b>lab 13.4 steps</b></summary>
 
 ```sh
 # create service account yaml
-kubectl create serviceaccount test-sa --dry-run=client -o yaml > lab12.yaml
-echo --- >> lab12.yaml
+kubectl create serviceaccount test-sa --dry-run=client -o yaml > lab13-4.yaml
+echo --- >> lab13-4.yaml
 # create role yaml
-kubectl create role test-role --resource=pods --verb=list --dry-run=client -o yaml >> lab12.yaml
-echo --- >> lab12.yaml
+kubectl create role test-role --resource=pods --verb=list --dry-run=client -o yaml >> lab13-4.yaml
+echo --- >> lab13-4.yaml
 # create rolebinding yaml
-kubectl create rolebinding test-rolebinding --role=test-role --serviceaccount=default:test-sa --namespace=default --dry-run=client -o yaml >> lab12.yaml
-echo --- >> lab12.yaml
+kubectl create rolebinding test-rolebinding --role=test-role --serviceaccount=default:test-sa --namespace=default --dry-run=client -o yaml >> lab13-4.yaml
+echo --- >> lab13-4.yaml
 # create configmap yaml
-kubectl create configmap test-cm --from-literal="SA=/var/run/secrets/kubernetes.io/serviceaccount" --dry-run=client -o yaml >> lab12.yaml
-echo --- >> lab12.yaml
+kubectl create configmap test-cm --from-literal="SA=/var/run/secrets/kubernetes.io/serviceaccount" --dry-run=client -o yaml >> lab13-4.yaml
+echo --- >> lab13-4.yaml
 # create pod yaml
-kubectl run test-pod --image=nginx --dry-run=client -o yaml >> lab12.yaml
+kubectl run test-pod --image=nginx --dry-run=client -o yaml >> lab13-4.yaml
 # review & edit yaml to add configmap and service account in pod spec, see `https://k8s.io/examples/pods/pod-single-configmap-env-variable.yaml`
-nano lab12.yaml
+nano lab13-4.yaml
 # create all resources
-kubectl apply -f lab12.yaml
+kubectl apply -f lab13-4.yaml
 # verify resources
 kubectl get sa test-sa
 kubectl describe sa test-sa | less
@@ -3696,14 +4089,14 @@ curl -H $HEADER https://kubernetes.default.svc/api/v1/namespaces/default/pods/$P
 curl -H $HEADER https://kubernetes.default.svc/api/v1/namespaces/default/deployments --insecure
 exit
 # clean up
-kubectl delete -f lab12.yaml
+kubectl delete -f lab13-4.yaml
 ```
 
 </details>
 
 <div style="page-break-after: always;"></div>
 
-## 13. DevOps
+## 14. DevOps
 
 ### Helm
 
@@ -3749,7 +4142,7 @@ helm delete
 helm uninstall $RELEASE_NAME
 ```
 
-### Lab 13.1. Explore Helm Charts
+### Lab 14.1. Explore Helm Charts
 
 1. [Install Helm](https://github.com/helm/helm#install)
 2. List installed Helm Charts
@@ -3786,7 +4179,7 @@ tar -xvf file.tgz -C /path/to/directory
 tar -tvf file.tar
 ```
 
-### Lab 13.2. Customising Helm Charts
+### Lab 14.2. Customising Helm Charts
 
 1. Download a Chart template and extract the content to a specified directory
 2. Edit the template and change any value
@@ -3889,68 +4282,13 @@ We can take advantage of Kustomization's "composing and customising" feature to 
 
 </details>
 
-### Lab 13.3. Kustomize resources
+### Lab 14.3. Kustomize resources
 
 1. Create a `service.yaml` resource file for a service
 2. Create a `deployment.yaml` resource file for an app using the service
 3. Create a `kustomization.yaml` file with name prefix/suffix and common labels for both resource files
 4. Apply the Kustomization file to create the resources
 5. Review resources created and confirm that the prefix/suffix and labels are applied
-
-### Lab 13.4. Blue/Green deployments
-
-[Blue/green deployment](https://kubernetes.io/blog/2018/04/30/zero-downtime-deployment-kubernetes-jenkins/#blue-green-deployment) is a update-strategy used to accomplish zero-downtime deployments. The current version application is marked blue and the new version application is marked green. In Kubernetes, blue/green deployment can be easily implemented with Services.
-
-<details>
-  <summary><b>blue/green update strategy</b></summary>
-  
-  ![blue-green update strategy from https://engineering-skcc.github.io/performancetest/Cloud-%ED%99%98%EA%B2%BD-%EC%84%B1%EB%8A%A5%EB%B6%80%ED%95%98%ED%85%8C%EC%8A%A4%ED%8A%B8/](https://user-images.githubusercontent.com/17856665/185770858-83a088c2-4701-4fd6-943e-ebfb020aa498.gif)
-</details>
-
-1. Create a webserver application (blue deployment)
-   - three replicas
-   - use an older version of the image
-   - mount the DocumentRoot `index.html` as volume
-2. Make the application accessible via an IP
-3. Verify created resources and test access with `curl`
-4. Create a new application using [1] as base (green deployment)
-   - three replicas
-   - use a newer version of the image
-   - the landing page should look different from the webserver in [1]
-   - mount the DocumentRoot `index.html` as volume
-5. Verify created resources and test access with `curl`
-6. Make green deployment accessible via an IP by replacing the Service for blue deployment
-7. Confirm all working okay with `curl`
-
-### Lab 13.5. Canary deployments
-
-Canary deployment is an update strategy where updates are deployed to a subset of users/servers (canary application) for testing prior to full deployment. This is a scenario where Labels are required to distinguish deployments by release or configuration.
-
-<details>
-  <summary><b>canary update strategy</b></summary>
-  
-  ![canary update strategy from https://life.wongnai.com/project-ceylon-iii-argorollouts-55ec70110f0a](https://user-images.githubusercontent.com/17856665/185770905-7c3901ec-f97a-4046-8411-7a722b0601a4.png)
-</details>
-
-1. Create a webserver application
-   - three replicas
-   - selector `updateType: canary`
-   - use an older version of the image
-   - mount the DocumentRoot `index.html` as volume
-2. Make the application accessible via an IP
-3. Verify created resources and test access with `curl`
-4. Create a new application using [1] as base
-   - one replica
-   - selector `updateType: canary`
-   - use a newer version of the image in [1]
-   - the landing page should look different from the webserver in [1]
-   - mount the DocumentRoot `index.html` as volume
-5. Verify created resources and confirm the Service targets both webservers
-6. Run multiple `curl` requests to the IP in [2] and confirm access to both webservers
-7. Scale up the new webserver to three replicas and confirm all Pods running
-8. Scale down the old webserver to zero and confirm no Pods running
-
-> Scaling down to zero instead of deleting provides an easy option to revert changes when there are issues
 
 ### Custom Resource Definition (CRD)
 
@@ -3997,7 +4335,7 @@ spec:
     - ct # allow `crontab|ct` to match this resource on CLI
 ```
 
-### Lab 13.6. Custom objects
+### Lab 14.4. Custom objects
 
 You can follow the [official CRD tutorial](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/).
 
@@ -4030,7 +4368,7 @@ Although, you can write your own operator, majority prefer to find ready-made op
 
 > This lab requires the Calico plugin. You will need to delete and start a new cluster if your current one doesn't support Calico
 
-### Lab 13.7. Operators
+### Lab 14.5. Operators
 
 See the [official Calico install steps](https://projectcalico.docs.tigera.io/getting-started/kubernetes/minikube).
 
@@ -4084,7 +4422,7 @@ StatefulSets are valuable for applications that require one or more of the follo
 - To achieve ordered and graceful termination of Pods, scale the StatefulSet down to 0 prior to deletion
 - It's possible to get into a broken state that requires [manual repair](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#forced-rollback) when using [Rolling Updates](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#rolling-updates) with the default [Pod Management Policy](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies) (`OrderedReady`)
 
-### Lab 13.8. Components of a StatefulSet
+### Lab 14.6. Components of a StatefulSet
 
 See the [example manifest](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components)
 
@@ -4094,56 +4432,7 @@ See the [example manifest](https://kubernetes.io/docs/concepts/workloads/control
 
 <div style="page-break-after: always;"></div>
 
-## 14. Troubleshooting
-
-<details>
-<summary><i>kubectl</i> flow diagram</summary>
-
-<a href="https://medium.com/jorgeacetozi/kubernetes-master-components-etcd-api-server-controller-manager-and-scheduler-3a0179fc8186">![kubectl flow diagram from medium.com](https://user-images.githubusercontent.com/17856665/188337178-851605cc-838e-4c0c-987c-c1f43a42abd0.png)</a>
-
-<ol>
-  <li>kubectl forwards command to the API Server</li>
-  <li>API Server validates the request and persists it to etcd</li>
-  <li>etcd notifies the API Server</li>
-  <li>API Server invokes the Scheduler</li>
-  <li>Scheduler will lookup eligible nodes to run the pod and return that to the API Server</li>
-  <li>API Server persists it to etcd</li>
-  <li>etcd notifies the API Server</li>
-  <li>API Server invokes the Kubelet in the corresponding node</li>
-  <li>Kubelet talks to the Docker daemon using the API over the Docker socket to create the container</li>
-  <li>Kubelet updates the pod status to the API Server (success or failure, failure invokes RestartPolicy)</li>
-  <li>API Server persists the new state in etcd</li>
-</ol>
-
-</details>
-
-### Pod states
-
-This can be viewed with `kubectl get pods` under `STATUS` column.
-
-- Pending - Pod starts here and waits to be scheduled, image download, etc
-- Running - at least one container running
-- Completed - all containers terminated successfully
-- Failed - all containers have terminated, at least one terminated in failure
-- CrashLoopbackOff - the Pod had failed and was restarted
-- Unknown - pod state cannot be obtained, either node communication breakdown or other
-
-### Container probes
-
-A [_probe_](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes) is a diagnostic performed periodically by the kubelet on a container, either by executing code within the container, or by network request. A probe will either return: `Success | Failure | Unknown`. There are four different ways to check a container using a probe:
-
-- `exec`: executes a specified command within the container, status code 0 means `Success`.
-- `grpc`: performs a remote procedure call using gRPC, this feature is in `alpha` stage (not for CKAD)
-- `httpGet`: performs HTTP GET request against the Pod's IP on a specified port and path, status code greater than or equal to 200 and less than 400 means `Success`.
-- `tcpSocket`: performs a TCP check against the Pod's IP on a specified port, port is open means `Success`, even if connection is closed immediately.
-
-The kubelet can optionally perform and react to three kinds of probes on running containers:
-
-- `livenessProbe`: indicates if container is running, On failure, the kubelet kills the container which triggers restart policy. Defaults to `Success` if not set.
-- `readinessProbe`: indicates if container is ready to respond to requests. On failure, the endpoints controller removes the Pod's IP address from the endpoints of all Services that match the Pod. Defaults to `Success` if not set. If set, starts as `Failure`.
-- `startupProbe`: indicates if application within container is started. All other probes are disabled if a startup probe is set, until it succeeds. On failure, the kubelet kills the container which triggers restart policy. Defaults to `Success` if not set.
-
-For more details, see [when to use liveness probe](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#when-should-you-use-a-liveness-probe), [when to use readiness probe?](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#when-should-you-use-a-readiness-probe), [when to use startup probe?](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#when-should-you-use-a-startup-probe), and [configuring Liveness, Readiness and Startup Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
+## 15. Debugging
 
 ### Troubleshooting failing applications
 
@@ -4151,6 +4440,6 @@ For more details, see [when to use liveness probe](https://kubernetes.io/docs/co
 
 <div style="page-break-after: always;"></div>
 
-## 15. Exam
+## 16. Exam
 
 [kubectl cheat sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
