@@ -824,6 +824,66 @@ docker image rm test-image
 
 <div style="page-break-after: always;"></div>
 
+### Task 1 - Docker image
+
+```Dockerfile
+FROM nginx:1.22-alpine
+EXPOSE 80
+```
+
+Using docker and the Dockerfile above, build an image with tag `bootcamp/nginx:v1` and tag `ckad/nginx:latest`. Once complete, export a tar file of the image to `/home/$USER/ckad-tasks/docker/nginx.tar`. \
+Run a container named `web-test` from the image `bootcamp/nginx:v1` accessible on port 2000, and another container named `web-test2` from image `ckad/nginx:latest` accessible on port 2001. Leave both containers running.
+
+What commands would you use to perform the above operations using `podman`? Specify these commands on separate lines in file `/home/$USER/ckad-tasks/docker/podman-commands`
+
+<details>
+  <summary>hints</summary>
+
+  <details>
+  <summary>hint 1</summary>
+
+  You can specify multiple tags when building an image `docker build -t tag1 -t tag2 /path//to/dockerfile-directory`
+  </details>
+
+  <details>
+  <summary>hint 2</summary>
+
+  Try to find the command for exporting a docker image with `docker image --help`
+  </details>
+
+  <details>
+  <summary>hint 2</summary>
+
+  Did you run the containers in detached mode?
+  </details>
+
+  <details>
+  <summary>hint 3</summary>
+
+  You can export a docker image to a tar file with `docker image save -o /path/to/output/file $IMAGE_NAME`
+  </details>
+
+  <details>
+  <summary>hint 4</summary>
+
+  Did you expose the required ports when creating the containers? You can use `docker run -p $HOST_PORT:$CONTAINER_PORT`
+  </details>
+
+  <details>
+  <summary>hint 5</summary>
+
+  Did you verify the containers running at exposed ports `curl localhost:2000` and `curl localhost:2001`?
+  </details>
+
+  <details>
+  <summary>hint 6</summary>
+
+  Docker and Podman have interchangeable commands, therefore, the only change is `docker -> podman`, For example, `docker run -> podman run`, `docker build -> podman build`, etc.
+  </details>
+</details>
+
+<div style="page-break-after: always;"></div>
+
 ## 3. Understanding Kubernetes
 
 [K8s](kubernetes.io) is an open-source system for automating deployment, scaling and containerized applications management, currently owned by the [Cloud Native Computing Foundation (CNCF)](https://www.cncf.io/). \
@@ -1139,15 +1199,15 @@ kind: Pod # type of resource, pod, deployment, configmap, etc
 metadata:
   name: box # metadata information, including labels, namespace, etc
 spec:
-  containers:
-    - name: box
-      image: busybox:1.28
-      volumeMounts: # mount created volume
-        - name: varlog
-          mountPath: /var/log
   volumes: # create an empty-directory volume
+  - name: varlog
+    emptyDir: {}
+  containers:
+  - name: box
+    image: busybox:1.28
+    volumeMounts: # mount created volume
     - name: varlog
-      emptyDir: {}
+      mountPath: /var/log
 ```
 
 > Volumes are covered in more detail in [Chapter 10 - Storage](#10-storage). For now it will suffice to know how to create and mount an _empty-directory_ volume
@@ -1451,6 +1511,130 @@ kubectl explain namespace.spec | less
 
 <div style="page-break-after: always;"></div>
 
+### Task 2 - Pods
+
+Imagine a student in the CKAD Bootcamp training reached out to you for assistance to finish their homework. Their task was to create a `webserver` with a sidecar container for logging in the `cow` namespace. Find this Pod, which could be located in of the Namespaces `ape | cow | fox`, and ensure it is configured as required.
+
+At the end of your task, copy the log file used by the logging container to directory `/home/$USER/ckad-tasks/pods/`
+
+- Command to setup environment:
+```sh
+echo '{"apiVersion":"v1","items":[{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"fox"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"ape"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"cow"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"box"},"name":"box","namespace":"ape"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"box"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"for-testing"},"name":"for-testing","namespace":"fox"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"for-testing"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"webserver"},"name":"webserver","namespace":"fox"},"spec":{"containers":[{"name":"server","image":"ngnx:1.20-alpine","volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]},{"name":"logger","image":"busybox:1.28","args":["/bin/sh","-c","while true; do  echo $(date) >> /usr/share/nginx/html/1.log;\n  sleep 30;\ndone\n"],"volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]}],"volumes":[{"name":"serverlog","emptyDir":{}}]}}],"metadata":{"resourceVersion":""},"kind":"List"}' | kubectl apply -f - >/dev/null
+```
+- Command to destroy environment: `kubectl delete ns ape cow fox`
+
+<details>
+  <summary>hints</summary>
+
+  <details>
+  <summary>hint 1</summary>
+
+  did you search for Pods in specific namespaces, e.g. `kubectl get pod -n ape`?
+  </details>
+
+  <details>
+  <summary>hint 2</summary>
+
+  did you review the Pod error message under _STATUS_ column of `kubectl get po` command?
+  </details>
+
+  <details>
+  <summary>hint 3</summary>
+
+  did you review more details of the Pod, especially details under _Containers_ section of `kubectl describe po` command?
+  </details>
+
+  <details>
+  <summary>hint 4</summary>
+
+  is the `webserver` Pod up and running in the `cow` Namespace?
+  </details>
+
+  <details>
+  <summary>hint 5</summary>
+
+  did you delete the `webserver` Pod in wrong Namespace `fox`?
+  </details>
+
+  <details>
+  <summary>hint 6</summary>
+
+  You can use `kubectl cp --help` to copy files and directories to and from containers. See [_kubectl_ cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/#copy-files-and-directories-to-and-from-containers) for more details.
+  </details>
+</details>
+
+### Task 3 - Pods
+
+In the `rat` Namespace (create if required), create a Pod named `webapp` that runs `nginx:1.22-alpine` image and has env-var `NGINX_PORT=3005` which determines the port exposed by the container. The Pod container should be named `web` and should mount an `emptyDir` volume to `/etc/nginx/templates`. \
+The Pod should have an _Init Container_ named `web-init`, running `busybox:1.28` image, that creates a file in the same `emptyDir` volume, mounted to `/tempdir`, with below command:
+
+```sh
+echo "server {\n\tlisten\t${NGINX_PORT};\n\n\tlocation / {\n\t\troot\t/usr/share/nginx/html;\n\t}\n}" > /tempdir/default.conf.template
+```
+
+<details>
+  <summary>hints</summary>
+
+  <details>
+  <summary>hint 1</summary>
+
+  Did you create the Pod in Namespace `rat`?
+  </details>
+
+  <details>
+  <summary>hint 2</summary>
+
+  Did you set environment variable `NGINX_PORT=3005` in container `web`? See `kubectl run --help` for how to set an environment variable in a container. 
+  </details>
+
+  <details>
+  <summary>hint 3</summary>
+
+  Did you set Pod's `containerPort` parameter to be same value as env-var `NGINX_PORT`? See `kubectl run --help` for how to set port exposed by container.
+  </details>
+
+  <details>
+  <summary>hint 4</summary>
+
+  Did you specify an `emptyDir` volume and mounted it to `/etc/nginx/templates` in Pod container `web`? See [example pod manifest](#pod-manifest-file).
+  </details>
+
+  <details>
+  <summary>hint 5</summary>
+
+  Did you create `web-init` as an _Init Container_ under `pod.spec.initContainers`? See [_lab 5.3 - init containers_](#lab-53-init-containers).
+  </details>
+
+  <details>
+  <summary>hint 6</summary>
+
+  Did you run appropriate command in _Init Container_? You can use _list-form_, or _array-form_ with single quotes.
+  ```yaml
+  # list form
+  command:
+  - /bin/sh
+  - -c
+  - echo "..." > /temp...
+  # array form with single quotes
+  command: ["/bin/sh", "-c", "echo '...' > /temp..."]
+  ```
+  </details>
+
+  <details>
+  <summary>hint 7</summary>
+
+  Did you specify an `emptyDir` volume, mounted to `/tempdir` in _Init Container_ `web-init`? See [example pod manifest](#pod-manifest-file).
+  </details>
+
+  <details>
+  <summary>hint 8</summary>
+
+  Did you confirm that a webpage is being served by container `web` on specified port? Connect a shell to the container and run `curl localhost:3005`.
+  </details>
+</details>
+
+<div style="page-break-after: always;"></div>
+
 ## 6. Exploring Pods
 
 Whilst a Pod is running, the _kubelet_ is able to restart containers to handle some faults. Within a Pod, Kubernetes tracks different container states and determines what action to take to make the Pod healthy again.
@@ -1481,6 +1665,8 @@ When running commands locally in a Terminal, you can immediately see the output 
 
 ```sh
 kubectl logs $POD_NAME
+# to view only events
+kubectl get events --field-selector=involvedObject.name=$POD_NAME
 ```
 
 > A Pod `STATUS=CrashLoopBackOff` means the Pod is in a cool off period following container failure. The container will be restarted after cool off \
@@ -1504,8 +1690,7 @@ kubectl run mydb --image=mysql --dry-run=client -o yaml > lab6-1.yaml
 kubectl apply -f lab6-1.yaml
 kubectl get pods
 kubectl describe -f lab6-1.yaml | less
-# watch pods for changes
-kubectl get pods --watch
+kubectl get pods --watch # watch pods for changes
 ctrl+c
 kubectl delete -f lab6-1.yaml
 kubectl run mydb --image=mysql --env="MYSQL_ROOT_PASSWORD=secret" --dry-run=client -o yaml > lab6-1.yaml
@@ -1862,18 +2047,21 @@ _Request_ is the initial/minimum amount of a particular resource provided to a c
 - `spec.containers[].resources.requests.hugepages-<size>`
 
 ```sh
-# view the pod spec
-kubectl explain pod.spec
-# view the containers object within the pod spec
-kubectl explain pod.spec
 # view container resources object within the pod spec
 kubectl explain pod.spec.containers.resources
-# available limit types
+# pod resource update is forbidden, but you can generate YAML, see `kubectl set -h`
+kubectl set resources pod --help
+# generate YAML for pod `mypod` that requests 0.2 CPU and 128Mi memory
+kubectl set resources pod mypod --requests=cpu=200m,memory=128Mi --dry-run=client -oyaml|less
+# generate YAML for requests 0.2 CPU, 128Mi memory, and limits 0.5 CPU, 256Mi memory
+kubectl set resources pod mypod --requests=cpu=200m,memory=128Mi --limits=cpu=500m,memory=256Mi --dry-run=client -oyaml|less
 ```
 
 ### Lab 6.6. Resource limitation
 
-1. Using the [official container resource example manifest](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#example-1), Create a Pod with the following spec:
+You may use the [official container resource example manifest](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#example-1) or generate a manifest file with `kubectl set resources`.
+
+1. Create a Pod with the following spec:
    - runs in `dev` namespace
    - runs two containers, MongoDB database and webserver frontend
    - restart only on failure, see `pod.spec.restartPolicy`
@@ -1997,6 +2185,182 @@ kubectl explain pod.spec.containers.resources | less
 </details>
 
 > Remember a multi-container Pod is not recommended in live environments but only used here for learning purposes
+
+### Lab 6.7. Resource allocation and usage
+
+This lab requires a Metrics Server running in your cluster, please run `minikube addons enable metrics-server` to enable Metrics calculation.
+
+```sh
+# enable metrics-server on minikube
+minikube addons enable metrics-server
+# list available nodes
+kubectl get nodes
+# view allocated resources for node and % resource usage for running (non-terminated) pods
+kubectl describe node $NODE_NAME
+# view nodes resource usage
+kubectl top node
+# view pods resource uage
+kubectl top pod
+```
+
+<details>
+<summary>output from <code>kubectl describe node</code></summary>
+
+![image](https://user-images.githubusercontent.com/17856665/191446804-8bbf8678-70ef-4f1c-a88c-bcbe01f8b232.png)
+</details>
+
+1. Enable Metrics Server in your cluster
+2. What is the cluster Node's minimum required CPU and memory?
+3. Create a Pod as follows:
+   - image `nginx:alpine`
+   - does not restart, see `kubectl explain pod.spec`
+   - only pulls a new image if not present locally, see `kubectl explain pod.spec.containers`
+   - requires 0.2 CPU to start but does not exceed half of the cluster Node's CPU
+   - requires 64Mi memory to start but does not exceed half of the cluster Node's memory
+4. Review the running Pod and confirm resources configured as expected
+5. Delete created resources
+
+<details>
+<summary>lab 6.7 solution</code></summary>
+
+```sh
+minikube addons enable metrics-server
+kubectl get node # show node name
+kubectl describe node $NODE_NAME | grep -iA10 "allocated resources:" # cpu 0.95, memory 460Mi
+kubectl run mypod --image=nginx:alpine --restart=Never --image-pull-policy=IfNotPresent --dry-run=client -oyaml>lab6-7.yml
+kubectl apply -f lab6-7.yml # cannot use `kubectl set` if pod don't exist
+kubectl set resources pod mypod --requests=cpu=200m,memory=64Mi --limits=cpu=475m,memory=230Mi --dry-run=client -oyaml|less
+nano lab6-7.yml # copy resources section of above output to pod yaml
+```
+
+```yaml
+kind: Pod
+spec:
+  containers:
+  - name: mypod
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 475m
+        memory: 230Mi
+      requests:
+        cpu: 200m
+        memory: 64Mi
+```
+
+```sh
+kubectl delete -f lab6-7.yml
+kubectl apply -f lab6-7.yml
+kubectl describe -f lab6-7.yml | grep -iA6 limits:
+kubectl delete -f lab6-7.yml
+```
+</details>
+
+<div style="page-break-after: always;"></div>
+
+### Task 4 - CronJobs
+
+In the `boa` Namespace, create a Pod that runs the shell command `date`, in a busybox container, once every hour, regardless success or failure. Job should terminate after 20s even if command still running. Jobs should be automatically deleted after 12 hours. A record of 5 successful Jobs and 5 failed Jobs should be kept. All resources should be named `bootcamp`, including the container. You may create a new Namespace if required.
+
+At the end of your task, to avoid waiting an hour to confirm all works, manually run the Job from the Cronjob and verify expected outcome.
+
+<details>
+  <summary>hints</summary>
+
+  <details>
+  <summary>hint 1</summary>
+
+  Did you create the Cronjob in the `boa` Namespace? You can generate YAML with Namespace specified, see [lab 5.6](#lab-56-namespaces)
+  </details>
+
+  <details>
+  <summary>hint 2</summary>
+
+  You can generate YAML for Cronjob schedule and command, see [_lab 6.5 - working with cronjobs_](#lab-65-working-with-cronjobs)
+  </details>
+
+  <details>
+  <summary>hint 3</summary>
+
+  See `kubectl explain job.spec` for terminating and auto-deleting Jobs after specified time.
+  </details>
+
+  <details>
+  <summary>hint 4</summary>
+
+  See `kubectl explain cronjob.spec` for keeping successful/failed Jobs.
+  </details>
+
+  <details>
+  <summary>hint 5</summary>
+
+  You can create a Job to manually run a Cronjob, see `kubectl create job --help`
+  </details>
+
+  <details>
+  <summary>hint 6</summary>
+
+  Did you create the Job in the `boa` Namespace?
+  </details>
+
+  <details>
+  <summary>hint 7</summary>
+
+  Did you specify `cronjob.spec.jobTemplate.spec.activeDeadlineSeconds` and `cronjob.spec.jobTemplate.spec.ttlSecondsAfterFinished`?
+  </details>
+
+  <details>
+  <summary>hint 8</summary>
+
+  Did you specify `cronjob.spec.failedJobsHistoryLimit` and `cronjob.spec.successfulJobsHistoryLimit`?
+  </details>
+
+  <details>
+  <summary>hint 9/summary>
+
+  After Cronjob creation, did you verify configured parameters in `kubectl describe`?
+  </details>
+
+  <details>
+  <summary>hint 10</summary>
+
+  After manual Job creation, did you verify Job successfully triggered?
+  </details>
+</details>
+
+### Task 5 - Resources and Security Context
+
+A client requires a Pod running the `nginx:1.21-alpine` image with name `webapp` in the `dog` Namespace. The Pod should start with 0.25 CPU and 128Mi memory, but shouldn't exceed 0.5 CPU and half of the Node's memory. All processes in Pod containers should run with user ID 1002 and group ID 1003. Containers mustn't run in `privileged` mode and privilege escalation should be disabled. You may create a new Namespace if required.
+
+When you are finished with the task, the client would also like to know the Pod with the highest memory consumption in the `default` Namespace. Save the name the Pod in the format `<namespace>/<pod-name>` to a file `/home/$USER/ckad-tasks/resources/pod-with-highest-memory`
+
+<details>
+  <summary>hints</summary>
+
+  <details>
+  <summary>hint 1</summary>
+
+  Did you create the resource in the `dog` Namespace? You can generate YAML with Namespace specified, see [lab 5.6](#lab-56-namespaces)
+  </details>
+
+  <details>
+  <summary>hint 2</summary>
+
+  You can separately generate YAML for the `pod.spec.containers.resources` section, see [_lab 6.7 - resource allocation and usage_](#lab-67-resource-allocation-and-usage)
+  </details>
+
+  <details>
+  <summary>hint 3</summary>
+
+  See [lab 6.3](#lab-63-set-pod-security-context) for security context. You will need to add four separate rules for user ID, group ID, privileged and privilege escalation.
+  </details>
+
+  <details>
+  <summary>hint 4</summary>
+
+  You can use a combination of the output-name and sorting format `kubectl -oname --sort-by=json-path-to-field`. The JSON path can be derived from viewing the resource with output-json `-ojson`. See [_kubectl_ cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/#viewing-finding-resources) for more details
+  </details>
+</details>
 
 <div style="page-break-after: always;"></div>
 
@@ -2376,7 +2740,7 @@ kubectl explain daemonset.spec --recursive | less
 ```
 </details>
 
-### Lab 7.6. Autoscaling
+### Lab 7.6. Resource usage and Autoscaling
 
 Autoscaling is very important in live environments but not covered in [CKAD](https://www.cncf.io/certification/ckad/). Visit [HorizontalPodAutoscaler Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#run-and-expose-php-apache-server) for a complete lab on autoscaling.
 
@@ -3307,7 +3671,7 @@ For further learning, see [mounting the same persistentVolume in two places](htt
 
 <div style="page-break-after: always;"></div>
 
-## 11. Varibales, ConfigMaps and Secrets
+## 11. Variables, ConfigMaps and Secrets
 
 ### Variables
 
