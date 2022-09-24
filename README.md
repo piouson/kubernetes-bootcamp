@@ -1,4 +1,4 @@
-# CKAD Bootcamp
+# Kubernetes Bootcamp (CKAD)
 
 This course is a part of my cloud-native application developer bootcamp series. Star this repo to say thank you!
 
