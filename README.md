@@ -824,7 +824,7 @@ docker image rm test-image
 
 <div style="page-break-after: always;"></div>
 
-### Task 1 - Docker image
+### Task - Docker image
 
 ```Dockerfile
 FROM nginx:1.22-alpine
@@ -1511,16 +1511,16 @@ kubectl explain namespace.spec | less
 
 <div style="page-break-after: always;"></div>
 
-### Task 2 - Pods
+### Task - Pods
 
-Imagine a student in the CKAD Bootcamp training reached out to you for assistance to finish their homework. Their task was to create a `webserver` with a sidecar container for logging in the `cow` namespace. Find this Pod, which could be located in of the Namespaces `ape | cow | fox`, and ensure it is configured as required.
+Imagine a student in the CKAD Bootcamp training reached out to you for assistance to finish their homework. Their task was to create a `webserver` with a sidecar container for logging in the `cow` namespace. Find this Pod, which could be located in one of the Namespaces `ape`, `cow` or `fox`, and ensure it is configured as required.
 
 At the end of your task, copy the log file used by the logging container to directory `/home/$USER/ckad-tasks/pods/`
 
 - Command to setup environment:
-```sh
-echo '{"apiVersion":"v1","items":[{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"fox"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"ape"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"cow"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"box"},"name":"box","namespace":"ape"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"box"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"for-testing"},"name":"for-testing","namespace":"fox"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"for-testing"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"webserver"},"name":"webserver","namespace":"fox"},"spec":{"containers":[{"name":"server","image":"ngnx:1.20-alpine","volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]},{"name":"logger","image":"busybox:1.28","args":["/bin/sh","-c","while true; do  echo $(date) >> /usr/share/nginx/html/1.log;\n  sleep 30;\ndone\n"],"volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]}],"volumes":[{"name":"serverlog","emptyDir":{}}]}}],"metadata":{"resourceVersion":""},"kind":"List"}' | kubectl apply -f - >/dev/null
-```
+  ```sh
+  echo '{"apiVersion":"v1","items":[{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"fox"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"ape"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"cow"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"box"},"name":"box","namespace":"ape"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"box"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"for-testing"},"name":"for-testing","namespace":"fox"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"for-testing"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"webserver"},"name":"webserver","namespace":"fox"},"spec":{"containers":[{"name":"server","image":"ngnx:1.20-alpine","volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]},{"name":"logger","image":"busybox:1.28","args":["/bin/sh","-c","while true; do  echo $(date) >> /usr/share/nginx/html/1.log;\n  sleep 30;\ndone\n"],"volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]}],"volumes":[{"name":"serverlog","emptyDir":{}}]}}],"metadata":{"resourceVersion":""},"kind":"List"}' | kubectl apply -f - >/dev/null
+  ```
 - Command to destroy environment: `kubectl delete ns ape cow fox`
 
 <details>
@@ -1529,31 +1529,31 @@ echo '{"apiVersion":"v1","items":[{"kind":"Namespace","apiVersion":"v1","metadat
   <details>
   <summary>hint 1</summary>
 
-  did you search for Pods in specific namespaces, e.g. `kubectl get pod -n ape`?
+  Did you search for Pods in specific namespaces, e.g. `kubectl get pod -n ape`?
   </details>
 
   <details>
   <summary>hint 2</summary>
 
-  did you review the Pod error message under _STATUS_ column of `kubectl get po` command?
+  Did you review the Pod error message under _STATUS_ column of `kubectl get po` command? You can reveal more information with `kubectl get -owide`.
   </details>
 
   <details>
   <summary>hint 3</summary>
 
-  did you review more details of the Pod, especially details under _Containers_ section of `kubectl describe po` command?
+  Did you review more details of the Pod, especially details under _Containers_ section of `kubectl describe po` command?
   </details>
 
   <details>
   <summary>hint 4</summary>
 
-  is the `webserver` Pod up and running in the `cow` Namespace?
+  Is the `webserver` Pod up and running in the `cow` Namespace?
   </details>
 
   <details>
   <summary>hint 5</summary>
 
-  did you delete the `webserver` Pod in wrong Namespace `fox`?
+  Did you delete the `webserver` Pod in wrong Namespace `fox`?
   </details>
 
   <details>
@@ -1563,7 +1563,7 @@ echo '{"apiVersion":"v1","items":[{"kind":"Namespace","apiVersion":"v1","metadat
   </details>
 </details>
 
-### Task 3 - Pods
+### Task - Pods II
 
 In the `rat` Namespace (create if required), create a Pod named `webapp` that runs `nginx:1.22-alpine` image and has env-var `NGINX_PORT=3005` which determines the port exposed by the container. The Pod container should be named `web` and should mount an `emptyDir` volume to `/etc/nginx/templates`. \
 The Pod should have an _Init Container_ named `web-init`, running `busybox:1.28` image, that creates a file in the same `emptyDir` volume, mounted to `/tempdir`, with below command:
@@ -1590,7 +1590,7 @@ echo "server {\n\tlisten\t${NGINX_PORT};\n\n\tlocation / {\n\t\troot\t/usr/share
   <details>
   <summary>hint 3</summary>
 
-  Did you set Pod's `containerPort` parameter to be same value as env-var `NGINX_PORT`? See `kubectl run --help` for how to set port exposed by container.
+  Did you set Pod's `containerPort` parameter to be same value as env-var `NGINX_PORT`? Since the env-var `NGINX_PORT` determines the container port, you must change set the `containerPort` parameter to this value. See `kubectl run --help` for how to set port exposed by container.
   </details>
 
   <details>
@@ -1609,6 +1609,7 @@ echo "server {\n\tlisten\t${NGINX_PORT};\n\n\tlocation / {\n\t\troot\t/usr/share
   <summary>hint 6</summary>
 
   Did you run appropriate command in _Init Container_? You can use _list-form_, or _array-form_ with single quotes.
+
   ```yaml
   # list form
   command:
@@ -1723,8 +1724,10 @@ Port forwarding in Kubernetes should only be used for testing purposes.
 ```sh
 # get a list of pods with extra information, including IP Address
 kubectl get pods -o wide
-# forward host computer's port 8080 to container `mypod` port 80, requires `ctrl+c` to terminate
-kubectl port-forwarding mypod 8080:80
+# view port forwarding help
+kubectl port-forward --help
+# forward host port 8080 to container `mypod` port 80, requires `ctrl+c` to terminate
+kubectl port-forward mypod 8080:80
 ```
 
 > When a program runs in a unix-based environment, it starts a process. A _foreground process_ prevents further execution of commands, e.g. `sleep`
@@ -1736,8 +1739,8 @@ sleep 60 &
 jobs
 # bring a background process to the foreground
 fg $ID
-# run the `kubectl port-forwarding` command in the background
-kubectl port-forwarding mypod 8080:80 &
+# run the `kubectl port-forward` command in the background
+kubectl port-forward mypod 8080:80 &
 ```
 
 ### Lab 6.2. Use port forwarding to access applications
@@ -2258,7 +2261,7 @@ kubectl delete -f lab6-7.yml
 
 <div style="page-break-after: always;"></div>
 
-### Task 4 - CronJobs
+### Task - CronJobs
 
 In the `boa` Namespace, create a Pod that runs the shell command `date`, in a busybox container, once every hour, regardless success or failure. Job should terminate after 20s even if command still running. Jobs should be automatically deleted after 12 hours. A record of 5 successful Jobs and 5 failed Jobs should be kept. All resources should be named `bootcamp`, including the container. You may create a new Namespace if required.
 
@@ -2316,7 +2319,7 @@ At the end of your task, to avoid waiting an hour to confirm all works, manually
   </details>
 
   <details>
-  <summary>hint 9/summary>
+  <summary>hint 9</summary>
 
   After Cronjob creation, did you verify configured parameters in `kubectl describe`?
   </details>
@@ -2328,7 +2331,7 @@ At the end of your task, to avoid waiting an hour to confirm all works, manually
   </details>
 </details>
 
-### Task 5 - Resources and Security Context
+### Task - Resources and Security Context
 
 A client requires a Pod running the `nginx:1.21-alpine` image with name `webapp` in the `dog` Namespace. The Pod should start with 0.25 CPU and 128Mi memory, but shouldn't exceed 0.5 CPU and half of the Node's memory. All processes in Pod containers should run with user ID 1002 and group ID 1003. Containers mustn't run in `privileged` mode and privilege escalation should be disabled. You may create a new Namespace if required.
 
@@ -2757,6 +2760,95 @@ minikube addons disable metrics-server
 
 <div style="page-break-after: always;"></div>
 
+### Task - Deployment
+
+Some bootcamp students have been messing with the `webapp` Deployment for the test environment's webpage in the `default` Namespace, leaving it broken. Please rollback the Deployment to the last fully functional version.
+
+Once on the fully functional version, update the Deployment to have a total of 10 Pods, and ensure that the total number of old and new Pods, during a rolling update, do not exceed 13 or go below 7.
+
+Update the Deployment to `nginx:1.22-alpine` to confirm the Pod count stays within these thresholds. Then rollback the Deployment to the fully functional version.
+
+Before you leave, set the Replicas to 4, and just to be safe, Annotate all the Pods with `description="Bootcamp Test Env - Please Do Not Change Image!"`.
+
+- Command to setup environment:
+  ```sh
+  echo '\nlab: environment setup in progress...'; echo '{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp"},"spec":{"replicas":2,"revisionHistoryLimit":15,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"volumes":[{"name":"varlog","emptyDir":{}}],"containers":[{"image":"nginx:1.12-alpine","name":"nginx","volumeMounts":[{"name":"varlog","mountPath":"/var/logs"}]}]}}}}' > k8s-task-6.yml; kubectl apply -f k8s-task-6.yml >/dev/null; cp k8s-task-6.yml k8s-task-6-bak.yml; sed -i -e 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 1; sed -i -e 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; sed -i -e 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 2; sed -i -e 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; kubectl apply -f k8s-task-6-bak.yml >/dev/null; sleep 4; kubectl rollout undo deploy webapp --to-revision=5 >/dev/null; kubectl delete $(kubectl get rs --sort-by=".spec.replicas" -oname | tail -n1) >/dev/null; rm k8s-task-6.yml k8s-task-6-bak.yml; echo 'lab: environment setup complete!'
+  ```
+- Command to destroy environment: `kubectl delete deploy webapp`
+
+<details>
+  <summary>hints</summary>
+
+  <details>
+  <summary>hint 1</summary>
+
+  ReplicaSets store the Pod configuration used by a Deployment.
+  </details>
+
+  <details>
+  <summary>hint 2</summary>
+
+  You can reveal more resource details with `kubectl get -owide`. You might be able to find defective Pods/ReplicaSets quicker this way. 
+  </details>
+
+  <details>
+  <summary>hint 3</summary>
+
+  You will need to review the Deployment's rollout history, see [lab 7.4 - rolling updates](https://github.com/piouson/ckad-bootcamp#lab-74-rolling-updates)
+  </details>
+
+  <details>
+  <summary>hint 4</summary>
+
+  You can view more details of a rollout revision with `kubectl rollout history --revision=$REVISION_NUMBER`
+  </details>
+
+  <details>
+  <summary>hint 5</summary>
+
+  Did you test that the Pods are serving an actual webpage? This task isn't complete without testing the webpage - Pods in _Running_ state doesn't mean _fully functional_ version.
+  </details>
+
+  <details>
+  <summary>hint 6</summary>
+
+  You can test a Pod with `kubectl port-forward`, by creating a temporary Pod `kubectl run --rm -it --image=nginx:alpine -- sh` and running `curl $POD_IP`, etc.
+  </details>
+
+  <details>
+  <summary>hint 7</summary>
+
+  Always remember `kubectl explain` when you encounter new requirements. Use this to figure out what rolling update parameters are required.  
+  </details>
+
+  <details>
+  <summary>hint 8</summary>
+
+  You can update a Deployment's image quickly with `kubectl set image --help`. You're not required to count Pods during rolling update, all should be fine long as you have `maxSurge` and `maxUnavailable` set correctly. 
+  </details>
+
+  <details>
+  <summary>hint 9</summary>
+
+  Any change that triggers a rollout (changing anything under `deploy.spec.template`) will create a new ReplicaSet which becomes visible with `kubectl rollout history`. \
+  Be sure to perform updates one after the other, without batching, as an exam question dictates, especially if the changes trigger a rollout. For example, apply replicas and update strategy changes before applying image changes.
+  </details>
+
+  <details>
+  <summary>hint 10</summary>
+
+  You can set replicas quickly with `kubectl scale --help`.  
+  </details>
+
+  <details>
+  <summary>hint 11</summary>
+
+  You can Annotate all 4 Pods in a single command, see `kubectl annotate --help`.
+  </details>
+</details>
+
+<div style="page-break-after: always;"></div>
+
 ## 8. Networking
 
 ### Service
@@ -3030,6 +3122,165 @@ curl $(minikube ip):$NODE_PORT # shows backend httpd page
 kubectl delete -f lab8-2.yaml
 ```
 
+</details>
+
+<div style="page-break-after: always;"></div>
+
+### Task - Service
+
+Create a Pod named `webapp` in the `pig` Namespace (create new if required), running `nginx:1.20-alpine` image. The Pod should have a Annotation `motd="Welcome to Piouson's CKAD Bootcamp"`. Expose the Pod on port 8080.
+
+<details>
+  <summary>hints</summary>
+
+  <details>
+  <summary>hint 1</summary>
+
+  Did you create the Pod in the `pig` Namespace? You should create the Namespace if it doesn't exist.
+  </details>
+
+  <details>
+  <summary>hint 2</summary>
+
+  You can set Annotation when creating a Pod, see `kubectl run --help`
+  </details>
+
+  <details>
+  <summary>hint 3</summary>
+
+  Actually, besides creating the Namespace, you can complete the rest of the task in a single command. Completing this task any other way is not but time wasting. Have a deeper look at `kubectl run --help`.
+  </details>
+
+  <details>
+  <summary>hint 4</summary>
+
+  Did you test you are able to access the app via the Service? This task is not complete until you confirm the application is accessible via the Service.
+  </details>
+
+  <details>
+  <summary>hint 5</summary>
+
+  You can test the Service by connecting a shell to a temporary Pod `kubectl run -it --rm --image=nginx:alpine -n $NAMESPACE -- sh` and run `curl $SERVICE_NAME:$PORT`. If you did not create the temporary Pod in the same Namespace, you will need to add the Namespace to the hostname `curl $SERVICE_NAME.$NAMESPACE:$PORT`. \
+  Testing this way, with Service hostname, is also a way to confirm DNS is working in the cluster.
+  </details>
+</details>
+
+### Task - Service II
+
+A bootcamp student is stuck on a _simple task_ and would appreciate your expertise. Their goal is to create a `webapp` Deployment running `gcr.io/google-samples/node-hello:1.0` image in the `bat` Namespace, exposed on port 80 and _NodePort_ 32500. The student claims _everything_ was setup as explained in class but still unable to access the application via the Service. Swoop down like a superhero and save the day by picking up where the student left off.
+
+- Command to setup environment:
+  ```sh
+  echo '\nlab: environment setup in progress...'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"bat"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"replicas":2,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"containers":[{"image":"gcr.io/google-samples/node-hello:1.0","name":"nginx"}]}}}},{"apiVersion":"v1","kind":"Service","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"webapp"}}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
+  ```
+- Command to destroy environment: `kubectl delete ns bat`
+
+<details>
+  <summary>hints</summary>
+
+  <details>
+  <summary>hint 1</summary>
+
+  Did you check the Service Endpoint? \
+  When a Service with a _Selector_ is created, an Endpoint with the same name is automatically created. It might be a good idea to check if this is a Service with a selector and if any Endpoints were created.
+  </details>
+
+  <details>
+  <summary>hint 2</summary>
+
+  You can perform the checks mentioned in _hint 1_ with a single command `kubectl get all,ep -owide`
+  </details>
+
+  <details>
+  <summary>hint 3</summary>
+
+  Did you compare the Endpoint's IP addresses with the targeted Pods'? \
+  A working Endpoint should have the IP addresses of the Pods targeted by the Service. Again, the command from _hint 2_ should reveal this.
+  </details>
+
+  <details>
+  <summary>hint 4</summary>
+
+  Did you review the Service configuration with `kubectl describe`?
+  A Service Endpoint with incorrect/missing IP addresses indicates a poorly configured Service. Now might be a good time to pull out `kubectl describe svc` and figure out what the _nine heavens_ the student cooked up in that Service.
+  </details>
+
+  <details>
+  <summary>hint 5</summary>
+
+  Did you confirm that the Service configuration matches the requirements? If the Service config matches, then you should test that you're able to access the application via the Service as expected.
+  </details>
+
+  <details>
+  <summary>hint 6</summary>
+
+  You can test the Service by connecting a shell to a temporary Pod `kubectl run -it --rm --image=nginx:alpine -n $NAMESPACE -- sh` and run `curl $SERVICE_NAME:$PORT`. If you did not create the temporary Pod in the same Namespace, you can add the Namespace to the hostname `curl $SERVICE_NAME.$NAMESPACE:$PORT`.
+  </details>
+
+  <details>
+  <summary>hint 7</summary>
+
+  Did you check that the Service correctly targets the Pods? The Selector of a Service must match the Label of a Pod to correctly target that Pod.
+  </details>
+
+  <details>
+  <summary>hint 8</summary>
+
+  If you're still unable to access the app and believe no issue with the Service, for example, Endpoints have correct IP addresses, you might want to check if there is any application to begin with. For the record, an application exists and is exposed by the container.
+  </details>
+
+  <details>
+  <summary>hint 9</summary>
+
+  You can use the method from _hint 6_ to test the Pod's IP address and port.
+  </details>
+
+  <details>
+  <summary>hint 10</summary>
+
+  Did you determine the port exposed by the Pod's containers? It might not be port 80.
+  </details>
+
+  <details>
+  <summary>hint 11</summary>
+
+  There is no Kubernetes way to check opened ports in a container. Usually, in the CKAD exam, the container port will be provided. However, when not provided, you can try to use common network tools like `lsof`, `netstat` or `ss`. \
+  Run these command without parameters, one after the other, to check if installed and determine which to use: `lsof -i | netstat -tulpn | ss -tulpn`. \
+  Once you find the port, repeat _hint 6_ with `curl $POD_IP:$CONTAINER_PORT` to confirm application exposed.
+  </details>
+
+  <details>
+  <summary>hint 12</summary>
+
+  Now you have the container port? Is the Service configured to use this container port? Is the Pod configured to use this container port? 💡
+  </details>
+
+  <details>
+  <summary>hint 13</summary>
+
+  You can tell what container port the Service is configured with by reviewing the IP addresses of the Service Endpoint, they should be of the form `$POD_IP:CONTAINER_PORT`. \
+  Once resolved, you should be able to access the application via the Service as described in _hint 6_.
+  </details>
+
+  <details>
+  <summary>hint 14</summary>
+
+  Remember a Service can specify three types of ports: `port | targetPort | nodePort`. The container port is the `targetPort`.
+  </details>
+
+  <details>
+  <summary>hint 15</summary>
+
+  For a Service, you can quickly verify the configured container port by reviewing the IP addresses of the Service Endpoint, they should be of the form `$POD_IP:CONTAINER_PORT` \
+  Once resolved, you should be able to access the application via the Service as described in _hint 6_.
+  </details>
+
+  <details>
+  <summary>hint 16</summary>
+
+  For a Pod, you can quickly verify the configured container port by reviewing the ReplicaSet config with `kubectl describe rs`. \
+  Once resolved, you should be able to access the application via the Service as described in _hint 6_.
+  </details>
 </details>
 
 <div style="page-break-after: always;"></div>
@@ -3526,6 +3777,16 @@ minikube start --kubernetes-version=1.23.9 --driver=docker
 
 <div style="page-break-after: always;"></div>
 
+### Task - Ingress
+
+Same as _Task - Service II_ with ingress added. Coming soon.
+
+### Task - Network policy
+
+Coming soon.
+
+<div style="page-break-after: always;"></div>
+
 ## 10. Storage
 
 [PersistentVolume (PV)](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#introduction) is a piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using Storage Classes, with a lifecycle independent of any individual Pod that uses the PV.
@@ -3605,11 +3866,13 @@ nano pv-claim.yaml
 # pv-volume.yaml
 kind: PersistentVolume
 spec:
+  storageClassName: manual
   capacity:
     storage: 3Gi
 # pv-claim.yaml
 kind: PersistentVolumeClaim
 spec:
+  storageClassName: manual
   resources:
     requests:
       storage: 1Gi
@@ -3631,7 +3894,7 @@ You can follow the [official _configure a Pod to use a PersistentVolume for stor
 1. Create a `/mnt/data/index.html` file on cluster host `minikube ssh` with some message, e.g. "Hello, World!"
 2. Create a PV with the following parameters, see `https://k8s.io/examples/pods/storage/pv-volume.yaml`
    - uses `hostPath` storage
-   - allows multiple pods access the storage
+   - allows multiple pods in the Node access the storage
 3. Create a Pod running a webserver to consume the storage, see `https://k8s.io/examples/pods/storage/pv-pod.yaml`
    - uses PVC, see `https://k8s.io/examples/pods/storage/pv-claim.yaml`
    - image is `httpd` and default documentroot is `/usr/local/apache2/htdocs` or `/var/www/html`
@@ -3668,6 +3931,12 @@ kubectl delete -f lab10-2.yaml
 </details>
 
 For further learning, see [mounting the same persistentVolume in two places](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/#mounting-the-same-persistentvolume-in-two-places) and [access control](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/#access-control)
+
+<div style="page-break-after: always;"></div>
+
+### Task - Persistent volumes
+
+Same as _Lab 10.2 - Configuring Pods storage with PVs and PVCs_ without stepwise guide. Coming soon.
 
 <div style="page-break-after: always;"></div>
 
@@ -4010,6 +4279,16 @@ Repeat [lab 11.3](#lab113-mounting-configmaps) with secrets.
 
 <div style="page-break-after: always;"></div>
 
+### Task - ConfigMap
+
+Coming soon.
+
+### Task - Secret
+
+Coming soon.
+
+<div style="page-break-after: always;"></div>
+
 ## 12. Pod Lifecycle and Update Strategies
 
 ### Pod states
@@ -4114,7 +4393,11 @@ Probes have a number of fields that you can use to more precisely control the be
 
 ### Lab 12.2. Readiness probe
 
+Coming soon.
+
 ### Lab 12.3. Protect slow starting containers with startup probe
+
+Coming soon.
 
 ### Lab 12.4. Blue/Green deployments
 
@@ -4170,6 +4453,16 @@ Canary deployment is an update strategy where updates are deployed to a subset o
 8. Scale down the old webserver to zero and confirm no Pods running
 
 > Scaling down to zero instead of deleting provides an easy option to revert changes when there are issues
+
+<div style="page-break-after: always;"></div>
+
+### Task - Probes
+
+Coming soon.
+
+### Task - Canary deployment
+
+Coming soon.
 
 <div style="page-break-after: always;"></div>
 
@@ -4457,6 +4750,12 @@ kubectl delete -f lab13-4.yaml
 ```
 
 </details>
+
+<div style="page-break-after: always;"></div>
+
+### Task - Service account
+
+Coming soon.
 
 <div style="page-break-after: always;"></div>
 
@@ -4796,14 +5095,16 @@ See the [example manifest](https://kubernetes.io/docs/concepts/workloads/control
 
 <div style="page-break-after: always;"></div>
 
-## 15. Debugging
+### Task - Helm
 
-### Troubleshooting failing applications
-
-
+Coming soon.
 
 <div style="page-break-after: always;"></div>
 
 ## 16. Exam
+
+Final exam tips coming soon, mostly about text editor and aliases.
+
+You can simulate an exam by completing all the Tasks in 2hours.
 
 [kubectl cheat sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
