@@ -187,8 +187,9 @@ docker run busybox date
 docker exec -it $CONTAINER_NAME_OR_ID sh
 # get a "bash" shell to a running container
 docker exec -it $CONTAINER_NAME_OR_ID bash
-# view open ports, see `netstat --help` - t tcp, u udp, p program-names, l listening, n port-numbers-only
-netstat -tupln
+# view open ports, the commands below only work if installed in the container
+netstat -tupln # see `netstat --help` - t tcp, u udp, p program-names, l listening, n port-numbers-only
+ss -tulpn # see `ss --help`, alternative to netstat
 ```
 
 1. Run a `nginx` container
@@ -232,6 +233,7 @@ docker ps
 docker exec -it webserver3 bash
 # container terminal
 netstat -tupln
+ss -tulpn
 exit
 # host terminal
 docker ps
@@ -1148,6 +1150,10 @@ kubectl run mypod --image=nginx -- <arg1> <arg2> ... <argN>
 kubectl run mypod --image=nginx --command -- <command>
 # run a busybox pod interactively and delete after task completion
 kubectl run -it mypod --image=busybox --rm --restart=Never -- date
+# to specify the port exposed by the image is 8080
+kubectl run mypod --port=8080 --image=image-that-uses-port-8080
+# connect a shell to a running pod `mypod`
+kubectl exec mypod -it -- sh
 # list pods, see `kubectl get --help`
 kubectl get pods # using `pod` or `pods` will work
 # only show resource names when listing pods
@@ -1166,22 +1172,35 @@ kubectl explain pod.spec | less
 
 ### Lab 5.1. Creating Pods
 
-1. Create an nginx Pod and confirm creation
+1. Create a Pod with `nginx:alpine` image and confirm creation
 2. Review full details of the Pod in YAML form
 3. Display details of the Pod in readable form and review the Node, IP, container start date/time and Events
 4. List pods but only show resource names
+5. Connect a shell to the Pod and confirm an application is exposed
+   - By default, Nginx exposes applications on port 80
+   - confirm exposed ports
 5. Delete the Pod
 6. Review the Pod spec
 7. Have a look at the Kubernetes API to determine when pods were introduced
+
+> Not all images expose their applications on port 80. Kubernetes doesn't have a native way to check ports exposed on running container, however, you can connect a shell to a Pod with `kubectl exec` and try one of `netstat -tulpn` or `ss -tulpn` in the container, if installed, to show open ports.
 
 <details>
 <summary>lab5.1 solution</summary>
 
 ```sh
-kubectl run mypod --image=nginx
+# host terminal
+kubectl run mypod --image=nginx:alpine
 kubectl get pods
 kubectl describe pods mypod | less
 kubectl get pods -o name
+kubectl exec -it mypod -- sh
+# container terminal
+curl localhost # or curl localhost:80, can omit since 80 is the default
+netstat -tulpn
+ss -tulpn
+exit
+# host terminal
 kubectl delete pods mypod
 kubectl explain pod.spec
 kubectl api-resources # pods were introduced in v1 - the first version of kubernetes
@@ -1286,6 +1305,7 @@ kubectl logs mypod -c mypod-container-1
 ```
 
 1. Create a Pod that logs `App is running!` to STDOUT
+   - use `busybox:1.28` image
    - the application should `Never` restart
    - the application should use a _Init Container_ to wait for 60secs before starting
    - the _Init Container_ should log `App is initialising...` to STDOUT
@@ -1302,7 +1322,7 @@ kubectl logs mypod -c mypod-container-1
 
 ```sh
 # partially generate pod manifest
-kubectl run myapp --image=busybox --restart=Never --dry-run=client -o yaml --command -- sh -c "echo App is running!" > lab5-3.yaml
+kubectl run myapp --image=busybox:1.28 --restart=Never --dry-run=client -o yaml --command -- sh -c "echo App is running!" > lab5-3.yaml
 ```
 
 ```yaml
@@ -1479,6 +1499,8 @@ kubectl explain namespace --recursive | less
 
 You can also follow the [admin guide doc for namespaces](https://kubernetes.io/docs/tasks/administer-cluster/namespaces/)
 
+> Remember you can connect a shell to a Pod with `kubectl exec` and try one of `netstat -tulpn` or `ss -tulpn` in the container, if installed, to show open ports.
+
 1. Create a Namespace `myns`
 2. Create a webserver Pod in the `myns` Namespace
 3. Review created resources and confirm `myns` Namespace is assigned to the Pod
@@ -1492,7 +1514,7 @@ You can also follow the [admin guide doc for namespaces](https://kubernetes.io/d
 ```sh
 kubectl create ns myns --dry-run=client -o yaml > lab5-6.yaml
 echo --- >> lab5-6.yaml
-kubectl run mypod --image=httpd -n myns --dry-run=client -o yaml >> lab5-6.yaml
+kubectl run mypod --image=httpd:alpine -n myns --dry-run=client -o yaml >> lab5-6.yaml
 kubectl apply -f lab5-6.yaml
 kubectl get pods
 kubectl describe -f lab5-6.yaml | less
@@ -1705,7 +1727,7 @@ kubectl delete -f lab6-1.yaml
 
 ### Ephemeral containers
 
-[Ephemeral containers](https://kubernetes.io/docs/concepts/workloads/pods/ephemeral-containers/) are useful for interactive troubleshooting when kubectl exec is insufficient because a container has crashed or a container image doesn't include debugging utilities, such as with [distroless images](https://github.com/GoogleContainerTools/distroless).
+[Ephemeral containers](https://kubernetes.io/docs/concepts/workloads/pods/ephemeral-containers/) are useful for interactive troubleshooting when `kubectl exec` is insufficient because a container has crashed or a container image doesn't include debugging utilities, such as with [distroless images](https://github.com/GoogleContainerTools/distroless).
 
 ```sh
 # create a `mysql` Pod called `mypod` (assume the pod fails to start)
@@ -2879,6 +2901,37 @@ In the env-vars mode, the [_kubelet_](https://kubernetes.io/docs/reference/comma
 
 The DNS mode is the recommended discovery method. A cluster-aware DNS server, such as [_CoreDNS_](https://kubernetes.io/docs/tasks/administer-cluster/coredns/#about-coredns), watches the Kubernetes API for new Services and creates a set of DNS records for each one. If DNS has been enabled throughout your cluster, then for a Service called `my-service` in a Kubernetes namespace `my-ns`, Pods in the `my-ns` namespace can find the service by a name lookup for `my-service`, while Pods in other namespaces must qualify the name `my-service.my-ns`.
 
+> Always remember that a Service will only target Pods that have Labels matching the Service's Label Selector \
+> Not all images expose their applications on port 80. When unsure, try one of `netstat -tulpn` or `ss -tulpn` in the container.
+
+```yaml
+# service
+kind: Service
+metadata:
+  name: webapp
+spec:
+  selector:
+    appid: webapp # this must match the label of a pod to be targeted by a Service
+  ports:
+  - nodePort: 32500 # node port
+    port: 80 # service port
+    targetPort: 8080 # container port - do not assume port 80, always check container
+---
+# pod targeted
+kind: Pod
+metadata:
+  labels:
+    appid: webapp # matches label selector of service
+  name: mypod
+---
+# pod not targeted
+kind: Pod
+metadata:
+  labels:
+    app: webapp # does not match label selector of service
+  name: mypod
+```
+
 ```sh
 # view the service spec
 kubectl explain svc.spec | less
@@ -2909,6 +2962,7 @@ kubectl get pods -o wide
 1. Create a simple deployment with name `webserver`
 2. List created resources
 3. List endpoints, and pods with their IPs
+   - Can you spot the relationship between the Service, Endpoints and Pods?
 4. Create a Service for the deployment, exposed on port 80
 5. List created resources and note services fields `TYPE`, `CLUSTER-IP`, `EXTERNAL-IP` and `PORT(S)`
 6. View more details of the Service and note fields `IPs`, `Port`, `TargetPort` and `Endpoints`
@@ -2918,14 +2972,18 @@ kubectl get pods -o wide
 10. List all pods and their IPs
 11. Print the Service env-vars from one of the pods and compare to results in [3]
 12. List endpoints, and pods with their IPs
-13. Access the app by the Service `$ClusterIP:$Port` using `curl`
-14. Access the app by the Service `$ClusterIP:$Port` from the container host `minikube ssh`
+13. Access the app by the Service: `curl $ClusterIP:$Port`
+14. Access the app by the Service from the container host: `minikube ssh` then `curl $ClusterIP:$Port`
 15. Run a `busybox` Pod with a shell connected interactively and perform the following commands:
    - run `cat /etc/resolv.conf` and review the output
    - run `nslookup webserver` (service name) and review the output
    - what IPs and/or qualified names do these match?
-16. Delete created resources
-17. Explore the Service object and the Service spec
+16. Run a temporary `nginx:alpine` Pod to query the Service by name:
+   - first run `kubectl run mypod --rm -it --image=nginx:alpine -- sh`
+   - then once in container, run `curl $SERVICE_NAME:$PORT`
+   - you should run `curl $SERVICE_NAME.$SERVICE_NAMESPACE:$PORT` if the Service and the temporary Pod are in separate Namespaces
+17. Delete created resources
+18. Explore the Service object and the Service spec
 
 <details>
 <summary>lab 8.1 solution</summary>
@@ -2935,7 +2993,7 @@ kubectl get pods -o wide
 kubectl create deploy webserver --image=httpd --dry-run=client -o yaml > lab8-1.yaml
 kubectl apply -f lab8-1.yaml
 kubectl get all
-kubectl get endpoints,pods -o wide
+kubectl get svc,ep,po -o wide # endpoints have <ip_address:port> of pods targeted by service
 echo --- >> lab8-1.yaml
 kubectl expose deploy webserver --port=80 --dry-run=client -o yaml >> lab8-1.yaml
 kubectl apply -f lab8-1.yaml
@@ -2957,6 +3015,12 @@ kubectl run mypod --rm -it --image=busybox
 # container terminal
 cat /etc/resolv.conf # shows service ip as dns server
 nslookup webserver # shows dns search results, read more at https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#namespaces-of-services
+exit
+# host terminal
+kubectl run mypod --rm -it --image=nginx:alpine -- sh
+# container terminal
+curl webserver # no need to add port cos default is 80
+curl webserver.default # this uses the namespace of the service
 exit
 # host terminal
 kubectl delete -f lab8-1.yaml
@@ -2988,7 +3052,7 @@ In this lab, we will implement a naive example of a _backend-frontend_ microserv
    - type `ClusterIP`
    - port 80
    - same name, Labels and Selectors as backend Deployment
-3. Confirm you can access the app on the `$CLUSTER-IP`
+3. Confirm you can access the app by `$CLUSTER-IP` or `$SERVICE_NAME`
 4. Create an [nginx _server block_ config file `nginx/default.conf`]() to redirect traffic for the `/` route to the backend service
 
    ```sh
@@ -3011,12 +3075,14 @@ In this lab, we will implement a naive example of a _backend-frontend_ microserv
    - name `frontend`
    - has Labels `app: webapp` and `tier: frontend`
    - has Selectors `app: webapp` and `tier: frontend`
+   - Remember that Services target Pods by Selector (the Label Selector of the Service must match the Label of the Pod)
    - mounts the nginx config file to `/etc/nginx/conf.d/default.conf` (use fullpath `$(pwd)/nginx/default.conf`)
    - see example [_hostPath volume mount manifest_](https://kubernetes.io/docs/concepts/storage/volumes/#hostpath-configuration-example)
 6. Create a Service for the frontend app with the following spec:
    - type `NodePort`
    - port 80
    - same name, Labels and Selectors as frontend Deployment
+   - Remember that Services target Pods by Selector
 7. Confirm you can access the backend app from the Minikube Node `$(minikube ip):NodePort`
 8. Delete created resources
 
@@ -3181,105 +3247,45 @@ A bootcamp student is stuck on a _simple task_ and would appreciate your experti
   <details>
   <summary>hint 1</summary>
 
-  Did you check the Service Endpoint? \
-  When a Service with a _Selector_ is created, an Endpoint with the same name is automatically created. It might be a good idea to check if this is a Service with a selector and if any Endpoints were created.
+  Did you check for the relationship between the Service, Endpoint and Pods? When a Service with a _Selector_ is created, an Endpoint with the same name is automatically created. See [_lab 8.1 - connecting applications with services_](#lab-81-connecting-applications-with-services).
   </details>
 
   <details>
   <summary>hint 2</summary>
 
-  You can perform the checks mentioned in _hint 1_ with a single command `kubectl get all,ep -owide`
+  Did you confirm that the Service configuration matches the requirements with `kubectl describe svc`? You should also run some tests, see [_discovering services_](#discovering-services) and [_lab 8.1 - connecting applications with services_](#lab-81-connecting-applications-with-services).
   </details>
 
   <details>
   <summary>hint 3</summary>
 
-  Did you compare the Endpoint's IP addresses with the targeted Pods'? \
-  A working Endpoint should have the IP addresses of the Pods targeted by the Service. Again, the command from _hint 2_ should reveal this.
+  If you're still unable to access the app but Endpoints have correct IP addresses, you might want to check if there is a working application to begin with. See [_lab 5.1 - creating pods_](#lab-51-creating-pods)
   </details>
 
   <details>
   <summary>hint 4</summary>
 
-  Did you review the Service configuration with `kubectl describe`?
-  A Service Endpoint with incorrect/missing IP addresses indicates a poorly configured Service. Now might be a good time to pull out `kubectl describe svc` and figure out what the _nine heavens_ the student cooked up in that Service.
+  Now you have the container port? Is the Service configured to use this container port? Is the Pod configured to use this container port? 💡
   </details>
 
   <details>
   <summary>hint 5</summary>
 
-  Did you confirm that the Service configuration matches the requirements? If the Service config matches, then you should test that you're able to access the application via the Service as expected.
+  Remember a Service can specify three types of ports: `port | targetPort | nodePort`. Which is the container port?
   </details>
 
   <details>
   <summary>hint 6</summary>
 
-  You can test the Service by connecting a shell to a temporary Pod `kubectl run -it --rm --image=nginx:alpine -n $NAMESPACE -- sh` and run `curl $SERVICE_NAME:$PORT`. If you did not create the temporary Pod in the same Namespace, you can add the Namespace to the hostname `curl $SERVICE_NAME.$NAMESPACE:$PORT`.
+  For a Service, you can quickly verify the configured container port by reviewing the IP addresses of the Service Endpoint, they should be of the form `$POD_IP:CONTAINER_PORT` \
+  Once resolved, you should be able to access the application via the Service with `curl`.
   </details>
 
   <details>
   <summary>hint 7</summary>
 
-  Did you check that the Service correctly targets the Pods? The Selector of a Service must match the Label of a Pod to correctly target that Pod.
-  </details>
-
-  <details>
-  <summary>hint 8</summary>
-
-  If you're still unable to access the app and believe no issue with the Service, for example, Endpoints have correct IP addresses, you might want to check if there is any application to begin with. For the record, an application exists and is exposed by the container.
-  </details>
-
-  <details>
-  <summary>hint 9</summary>
-
-  You can use the method from _hint 6_ to test the Pod's IP address and port.
-  </details>
-
-  <details>
-  <summary>hint 10</summary>
-
-  Did you determine the port exposed by the Pod's containers? It might not be port 80.
-  </details>
-
-  <details>
-  <summary>hint 11</summary>
-
-  There is no Kubernetes way to check opened ports in a container. Usually, in the CKAD exam, the container port will be provided. However, when not provided, you can try to use common network tools like `lsof`, `netstat` or `ss`. \
-  Run these command without parameters, one after the other, to check if installed and determine which to use: `lsof -i | netstat -tulpn | ss -tulpn`. \
-  Once you find the port, repeat _hint 6_ with `curl $POD_IP:$CONTAINER_PORT` to confirm application exposed.
-  </details>
-
-  <details>
-  <summary>hint 12</summary>
-
-  Now you have the container port? Is the Service configured to use this container port? Is the Pod configured to use this container port? 💡
-  </details>
-
-  <details>
-  <summary>hint 13</summary>
-
-  You can tell what container port the Service is configured with by reviewing the IP addresses of the Service Endpoint, they should be of the form `$POD_IP:CONTAINER_PORT`. \
-  Once resolved, you should be able to access the application via the Service as described in _hint 6_.
-  </details>
-
-  <details>
-  <summary>hint 14</summary>
-
-  Remember a Service can specify three types of ports: `port | targetPort | nodePort`. The container port is the `targetPort`.
-  </details>
-
-  <details>
-  <summary>hint 15</summary>
-
-  For a Service, you can quickly verify the configured container port by reviewing the IP addresses of the Service Endpoint, they should be of the form `$POD_IP:CONTAINER_PORT` \
-  Once resolved, you should be able to access the application via the Service as described in _hint 6_.
-  </details>
-
-  <details>
-  <summary>hint 16</summary>
-
   For a Pod, you can quickly verify the configured container port by reviewing the ReplicaSet config with `kubectl describe rs`. \
-  Once resolved, you should be able to access the application via the Service as described in _hint 6_.
+  Once resolved, you should be able to access the application via the Service with `curl`.
   </details>
 </details>
 
