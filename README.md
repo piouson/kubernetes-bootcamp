@@ -29,6 +29,7 @@ A Unix-based environment running docker (Docker Engine or Docker Desktop).
 - Windows [setup WSL2 development environment](https://docs.microsoft.com/en-us/windows/wsl/setup/environment), then:
   - option 1 install Docker Engine in WSL2, see [Ubuntu install steps](#docker-engine-installation) below
   - option 2 [install Docker Desktop with WSL2 backend](https://docs.docker.com/desktop/windows/wsl/) - [`winget install Docker.DockerDesktop`](https://docs.microsoft.com/en-us/windows/package-manager/winget/)
+  - if you are on a device with VPN and encounter WSL Internet issues, use [WSL VPN fix](https://github.com/sakai135/wsl-vpnkit)
 - preferably, have a command-line package manager for your operating system
   - macOS use [Homebrew](https://brew.sh/)
   - Windows use [winget](https://docs.microsoft.com/en-us/windows/package-manager/winget/)
@@ -1036,8 +1037,8 @@ sudo apt install conntrack
 sudo sysctl fs.protected_regular=0
 # 3. start a minikube cluster
 minikube start --driver=docker --kubernetes-version=1.23.9
-# 3b. if using docker-engine and [3] doesn't work, e.g. vpn, etc, try `--driver=none`
-sudo minikube start --driver=none --kubernetes-version=1.23.9
+# if [3] doesn't work, e.g. vpn issue, etc, try `--driver=none`
+# sudo minikube start --driver=none --kubernetes-version=1.23.9
 # 4. change the owner of the .kube and .minikube directories
 sudo chown -R $USER $HOME/.kube $HOME/.minikube
 ```
@@ -1052,7 +1053,7 @@ minikube dashboard
 # start a minikube cluster with latest k8s version and default driver, see `minikube --help`
 minikube start
 # start minikube with a specified driver and specified kubernetes version
-minikube start --driver=docker --kubernetes-version=1.23
+minikube start --driver=docker --kubernetes-version=1.23.9
 # show current IP address
 minikube ip
 # show current version
@@ -1108,6 +1109,10 @@ minikube delete
    kubectl get all
    kubectl delete deploy app
    ```
+9. List Kubernetes clusters with `kubectl config get-contexts`
+10. If you have Kubernetes cluster from both Minikube and Docker Desktop, you can switch between them:
+   - Set Docker Desktop cluster as current cluster: `kubectl config set-context docker-desktop`
+   - Set Minikube cluster as current cluster: `kubectl config set-context minikube`
 
 ### Lab 4.2. Explore Kubernetes API resources via Minikube
 
@@ -1569,7 +1574,7 @@ At the end of your task, copy the log file used by the logging container to dire
   <details>
   <summary>hint 4</summary>
 
-  Is the `webserver` Pod up and running in the `cow` Namespace?
+  Is the `webserver` Pod up and running in the `cow` Namespace? Remember this is the requirement, so migrate the Pod if not in correct Namespace. No other resources should be migrated.
   </details>
 
   <details>
@@ -2794,7 +2799,7 @@ Before you leave, set the Replicas to 4, and just to be safe, Annotate all the P
 
 - Command to setup environment:
   ```sh
-  echo '\nlab: environment setup in progress...'; echo '{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp"},"spec":{"replicas":2,"revisionHistoryLimit":15,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"volumes":[{"name":"varlog","emptyDir":{}}],"containers":[{"image":"nginx:1.12-alpine","name":"nginx","volumeMounts":[{"name":"varlog","mountPath":"/var/logs"}]}]}}}}' > k8s-task-6.yml; kubectl apply -f k8s-task-6.yml >/dev/null; cp k8s-task-6.yml k8s-task-6-bak.yml; sed -i -e 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 1; sed -i -e 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; sed -i -e 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 2; sed -i -e 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; kubectl apply -f k8s-task-6-bak.yml >/dev/null; sleep 4; kubectl rollout undo deploy webapp --to-revision=5 >/dev/null; kubectl delete $(kubectl get rs --sort-by=".spec.replicas" -oname | tail -n1) >/dev/null; rm k8s-task-6.yml k8s-task-6-bak.yml; echo 'lab: environment setup complete!'
+  printf '\nlab: environment setup in progress...'; echo '{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp"},"spec":{"replicas":2,"revisionHistoryLimit":15,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"volumes":[{"name":"varlog","emptyDir":{}}],"containers":[{"image":"nginx:1.12-alpine","name":"nginx","volumeMounts":[{"name":"varlog","mountPath":"/var/logs"}]}]}}}}' > k8s-task-6.yml; kubectl apply -f k8s-task-6.yml >/dev/null; cp k8s-task-6.yml k8s-task-6-bak.yml; sed -i -e 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 1; sed -i -e 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; sed -i -e 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 2; sed -i -e 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; kubectl apply -f k8s-task-6-bak.yml >/dev/null; sleep 4; kubectl rollout undo deploy webapp --to-revision=5 >/dev/null; kubectl delete $(kubectl get rs --sort-by=".spec.replicas" -oname | tail -n1) >/dev/null; rm k8s-task-6.yml k8s-task-6-bak.yml; echo 'lab: environment setup complete!'
   ```
 - Command to destroy environment: `kubectl delete deploy webapp`
 
@@ -3237,7 +3242,7 @@ A bootcamp student is stuck on a _simple task_ and would appreciate your experti
 
 - Command to setup environment:
   ```sh
-  echo '\nlab: environment setup in progress...'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"bat"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"replicas":2,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"containers":[{"image":"gcr.io/google-samples/node-hello:1.0","name":"nginx"}]}}}},{"apiVersion":"v1","kind":"Service","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"webapp"}}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
+  printf '\nlab: environment setup in progress...'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"bat"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"replicas":2,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"containers":[{"image":"gcr.io/google-samples/node-hello:1.0","name":"nginx"}]}}}},{"apiVersion":"v1","kind":"Service","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"webapp"}}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
   ```
 - Command to destroy environment: `kubectl delete ns bat`
 
@@ -3785,11 +3790,20 @@ minikube start --kubernetes-version=1.23.9 --driver=docker
 
 ### Task - Ingress
 
-Same as _Task - Service II_ with ingress added. Coming soon.
+The application is meant to be accessible at `ckad-bootcamp.local`. Please debug and resolve the issue without creating any new resource.
+
+- Command to setup environment:
+  ```sh
+  printf '\nlab: environment setup in progress...'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"bat"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"replicas":2,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"containers":[{"image":"gcr.io/google-samples/node-hello:1.0","name":"nginx"}]}}}},{"apiVersion":"v1","kind":"Service","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"webapp"}}},{"kind":"Ingress","apiVersion":"networking.k8s.io/v1","metadata":{"name":"webapp","namespace":"bat"},"spec":{"ingressClassName":"ngnx","rules":[{"http":{"paths":[{"path":"/","pathType":"Prefix","backend":{"service":{"name":"webapp","port":{"number":80}}}}]}}]}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
+  ```
+- Command to destroy environment: `kubectl delete ns dog`
 
 ### Task - Network policy
 
-Coming soon.
+Given several Pods in Namespaces `pup` and `cat`. Lock down the cluster as follows:
+  - Pods in the same Namespace can communicate together
+  - `webapp` Pod in the `pup` Namespace can communicate with `microservice` Pod in the `cat` Namespace
+  - DNS resolution on UDP/TCP port 53 is allowed for all Pods in all Namespaces
 
 <div style="page-break-after: always;"></div>
 
@@ -3942,7 +3956,23 @@ For further learning, see [mounting the same persistentVolume in two places](htt
 
 ### Task - Persistent volumes
 
-Same as _Lab 10.2 - Configuring Pods storage with PVs and PVCs_ without stepwise guide. Coming soon.
+In the `kid` Namespace (create if required), create a Deployment `webapp` with two replicas, running the `nginx:1.22-alpine` image, that serves an `index.html` HTML document (see below) from the Cluster Node's `/mnt/data` directory. The HTML document should be made available via a Persistent Volume with 5Gi storage and no class name specified. The Deployment should use Persistent Volume claim with 2Gi storage.
+
+```html
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>K8s Bootcamp (CKAD)</title>
+  </head>
+  <body>
+    <h1>Welcome to K8s Bootcamp!</h1>
+  </body>
+</html>
+```
 
 <div style="page-break-after: always;"></div>
 
@@ -4285,13 +4315,20 @@ Repeat [lab 11.3](#lab113-mounting-configmaps) with secrets.
 
 <div style="page-break-after: always;"></div>
 
-### Task - ConfigMap
+### Task - ConfigMap and Secrets
 
-Coming soon.
+The latest Bootcamp cohort have requested a new database in the `rig` Namespace. This should be created as a single replica Deployment named `db` running the `mysql:8.0.22` image with container named `mysql`. The container should start with 64Mi memory and 0.25 CPU but should not exceed 256Mi memory and 0.5 CPU.
 
-### Task - Secret
+The Resource limit values should be available in the containers as env-vars `MY_CPU_LIMIT` and `MY_MEM_LIMIT` for the values of the cpu limit and memory limit respectively. The Pod IP address should also be available as env-var `MY_POD_IP` in the container.
 
-Coming soon.
+A Secret named `db-secret` should be created with variables `MYSQL_DATABASE=bootcamp` and `MYSQL_ROOT_PASSWORD="shhhh!"` to be used by the Deployment as the database credentials. A ConfigMap named `db-config` should be used to load the `.env` file (see below) and provide environment variable `DEPLOY_ENVIRONMENT` to the Deployment.
+
+```sh
+# .env
+DEPLOY_CITY=manchester
+DEPLOY_REGION=north-west
+DEPLOY_ENVIRONMENT=staging
+```
 
 <div style="page-break-after: always;"></div>
 
@@ -4464,7 +4501,16 @@ Canary deployment is an update strategy where updates are deployed to a subset o
 
 ### Task - Probes
 
-Coming soon.
+You have a legacy application `legacy` running in the `dam` Namespace that has a long startup time. Once startup is complete, the `/healthz:8080` endpoint returns 200 status. If this application is down at anytime or starting up, this endpoint will return a 500 status. The container port for this application often changes and will not always be `8080`.
+
+Create a probe for the existing Deployment that checks the endpoint every 10secs, for a maximum of 5mins, to ensure that the application does not receive traffic until startup is complete. 20 secs after startup, a probe should continue to check, every 30secs, that the application is up and running, otherwise, the Pod should be killed and restarted anytime the application is down.
+
+You do not need to test that the probes work, you only need to configure them. Another test engineer will perform all tests.
+
+- Command to setup environment:
+  ```sh
+  printf '\nlab: lab environment setup...'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"dam"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app":"legacy"},"name":"legacy","namespace":"dam"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"legacy"}},"template":{"metadata":{"labels":{"app":"legacy"}},"spec":{"containers":[{"args":["/server"],"image":"registry.k8s.io/liveness","name":"probes","ports":[{"containerPort":8080}]}],"restartPolicy":"OnFailure"}}}}]}' | kubectl apply -f - >/dev/null
+- Command to destroy environment: `kubectl delete ns dam`
 
 ### Task - Canary deployment
 
@@ -5107,7 +5153,7 @@ Coming soon.
 
 <div style="page-break-after: always;"></div>
 
-## 16. Exam
+## 15. Exam
 
 Final exam tips coming soon, mostly about text editor and aliases.
 
