@@ -1,6 +1,6 @@
 # Kubernetes Bootcamp (CKAD)
 
-This course is a part of my cloud-native application developer bootcamp series. Star this repo to say thank you!
+Hi, I'm Pius Lawal, and this course is part of my cloud application developer bootcamp series. Star [this repo](https://github.com/piouson/kubernetes-bootcamp) to say thank you!
 
 <a href="https://github.com/sponsors/piouson" target="_blank"><img src="https://img.shields.io/static/v1?message=buy%20me%20coffee&logo=buymeacoffee&labelColor=2E0050&color=4B0083&logoColor=pink&label=%20&style=for-the-badge" alt="buy me coffee to sponsor this project"></a>
 
@@ -8,7 +8,7 @@ This course is a part of my cloud-native application developer bootcamp series. 
 
 ## Learning Outcomes
 
-In summary, you will be learning cloud-native application development, which is a modern approach to building and running software applications that exploits the flexibility, scalability, and resilience of cloud computing. Some highlights include:
+In summary, you will be learning cloud application development, which is a modern approach to building and running software applications that exploits the flexibility, scalability, and resilience of cloud computing. Some highlights include:
 
 - proficiency working on the command-line
 - proficiency working with containers
@@ -147,7 +147,7 @@ A container image is a lightweight, standalone, executable package of software t
 
 The [Open Container Initiative (OCI)](https://opencontainers.org/) creates open industry standards around container formats and runtimes.
 
-A container registry is a repository, or collection of repositories, used to store and access container images. Container registries are a big player in cloud-native application development, often as part of [GitOps](https://www.redhat.com/en/topics/devops/what-is-gitops) processes.
+A container registry is a repository, or collection of repositories, used to store and access container images. Container registries are a big player in cloud application development, often as part of [GitOps](https://www.redhat.com/en/topics/devops/what-is-gitops) processes.
 
 ### Basic docker commands
 
@@ -176,10 +176,16 @@ ctrl-p ctrl-q
 
 > See [possible container statuses](https://www.baeldung.com/ops/docker-container-states#possible-states-of-a-docker-container) to understand more about container states
 
+<div id="lab1-1">
+
 ### Lab 1.1. Hello docker
 
 1. Run `docker info` to confirm docker client and server statuses
 2. Run `docker run hello-world`
+
+</div>
+
+<div id="lab1-2">
 
 ### Lab 1.2. First container interaction
 
@@ -206,6 +212,10 @@ cat /proc/$PID/cmdline
 9. List running containers
 10. List all containers
 11. Delete the containers
+
+</div>
+
+<div id="soln-lab1-2">
 
 <details>
   <summary>lab1.2 solution</summary>
@@ -240,6 +250,10 @@ docker rm box1 box2
 >
 > `CTRL+P, CTRL+Q` only works when running a container in interactive mode, see [how to attach/detach containers](https://stackoverflow.com/a/19689048/1235675) for more details
 
+</div>
+
+<div id="lab1-3">
+
 ### Lab 1.3. Entering and exiting containers
 
 ```sh
@@ -271,6 +285,10 @@ ss -tulpn # see `ss --help`, alternative to netstat
 13. Exit the container
 14. List running containers
 15. Delete all containers
+
+</div>
+
+<div id="soln-lab1-3">
 
 <details>
 <summary>lab1.3 solution</summary>
@@ -309,6 +327,10 @@ docker rm webserver1 webserver2 webserver3
 
 > Containers may not always have `bash` shell, but will usually have the dash shell `sh`
 
+</div>
+
+<div id="lab1-4">
+
 ### Lab 1.4. Container arguments
 
 1. Run a `busybox` container with command `sleep 30` as argument, see `sleep --help`
@@ -323,6 +345,10 @@ docker rm webserver1 webserver2 webserver3
 10. List running containers
 11. List all containers
 12. Delete all containers
+
+</div>
+
+<div id="soln-lab1-4">
 
 <details>
 <summary>lab1.4 solution</summary>
@@ -356,6 +382,8 @@ docker rm box1 box2 box3
 > ❌ `docker run -it mysql -e MYSQL_PASSWORD=hello` will pass `-e MYSQL_PASSWORD=hello` to the container
 > ✔️ `docker run -it -e MYSQL_PASSWORD=hello mysql`
 
+</div>
+
 ### Managing containers and images
 
 ```sh
@@ -385,6 +413,8 @@ docker image rm $IMAGE_ID
 # see `docker --help` for complete resources
 ```
 
+<div id="lab1-5">
+
 ### Lab 1.5. Container ports and IP
 
 1. Run a `nginx` container with name `webserver`
@@ -393,6 +423,10 @@ docker image rm $IMAGE_ID
 4. Run another `nginx` container with name `webserver` and exposed on port 80
 5. Visit http://localhost in your browser
 6. Delete the containers
+
+</div>
+
+<div id="soln-lab1-5">
 
 <details>
 <summary>lab1.5 solution</summary>
@@ -417,6 +451,10 @@ docker rm webserver
 
 > Always run containers in detached mode to avoid getting stuck in the container `STDOUT`
 
+</div>
+
+<div id="lab1-6">
+
 ### Lab 1.6. Container volumes
 
 1. Create an `html/index.html` file with some content
@@ -427,6 +465,10 @@ docker rm webserver
 4. List running containers
 5. List all containers
 6. Delete containers
+
+</div>
+
+<div id="soln-lab1-6">
 
 <details>
 <summary>lab1.6 solution</summary>
@@ -449,6 +491,10 @@ docker rm webserver
 
 </details>
 
+</div>
+
+<div id="lab1-7">
+
 ### Lab 1.7. Container environment variables
 
 1. Run a `mysql` container in detached mode
@@ -462,6 +508,10 @@ docker rm webserver
 9. List all volumes
 10. Clean up with [`docker system prune`](https://docs.docker.com/engine/reference/commandline/system_prune/)
 11. Check all resources are deleted, containers, images and volumes.
+
+</div>
+
+<div id="soln-lab1-7">
 
 <details>
 <summary>lab1.7 solution</summary>
@@ -488,11 +538,17 @@ docker volume ls
 
 > You don't always have to run a new container, we have had to do this to apply new configuration. You can restart an existing container `docker ps -a`, if it meets your needs, with `docker start $CONTAINER`
 
+</div>
+
+<div id="lab1-8">
+
 ### Lab 1.8. Container registries
 
 Explore [Docker Hub](https://hub.docker.com/) and search for images you've used so far or images/applications you use day-to-day, like databases, environment tools, etc.
 
 > Container images are created with instructions that determine the default container behaviour at runtime. A familiarity with specific images/applications may be required to understand their default behaviours
+
+</div>
 
 <div style="page-break-after: always;"></div>
 
@@ -512,6 +568,8 @@ docker tag nginx nginx:1.1
 docker tag nginx domain.com/nginx:1.1
 ```
 
+<div id="lab2-1">
+
 ### Lab 2.1. Working with images
 
 1. List all images (if you've just finished [lab1.7](#lab-17-container-environment-variables), run new container to download an image)
@@ -522,6 +580,10 @@ docker tag nginx domain.com/nginx:1.1
 6. View the tagged image history
 7. Delete tagged image by ID
 8. Lets try that again, delete tagged image by tag
+
+</div>
+
+<div id="soln-lab2-1">
 
 <details>
 <summary>lab2.1 solution</summary>
@@ -542,6 +604,10 @@ docker image rm localhost/nginx:1.1 # deleting removes tag
 
 </details>
 
+</div>
+
+<div id="lab2-2">
+
 ### Lab 2.2. Custom images
 
 Although, we can also [create an image from a running container using `docker commit`](https://docs.docker.com/engine/reference/commandline/commit/), we will only focus on using a Dockerfile, which is the recommended method.
@@ -559,6 +625,8 @@ ENTRYPOINT ["/usr/bin/nmap"]
 CMD ["-sn", "172.17.0.0/16"] # nmap will scan docker network subnet `172.17.0.0/16` for running containers
 ```
 
+</div>
+
 ### Dockerfile overview
 
 ```sh
@@ -575,7 +643,9 @@ CMD ["arg1", "arg2"] # specfify arguments to the ENTRYPOINT - if ENTRYPOINT is n
 EXPOSE $PORT # specify container should listen on port $PORT
 ```
 
-### Lab 2.2. Create image from Dockerfile
+<div id="lab2-3">
+
+### Lab 2.3. Create image from Dockerfile
 
 See [best practices for writing Dockerfile](https://docs.docker.com/develop/develop-images/dockerfile_best-practices).
 
@@ -605,8 +675,12 @@ dnf provides */sshd
 6. Repeat all three options in [4] and compare the behaviour
 7. Clean up
 
+</div>
+
+<div id="soln-lab2-3">
+
 <details>
-<summary>lab2.2 solution</summary>
+<summary>lab2.3 solution</summary>
 
 ```sh
 # run ubuntu container to find debian-based packages
@@ -683,7 +757,11 @@ docker image rm local/alpine:1.0 local/alpine:1.1
 
 > In most cases, building an image goes beyond a successful build. Some installed packages require additional steps to run containers successfully
 
-### Lab 2.3. Containerise your application
+</div>
+
+<div id="lab2-4">
+
+### Lab 2.4. Containerise your application
 
 See the [official language-specific getting started guides](https://docs.docker.com/language/) which includes NodeJS, Python, Java and Go examples.
 
@@ -694,8 +772,12 @@ See the [official language-specific getting started guides](https://docs.docker.
 5. Run a container from the image exposed on port 8080
 6. Confirm you can access the app on http://localhost:8080
 
+</div>
+
+<div id="soln-lab2-4">
+
 <details>
-<summary>lab2.3 nodejs solution</summary>
+<summary>lab2.4 nodejs solution</summary>
 
 ```sh
 # host terminal
@@ -732,6 +814,8 @@ rm -rf test-app
 ```
 
 </details>
+
+</div>
 
 ### Docker container access control
 
@@ -817,7 +901,9 @@ RUN groupadd --system myapp && useradd --system --no-log-init myapp --gid myapp
 USER myapp
 ```
 
-### Lab 2.4. Container privileges
+<div id="lab2-5">
+
+### Lab 2.5. Container privileges
 
 1. Display your system's current user
 2. Display the current user's UID, GID and group memberships
@@ -839,8 +925,12 @@ USER myapp
    - exit the container
 7. Delete created resources
 
+</div>
+
+<div id="lab2-5">
+
 <details>
-<summary>lab2.4 solution</summary>
+<summary>lab2.5 solution</summary>
 
 ```sh
 # host terminal
@@ -888,7 +978,11 @@ docker image rm test-image
 > If a containerized application can run without privileges, change to a non-root user \
 > It is recommended to explicitly specify GID/UID when creating a group/user
 
+</div>
+
 <div style="page-break-after: always;"></div>
+
+<div id="task2-1">
 
 ### Task - Docker image
 
@@ -901,6 +995,10 @@ Using docker and the Dockerfile above, build an image with tag `bootcamp/nginx:v
 Run a container named `web-test` from the image `bootcamp/nginx:v1` accessible on port 2000, and another container named `web-test2` from image `ckad/nginx:latest` accessible on port 2001. Leave both containers running.
 
 What commands would you use to perform the above operations using `podman`? Specify these commands on separate lines in file `/home/$USER/ckad-tasks/docker/podman-commands`
+
+</div>
+
+<div id="hint-task2-1">
 
 <details>
   <summary>hints</summary>
@@ -948,6 +1046,8 @@ What commands would you use to perform the above operations using `podman`? Spec
   </details>
 </details>
 
+</div>
+
 <div style="page-break-after: always;"></div>
 
 ## 3. Understanding Kubernetes
@@ -958,6 +1058,8 @@ K8s **release cycle is 3 months** and deprecated features are supported for a mi
 > You can watch [kubernetes in 1 minute](https://www.youtube.com/watch?v=BzvLp-lH5_Q&list=PLBBog2r6uMCSplEmHu-1n7VixRn9RTZP5&index=6) for a quick overview \
 > When you've got more time, watch/listen to **Kubernetes: The Documentary ([PART 1](https://www.youtube.com/watch?v=BE77h7dmoQU) & [PART 2](https://www.youtube.com/watch?v=318elIq37PE))**
 
+<div id="lab3-1">
+
 ### Lab 3.1. Kubernetes in Google Cloud
 
 > A local lab setup is covered in [chapter 4 with minikube](#4-kubernetes-lab-environment) \
@@ -967,6 +1069,8 @@ K8s **release cycle is 3 months** and deprecated features are supported for a mi
 - Use the "Cluster setup guide" to create "My first cluster"
 - Connect to the cluster using the "Cloud Shell"
 - View existing Kubernetes resources by running `kubectl get all`
+
+</div>
 
 ### Basic Kubernetes API resources
 
@@ -1011,6 +1115,8 @@ kubectl api-versions
 kubectl delete deploy myapp
 ```
 
+<div id="lab3-2">
+
 ### Lab 3.2. Explore Kubernetes API resources via Google Cloud
 
 > This lab is repeated in [chapter 4 with minikube](#4-kubernetes-lab-environment) \
@@ -1026,6 +1132,10 @@ kubectl delete deploy myapp
 8. Delete the Kubernetes service
 9. view available resources
 10. If nothing found, allow 5s and try [9] again
+
+</div>
+
+<div id="soln-lab3-2">
 
 <details>
 <summary>lab3.2 solution</summary>
@@ -1045,6 +1155,8 @@ kubectl get all # new kubernetes service is auto created to replace deleted
 </details>
 
 > Remember to delete Google cloud cluster to avoid charges if you wish to use a local environment detailed in the next chapter
+
+</div>
 
 <div style="page-break-after: always;"></div>
 
@@ -1133,6 +1245,8 @@ minikube stop
 minikube delete
 ```
 
+<div id="lab4-1">
+
 ### Lab 4.1. Setup minikube and kubectl
 
 1. Confirm minikube running `minikube status`
@@ -1177,6 +1291,10 @@ minikube delete
    - Set Docker Desktop cluster as current cluster: `kubectl config set-context docker-desktop`
    - Set Minikube cluster as current cluster: `kubectl config set-context minikube`
 
+</div>
+
+<div id="lab4-2">
+
 ### Lab 4.2. Explore Kubernetes API resources via Minikube
 
 1. Run an `nginx` Pod
@@ -1184,6 +1302,10 @@ minikube delete
 3. Delete the Pod
 4. View resources
 5. Repeat [Lab 3.2](#lab-32-explore-kubernetes-api-resources-via-gcloud) in Minikube
+
+</div>
+
+<div id="soln-lab4-2">
 
 <details>
 <summary>lab4.2 solution</summary>
@@ -1200,6 +1322,8 @@ kubectl get all # pod gone
 
 > Pods started without a deployment are called _Naked Pods_ - these are not managed by a replicaset, therefore, are not rescheduled on failure, not eligible for rolling updates, cannot be scaled, cannot be replaced automatically. \
 > Although, _Naked Pods_ are not recommended in live environments, they are crucial for learning how to manage Pods, which is a big part of [CKAD](https://www.cncf.io/certification/ckad/).
+
+</div>
 
 <div style="page-break-after: always;"></div>
 
@@ -1238,6 +1362,8 @@ kubectl explain pod.spec | less
 > 💡 `-- <args>` corresponds to Dockerfile `CMD` while `--command -- <args>` corresponds to `ENTRYPOINT` \
 > See [answer to `kubectl run --command vs -- arguments`](https://stackoverflow.com/a/66078726) for more details
 
+<div id="lab5-1">
+
 ### Lab 5.1. Creating Pods
 
 1. Create a Pod with `nginx:alpine` image and confirm creation
@@ -1252,6 +1378,10 @@ kubectl explain pod.spec | less
 7. Have a look at the Kubernetes API to determine when pods were introduced
 
 > Not all images expose their applications on port 80. Kubernetes doesn't have a native way to check ports exposed on running container, however, you can connect a shell to a Pod with `kubectl exec` and try one of `netstat -tulpn` or `ss -tulpn` in the container, if installed, to show open ports.
+
+</div>
+
+<div id="soln-lab5-1">
 
 <details>
 <summary>lab5.1 solution</summary>
@@ -1275,6 +1405,8 @@ kubectl api-resources # pods were introduced in v1 - the first version of kubern
 ```
 
 </details>
+
+</div>
 
 ### Pod manifest file
 
@@ -1323,6 +1455,8 @@ kubectl run mynginx --image=nginx -o yaml --dry-run=client > pod.yaml
 - To prevent direct access to primary container, e.g. proxy ([Ambassador Container](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/#example-2-ambassador-containers))
 - To match the traffic/data pattern in other applications in the cluster ([Adapter Container](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/#example-3-adapter-containers))
 
+<div id="lab5-2">
+
 ### Lab 5.2. Managing Pods with YAML file
 
 > In the official k8s docs, you will often find example code with a URL, e.g. `pods/commands.yaml`. The file can be downloaded by appending `https://k8s.io/examples` to the URL, thus: `https://k8s.io/examples/pods/commands.yaml`
@@ -1346,6 +1480,10 @@ wget -qO- https://k8s.io/examples/pods/commands.yaml
 4. View details of the Pod
 5. Delete the Pod
 
+</div>
+
+<div id="soln-lab5-2">
+
 <details>
 <summary>lab5.2 solution</summary>
 
@@ -1360,6 +1498,10 @@ kubectl delete -f lab5-2.yaml
 </details>
 
 > Some images, like busybox, do not remain in running state by default. An extra command is required, e.g. `sleep 60`, to keep containers using these images in running state for as long as you need. In the CKAD exam, make sure your Pods remain in running states unless stated otherwise
+
+</div>
+
+<div id="lab5-3">
 
 ### Lab 5.3. Init Containers
 
@@ -1384,6 +1526,10 @@ kubectl logs mypod -c mypod-container-1
 5. View more details of the Pod and note the `State` of both containers.
 6. List created resources and confirm Pod `STATUS`
 7. Delete Pod
+
+</div>
+
+<div id="soln-lab5-3">
 
 <details>
 <summary>lab5.3 solution</summary>
@@ -1424,6 +1570,10 @@ kubectl delete -f lab5-3.yaml
 ```
 
 </details>
+
+</div>
+
+<div id="lab5-4">
 
 ### Lab 5.4. Multi-container Pod
 
@@ -1471,6 +1621,10 @@ kubectl delete -f lab5-4.yaml
 
 > Always create single container Pods!
 
+</div>
+
+<div id="lab5-5">
+
 ### Lab 5.5. Sidecar Containers
 
 > Remember you can prepend [`https://k8s.io/examples/`](https://kubernetes.io/docs/concepts/workloads/pods/#using-pods) to any example manifest names from the official docs for direct download of the YAML file
@@ -1483,6 +1637,10 @@ kubectl delete -f lab5-4.yaml
 4. View the logs of the main container
 5. View the logs of the _sidecar container_
 6. Delete created resources
+
+</div>
+
+<div id="soln-lab5-5">
 
 <details>
 <summary>lab5.5 solution</summary>
@@ -1531,6 +1689,8 @@ kubectl delete -f lab5-5.yaml
 
 </details>
 
+</div>
+
 ### Using namespaces
 
 [Namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) are a way to divide/isolate cluster resources between multiple users. Names of resources need to be unique within a Namespace, but not across namespaces. \
@@ -1563,6 +1723,8 @@ kubectl explain namespace | less
 kubectl explain namespace --recursive | less
 ```
 
+<div id="lab5-6">
+
 ### Lab 5.6 Namespaces
 
 You can also follow the [admin guide doc for namespaces](https://kubernetes.io/docs/tasks/administer-cluster/namespaces/)
@@ -1575,6 +1737,10 @@ You can also follow the [admin guide doc for namespaces](https://kubernetes.io/d
 4. Delete resources created
 5. Review the `NAMESPACED` column of the Kubernetes API resources
 6. Review the Namespace object and the Namespace spec
+
+</div>
+
+<div id="soln-lab5-6">
 
 <details>
 <summary>lab5.6 solution</summary>
@@ -1599,7 +1765,11 @@ kubectl explain namespace.spec | less
 > 💡 `kubectl get pods` - only shows resources in the `default` namespace \
 > 💡 `kubectl get pods -n mynamespace` - shows resources in the `mynamespace` namespace
 
+</div>
+
 <div style="page-break-after: always;"></div>
+
+<div id="task5-1">
 
 ### Task - Pods
 
@@ -1612,6 +1782,10 @@ At the end of your task, copy the log file used by the logging container to dire
   printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"v1","items":[{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"fox"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"ape"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"cow"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"box"},"name":"box","namespace":"ape"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"box"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"for-testing"},"name":"for-testing","namespace":"fox"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"for-testing"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"webserver"},"name":"webserver","namespace":"fox"},"spec":{"containers":[{"name":"server","image":"ngnx:1.20-alpine","volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]},{"name":"logger","image":"busybox:1.28","args":["/bin/sh","-c","while true; do  echo $(date) >> /usr/share/nginx/html/1.log;\n  sleep 30;\ndone\n"],"volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]}],"volumes":[{"name":"serverlog","emptyDir":{}}]}}],"metadata":{"resourceVersion":""},"kind":"List"}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
   ```
 - Command to destroy environment: `kubectl delete ns ape cow fox`
+
+</div>
+
+<div id="hint-task5-1">
 
 <details>
   <summary>hints</summary>
@@ -1653,6 +1827,10 @@ At the end of your task, copy the log file used by the logging container to dire
   </details>
 </details>
 
+</div>
+
+<div id="task5-2">
+
 ### Task - Pods II
 
 In the `rat` Namespace (create if required), create a Pod named `webapp` that runs `nginx:1.22-alpine` image and has env-var `NGINX_PORT=3005` which determines the port exposed by the container. The Pod container should be named `web` and should mount an `emptyDir` volume to `/etc/nginx/templates`. \
@@ -1661,6 +1839,10 @@ The Pod should have an _Init Container_ named `web-init`, running `busybox:1.28`
 ```sh
 echo "server {\n\tlisten\t${NGINX_PORT};\n\n\tlocation / {\n\t\troot\t/usr/share/nginx/html;\n\t}\n}" > /tempdir/default.conf.template
 ```
+
+</div>
+
+<div id="hint-task5-2">
 
 <details>
   <summary>hints</summary>
@@ -1724,6 +1906,8 @@ echo "server {\n\tlisten\t${NGINX_PORT};\n\n\tlocation / {\n\t\troot\t/usr/share
   </details>
 </details>
 
+</div>
+
 <div style="page-break-after: always;"></div>
 
 ## 6. Exploring Pods
@@ -1752,7 +1936,7 @@ The first step in debugging a Pod is taking a look at it. Check the current stat
 kubectl describe pods $POD_NAME
 ```
 
-When running commands locally in a Terminal, you can immediately see the output `STDOUT`. However, applications running in a cloud-native environment have their own way of showing their outputs - for Kubernetes, you can view a Pod `STDOUT` with:
+When running commands locally in a Terminal, you can immediately see the output `STDOUT`. However, applications running in a cloud environment have their own way of showing their outputs - for Kubernetes, you can view a Pod `STDOUT` with:
 
 ```sh
 kubectl logs $POD_NAME
@@ -1764,6 +1948,8 @@ kubectl get events --field-selector=involvedObject.name=$POD_NAME
 > You will usually find more clues in the logs when a Pod shows a _none-zero_ `Exit Code` \
 > See the [official _debug running pods_ tutorial](https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/) for more details
 
+<div id="lab6-1">
+
 ### Lab 6.1 Troubleshoot failing Pod
 
 1. Create a Pod with mysql image and confirm Pod state
@@ -1772,6 +1958,10 @@ kubectl get events --field-selector=involvedObject.name=$POD_NAME
 3. Review cluster logs for the Pod
 4. Apply relevant fixes until you have a mysql Pod in 'Running' state
 5. Delete created resources
+
+</div>
+
+<div id="soln-lab6-1">
 
 <details>
 <summary>lab6.1 solution</summary>
@@ -1792,6 +1982,8 @@ kubectl delete -f lab6-1.yaml
 ```
 
 </details>
+
+</div>
 
 ### Ephemeral containers
 
@@ -1833,6 +2025,8 @@ fg $ID
 kubectl port-forward mypod 8080:80 &
 ```
 
+<div id="lab6-2">
+
 ### Lab 6.2. Use port forwarding to access applications
 
 1. Create a webserver Pod
@@ -1840,6 +2034,10 @@ kubectl port-forward mypod 8080:80 &
 3. Access the webserver with the IP address (you can use `curl`)
 4. Use port forwarding to access the webserver on http://localhost:5000
 5. Terminate port forwarding and delete created resources
+
+</div>
+
+<div id="soln-lab6-2">
 
 <details>
 <summary>lab6.2 solution</summary>
@@ -1856,6 +2054,8 @@ kubectl delete pods webserver
 ```
 
 </details>
+
+</div>
 
 ### Security context
 
@@ -1881,6 +2081,8 @@ kubectl explain pod.spec.containers.securityContext | less
 # view pod details for `mypod`
 kubectl get pods mypod -o yaml
 ```
+
+<div id="lab6-3">
 
 ### Lab 6.3. Set Pod security context
 
@@ -1909,6 +2111,10 @@ Using the official docs manifest example `pods/security/security-context.yaml` a
    - what were your findings?
 8. Delete created resources
 9. Explore the Pod spec and compare the `securityContext` options available at pod-level vs container-level
+
+</div>
+
+<div id="soln-lab6-3">
 
 <details>
 <summary>lab6.3 solution</summary>
@@ -1978,6 +2184,8 @@ kubectl describe pods security-context-demo | less
 
 </details>
 
+</div>
+
 ### Jobs
 
 A [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) creates one or more Pods and will continue to retry execution of the Pods until a specified number of them successfully terminate - a _Completed_ status. Deleting a Job will clean up the Pods it created. Suspending a Job will delete its active Pods until the Job is resumed again. The default `restartPolicy` for Pods is _Always_, while the default `restartPolicy` for Jobs is _Never_.
@@ -2008,6 +2216,8 @@ kubectl describe job myjob
 kubectl explain job.spec | less
 ```
 
+<div id="lab6-4">
+
 ### Lab 6.4. Working with Jobs
 
 1. Create a Job `myjob1` with a suitable image that runs the command `echo Lab 6.4. Jobs!`
@@ -2030,6 +2240,10 @@ kubectl explain job.spec | less
 13. Delete created resources
 14. Review the Job spec to understand fields related to working with jobs
 15. Review the Kubernetes API Resources to determine when jobs was introduced
+
+</div>
+
+<div id="soln-lab6-4">
 
 <details>
 <summary>lab6.4 solution</summary>
@@ -2070,6 +2284,8 @@ kubectl get pods --watch # watch pods for 30secs
 
 </details>
 
+</div>
+
 ### CronJobs
 
 A [CronJob](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/) creates Jobs on a repeating schedule. It runs a job periodically on a given schedule, written in Cron format. This isn't very different from the Linux/Unix crontab (cron table).
@@ -2089,6 +2305,8 @@ kubectl explain cronjobs.spec.jobTemplate.spec
 kubectl api-resources # jobs was introduced in batch/v1
 ```
 
+<div id="lab6-5">
+
 ### Lab 6.5. Working with CronJobs
 
 1. Create a job with a suitable image that runs the `date` command every minute
@@ -2099,6 +2317,10 @@ kubectl api-resources # jobs was introduced in batch/v1
 6. Review the CronJob spec to understand fields related to working with cronjobs
 7. Review the Job spec of a CronJob and compare this to a standard Job spec
 8. Review the Kubernetes API Resources to determine when jobs was introduced
+
+</div>
+
+<div id="soln-lab6-5">
 
 <details>
 <summary>lab6.5 solution</summary>
@@ -2119,6 +2341,8 @@ kubectl api-resources # cronjobs was introduced in batch/v1
 
 > All CronJob `schedule` times are based on the timezone of the [_kube-controller-manager_](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/) \
 > Since a CronJob runs a Job periodically, the Job spec auto delete feature `ttlSecondsAfterFinished` is quite handy
+
+</div>
 
 ### Requests and Limits
 
@@ -2150,6 +2374,8 @@ kubectl set resources pod mypod --requests=cpu=200m,memory=128Mi --dry-run=clien
 kubectl set resources pod mypod --requests=cpu=200m,memory=128Mi --limits=cpu=500m,memory=256Mi --dry-run=client -oyaml|less
 ```
 
+<div id="lab6-6">
+
 ### Lab 6.6. Resource limitation
 
 You may use the [official container resource example manifest](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#example-1) or generate a manifest file with `kubectl set resources`.
@@ -2175,6 +2401,10 @@ You may use the [official container resource example manifest](https://kubernete
 9. Apply the manifest and review behaviour
 10. Delete created resources
 11. Review the Pod spec fields related to limits and requests
+
+</div>
+
+<div id="soln-lab6-6">
 
 <details>
 <summary>lab6.6 solution</summary>
@@ -2279,6 +2509,10 @@ kubectl explain pod.spec.containers.resources | less
 
 > Remember a multi-container Pod is not recommended in live environments but only used here for learning purposes
 
+</div>
+
+<div id="lab6-7">
+
 ### Lab 6.7. Resource allocation and usage
 
 This lab requires a Metrics Server running in your cluster, please run `minikube addons enable metrics-server` to enable Metrics calculation.
@@ -2312,6 +2546,10 @@ kubectl top pod
    - requires 64Mi memory to start but does not exceed half of the cluster Node's memory
 4. Review the running Pod and confirm resources configured as expected
 5. Delete created resources
+
+</div>
+
+<div id="soln-lab6-7">
 
 <details>
 <summary>lab 6.7 solution</code></summary>
@@ -2349,13 +2587,21 @@ kubectl delete -f lab6-7.yml
 ```
 </details>
 
+</div>
+
 <div style="page-break-after: always;"></div>
+
+<div id="task6-1">
 
 ### Task - CronJobs
 
 In the `boa` Namespace, create a Pod that runs the shell command `date`, in a busybox container, once every hour, regardless success or failure. Job should terminate after 20s even if command still running. Jobs should be automatically deleted after 12 hours. A record of 5 successful Jobs and 5 failed Jobs should be kept. All resources should be named `bootcamp`, including the container. You may create a new Namespace if required.
 
 At the end of your task, to avoid waiting an hour to confirm all works, manually run the Job from the Cronjob and verify expected outcome.
+
+</div>
+
+<div id="hint-task6-1">
 
 <details>
   <summary>hints</summary>
@@ -2421,11 +2667,19 @@ At the end of your task, to avoid waiting an hour to confirm all works, manually
   </details>
 </details>
 
+</div>
+
+<div id="task6-2">
+
 ### Task - Resources and Security Context
 
 A client requires a Pod running the `nginx:1.21-alpine` image with name `webapp` in the `dog` Namespace. The Pod should start with 0.25 CPU and 128Mi memory, but shouldn't exceed 0.5 CPU and half of the Node's memory. All processes in Pod containers should run with user ID 1002 and group ID 1003. Containers mustn't run in `privileged` mode and privilege escalation should be disabled. You may create a new Namespace if required.
 
 When you are finished with the task, the client would also like to know the Pod with the highest memory consumption in the `default` Namespace. Save the name the Pod in the format `<namespace>/<pod-name>` to a file `/home/$USER/ckad-tasks/resources/pod-with-highest-memory`
+
+</div>
+
+<div id="hint-task6-2">
 
 <details>
   <summary>hints</summary>
@@ -2454,6 +2708,8 @@ When you are finished with the task, the client would also like to know the Pod 
   You can use a combination of the output-name and sorting format `kubectl -oname --sort-by=json-path-to-field`. The JSON path can be derived from viewing the resource with output-json `-ojson`. See [_kubectl_ cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/#viewing-finding-resources) for more details
   </details>
 </details>
+
+</div>
 
 <div style="page-break-after: always;"></div>
 
@@ -2486,6 +2742,8 @@ kubectl set image deployment/myapp *=nginx:1.8
 kubectl explain deploy.spec
 ```
 
+<div id="lab7-1">
+
 ### Lab 7.1. Deploy an app with a replicaset
 
 Deployments can be used to rollout a ReplicaSet which manages the number of Pods. In [CKAD](https://www.cncf.io/certification/ckad/) you will only work with ReplicaSets via Deployments
@@ -2500,6 +2758,10 @@ Deployments can be used to rollout a ReplicaSet which manages the number of Pods
 7. Delete created resources
 8. Explore the deployment spec
 9. Explore the Kubernetes API Resources to determine when deployments and replicasets was introduced
+
+</div>
+
+<div id="soln-lab7-1">
 
 <details>
 <summary>lab7.1 solution</summary>
@@ -2525,6 +2787,10 @@ kubectl api-resources # deployments & replicasets were introduced in apps/v1
 ```
 </details>
 
+</div>
+
+<div id="lab7-2">
+
 ### Lab 7.2. Scale deployment
 
 A deployment creates a ReplicaSet that manages scalability. Do not manage replicasets outside of deployments.
@@ -2545,6 +2811,10 @@ A deployment creates a ReplicaSet that manages scalability. Do not manage replic
 10. Delete created resources
 11. Edit the `apiVersion` of the manifest example file to `apps/v0`
 12. Apply the edited manifest and confirm behaviour
+
+</div>
+
+<div id="soln-lab7-2">
 
 <details>
 <summary>lab7.2 solution</summary>
@@ -2600,6 +2870,8 @@ kubectl apply -f lab7-2.yaml # recognise errors related to incorrect manifest fi
 
 </details>
 
+</div>
+
 ### Labels, selectors and annotations
 
 Labels are used for groupings, filtering and providing metadata. Selectors are used to group related resources. Annotations are used to provide additional metadata but are not used in queries. \
@@ -2624,6 +2896,8 @@ kubectl label deploy myapp app-
 kubectl label pod mypod run-
 ```
 
+<div id="lab7-3">
+
 ### Lab 7.3. Working with labels
 
 1. Create a deployment `myapp` with three replicas using a suitable image
@@ -2640,6 +2914,10 @@ kubectl label pod mypod run-
 12. List all pods filtered by the default label
 13. Delete the deployment
 14. Delete the _naked_ Pod from [10]
+
+</div>
+
+<div id="soln-lab7-3">
 
 <details>
 <summary>lab7.3 solution</summary>
@@ -2661,6 +2939,8 @@ kubectl get pods --selector="app=myapp" # shows 3 pods
 kubectl delete -f lab7-3.yaml # $POD_NAME not deleted! `deploy.spec.selector` is how a deployment find pods to manage!
 ```
 </details>
+
+</div>
 
 ### Update strategy
 
@@ -2699,6 +2979,8 @@ kubectl rollout history deployment myapp --revision=n
 kubectl rollout undo deployment myapp --to-revision=n
 ```
 
+<div id="lab7-4">
+
 ### Lab 7.4. Rolling updates
 
 1. Review the update strategy field under the deployment spec
@@ -2727,6 +3009,10 @@ kubectl rollout undo deployment myapp --to-revision=n
 17. List rollout history specific to the new deployment - any new revisions?
 18. List all resources specific to the new deployment
 19. Delete created resources
+
+</div>
+
+<div id="soln-lab7-4">
 
 <details>
 <summary>lab7.4 solution</summary>
@@ -2783,6 +3069,8 @@ kubectl delete -f lab7-4.yaml
 
 </details>
 
+</div>
+
 ### DaemonSets
 
 A [_DaemonSet_](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/) is a kind of deployment that ensures that all (or some) Nodes run a copy of a particular Pod. This is useful in a multi-node cluster where specific application is required on all nodes, e.g. running a - cluster storage, logs collection, node monitoring, network agent - daemon on every node. As nodes are added to the cluster, Pods are added to them. As nodes are removed from the cluster, those Pods are garbage collected. Deleting a DaemonSet will clean up the Pods it created.
@@ -2800,6 +3088,8 @@ kubectl explain daemontset.spec | less
 kubectl explain daemontset.spec --recursive | less
 ```
 
+<div id="lab7-5">
+
 ### Lab 7.5. Exploring DaemonSets
 
 DaemonSets can only be created by YAML file, see an official example manifest `controllers/daemonset.yaml`.
@@ -2814,6 +3104,10 @@ DaemonSets can only be created by YAML file, see an official example manifest `c
    - what does Kubernetes use a DaemonSet for?
 8. List all resources in the _kube-system_ namespace matching the DaemonSet label
 9. Review the DaemonSet spec
+
+</div>
+
+<div id="soln-lab7-5">
 
 <details>
 <summary>lab7.5 solution</summary>
@@ -2833,6 +3127,10 @@ kubectl explain daemonset.spec --recursive | less
 ```
 </details>
 
+</div>
+
+<div id="lab7-6">
+
 ### Lab 7.6. Resource usage and Autoscaling
 
 Autoscaling is very important in live environments but not covered in [CKAD](https://www.cncf.io/certification/ckad/). Visit [HorizontalPodAutoscaler Walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#run-and-expose-php-apache-server) for a complete lab on autoscaling.
@@ -2848,7 +3146,11 @@ minikube addons enable metrics-server
 minikube addons disable metrics-server
 ```
 
+</div>
+
 <div style="page-break-after: always;"></div>
+
+<div id="task7-1">
 
 ### Task - Deployment
 
@@ -2861,6 +3163,10 @@ Update the Deployment to `nginx:1.22-alpine` to confirm the Pod count stays with
   printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp"},"spec":{"replicas":2,"revisionHistoryLimit":15,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"volumes":[{"name":"varlog","emptyDir":{}}],"containers":[{"image":"nginx:1.12-alpine","name":"nginx","volumeMounts":[{"name":"varlog","mountPath":"/var/logs"}]}]}}}}' > k8s-task-6.yml; kubectl apply -f k8s-task-6.yml >/dev/null; cp k8s-task-6.yml k8s-task-6-bak.yml; sed -i -e 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 1; sed -i -e 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; sed -i -e 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 2; sed -i -e 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; kubectl apply -f k8s-task-6-bak.yml >/dev/null; sleep 4; kubectl rollout undo deploy webapp --to-revision=5 >/dev/null; kubectl delete $(kubectl get rs --sort-by=".spec.replicas" -oname | tail -n1) >/dev/null; rm k8s-task-6.yml k8s-task-6-bak.yml; echo 'lab: environment setup complete!'
   ```
 - Command to destroy environment: `kubectl delete deploy webapp`
+
+</div>
+
+<div id="hint-task7-1">
 
 <details>
   <summary>hints</summary>
@@ -2932,6 +3238,8 @@ Update the Deployment to `nginx:1.22-alpine` to confirm the Pod count stays with
   You can Annotate all 4 Pods in a single command, see `kubectl annotate --help`.
   </details>
 </details>
+
+</div>
 
 <div style="page-break-after: always;"></div>
 
@@ -3021,6 +3329,8 @@ kubectl get endpoints
 kubectl get pods -o wide
 ```
 
+<div id="lab8-1">
+
 ### Lab 8.1. Connecting applications with services
 
 1. Create a simple deployment with name `webserver`
@@ -3048,6 +3358,10 @@ kubectl get pods -o wide
    - you should run `curl $SERVICE_NAME.$SERVICE_NAMESPACE:$PORT` if the Service and the temporary Pod are in separate Namespaces
 17. Delete created resources
 18. Explore the Service object and the Service spec
+
+</div>
+
+<div id="soln-lab8-1">
 
 <details>
 <summary>lab 8.1 solution</summary>
@@ -3093,6 +3407,10 @@ kubectl explain service.spec | less
 ```
 
 </details>
+
+</div>
+
+<div id="lab8-2">
 
 ### Lab 8.2. Connect a frontend to a backend using services
 
@@ -3149,6 +3467,10 @@ In this lab, we will implement a naive example of a _backend-frontend_ microserv
    - Remember that Services target Pods by Selector
 7. Confirm you can access the backend app from the Minikube Node `$(minikube ip):NodePort`
 8. Delete created resources
+
+</div>
+
+<div id="soln-lab8-2">
 
 <details>
 <summary>lab 8.2 solution</summary>
@@ -3254,11 +3576,19 @@ kubectl delete -f lab8-2.yaml
 
 </details>
 
+</div>
+
 <div style="page-break-after: always;"></div>
+
+<div id="task8-1">
 
 ### Task - Service
 
 Create a Pod named `webapp` in the `pig` Namespace (create new if required), running `nginx:1.20-alpine` image. The Pod should have a Annotation `motd="Welcome to Piouson's CKAD Bootcamp"`. Expose the Pod on port 8080.
+
+</div>
+
+<div id="hint-task8-1">
 
 <details>
   <summary>hints</summary>
@@ -3295,6 +3625,10 @@ Create a Pod named `webapp` in the `pig` Namespace (create new if required), run
   </details>
 </details>
 
+</div>
+
+<div id="task8-2">
+
 ### Task - Service II
 
 A bootcamp student is stuck on a _simple task_ and would appreciate your expertise. Their goal is to create a `webapp` Deployment running `gcr.io/google-samples/node-hello:1.0` image in the `bat` Namespace, exposed on port 80 and _NodePort_ 32500. The student claims _everything_ was setup as explained in class but still unable to access the application via the Service. Swoop down like a superhero and save the day by picking up where the student left off.
@@ -3304,6 +3638,10 @@ A bootcamp student is stuck on a _simple task_ and would appreciate your experti
   printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"bat"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"replicas":2,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"containers":[{"image":"gcr.io/google-samples/node-hello:1.0","name":"nginx"}]}}}},{"apiVersion":"v1","kind":"Service","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"webapp"}}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
   ```
 - Command to destroy environment: `kubectl delete ns bat`
+
+</div>
+
+<div id="hint-task8-2">
 
 <details>
   <summary>hints</summary>
@@ -3353,6 +3691,8 @@ A bootcamp student is stuck on a _simple task_ and would appreciate your experti
   </details>
 </details>
 
+</div>
+
 <div style="page-break-after: always;"></div>
 
 ## 9. Ingress
@@ -3387,6 +3727,8 @@ kubectl explain ingress.spec | less
 
 > You can remove the need for a trailing slash `/` in urls by adding annotation `nginx.ingress.kubernetes.io/rewrite-target: /` to ingress spec `ingress.metadata.annotations`
 
+<div id="lab9-1">
+
 ### Lab 9.1 Enable Ingress
 
 1. List existing namespaces
@@ -3396,6 +3738,10 @@ kubectl explain ingress.spec | less
 5. Review the _ingress-nginx-controller_ Service in YAML form, note service type and ports
 6. Review the _ingressclass_ in YAML form, is this marked as the default?
 7. Review the Ingress spec
+
+</div>
+
+<div id="soln-lab9-1">
 
 <details>
 <summary>lab9.1 solution</summary>
@@ -3413,6 +3759,8 @@ kubectl explain ingress.spec | less
 ```
 </details>
 
+</div>
+
 ### Ingress Types
 
 - **single-service ingress** defines a single rule to access a single service
@@ -3429,6 +3777,8 @@ kubectl create ingress myingress --rule="/=app1:80" --rule="/about=app2:3000" --
 # create name-based-virtual-hosting ingress
 kubectl create ingress myingress --rule="api.domain.com/*=apiservice:80" --rule="db.domain.com/*=dbservice:80" --rule="app.domain.com/*=appservice:80"
 ```
+
+<div id="lab9-2">
 
 ### Lab 9.2 Understanding ingress
 
@@ -3464,6 +3814,10 @@ kubectl create ingress myingress --rule="api.domain.com/*=apiservice:80" --rule=
    - what are the ports related to HTTP `80` and HTTPS `443`?
 11. Can you access both apps via the _ingress-nginx-controller_ NodePorts for HTTP and HTTPS?
 12. Delete all created resources
+
+</div>
+
+<div id="lab9-2">
 
 <details>
 <summary>lab9.2 solution</summary>
@@ -3540,6 +3894,10 @@ kubectl delete ingress web-ing web2-ing
 > Ingress relies on Annotations to specify additional configuration. The supported Annotations depends on the Ingress controller type in use - in this case _Ingress-Nginx_ \
 > Please visit the [_Ingress-Nginx_ official _Rewrite_ documentation](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/rewrite/README.md) for more details
 
+</div>
+
+<div id="lab9-3">
+
 ### Lab 9.3. Simple fanout Ingress
 
 1. Create an Ingress `webapp-ingress` that:
@@ -3564,6 +3922,10 @@ kubectl delete ingress web-ing web2-ing
 17. Can you access `hello` via `curl $(minikube ip)/hello` or `myawesomesite.com/hello` with HTTP and HTTPS
 18. Can you access `webapp` and `hello` on `myawesomesite.com` via the NodePorts specified by the `ingress-nginx-controller`, `webappsvc` and `hellosvc` Services?
 19. Delete created resources
+
+</div>
+
+<div id="soln-lab9-3">
 
 <details>
 <summary>lab9.3 solution</summary>
@@ -3612,6 +3974,8 @@ curl https://myawesomesite.com:$HTTPS_NODE_PORT_FOR_NGINX_CONTROLLER/hello --ins
 kubectl delete -f lab9-3.yaml
 ```
 </details>
+
+</div>
 
 ### Ingress rules
 
@@ -3666,6 +4030,8 @@ kubectl get ingressclass
 kubectl explain ingressclass | less
 ```
 
+<div id="lab9-4">
+
 ### Lab 9.4. Multiple hosts ingress
 
 1. Review the _IngressClass_ resource object
@@ -3684,6 +4050,10 @@ kubectl explain ingressclass | less
    - `$(minikube ip)  httpd.yourchosenhostname.com`
 10. Verify you can access both deployments via their subdomains
 11. Delete created resources
+
+</div>
+
+<div id="soln-lab9-4">
 
 <details>
 <summary>lab9.4 solution</summary>
@@ -3715,6 +4085,8 @@ kubectl delete -f lab9-4.yaml
 # note that when specifying ingress path, `/*` creates a `Prefix` path type and `/` creates an `Exact` path type
 ```
 </details>
+
+</div>
 
 ### Network policies
 
@@ -3760,6 +4132,8 @@ spec:
   - {}
 ```
 
+<div id="lab9-5">
+
 ### Lab 9.5. Declare network policy
 
 You may follow the [official declare network policy walkthrough](https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/)
@@ -3782,6 +4156,10 @@ You may follow the [official declare network policy walkthrough](https://kuberne
 13. Run command in the Pod container `wget --spider --timeout=1 nginx`
 14. Delete created resources
 15. Revert to a cluster without Calico
+
+</div>
+
+<div id="soln-lab9-5">
 
 <details>
 <summary>lab9.5 solution</summary>
@@ -3845,7 +4223,11 @@ minikube start --kubernetes-version=1.23.9 --driver=docker
 ```
 </details>
 
+</div>
+
 <div style="page-break-after: always;"></div>
+
+<div id="task9-1">
 
 ### Task - Ingress
 
@@ -3857,12 +4239,18 @@ The application is meant to be accessible at `ckad-bootcamp.local`. Please debug
   ```
 - Command to destroy environment: `kubectl delete ns dog`
 
+</div>
+
+<div id="task9-2">
+
 ### Task - Network policy
 
 Given several Pods in Namespaces `pup` and `cat`. Lock down the cluster as follows:
   - Pods in the same Namespace can communicate together
   - `webapp` Pod in the `pup` Namespace can communicate with `microservice` Pod in the `cat` Namespace
   - DNS resolution on UDP/TCP port 53 is allowed for all Pods in all Namespaces
+
+</div>
 
 <div style="page-break-after: always;"></div>
 
@@ -3913,6 +4301,8 @@ A [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/) p
 
 > `hostPath` volumes is created on the host, in minikube use the `minikube ssh` command to access the host (requires starting the cluster with `--driver=docker`)
 
+<div id="lab10-1">
+
 ### Lab 10.1. PVs and PVCs
 
 ```sh
@@ -3930,6 +4320,10 @@ kubectl decribe {pvc|pv|storageclass} $NAME
 4. What happens when a PV and PVC are created without specifying a `StorageClass`?
    - repeat steps 1-3 after removing `storageClassName` from both YAML files
    - what was the results?
+
+</div>
+
+<div id="soln-lab10-1">
 
 <details>
 <summary>lab 10.1 solution</summary>
@@ -3964,6 +4358,10 @@ kubectl get pv,pvc # STATUS=Bound, task-pv-volume uses task-pv-claim
 ```
 </details>
 
+</div>
+
+<div id="lab10-2">
+
 ### Lab 10.2. Configuring Pods storage with PVs and PVCs
 
 The benefit of configuring Pods with PVCs is to decouple site-specific details.
@@ -3983,15 +4381,22 @@ You can follow the [official _configure a Pod to use a PersistentVolume for stor
 5. Connect to the Pod via an interactive shell and confirm you can view the contents of cluster host file `curl localhost`
 6. Clean up all resources created
 
+</div>
+
+<div id="soln-lab10-2">
+
 <details>
-  <summary><b>spoiler: lab steps</b></summary>
+  <summary>lab 10.2 solution</summary>
 
 ```sh
+# host terminal
 minikube ssh
+# node terminal
 sudo mkdir /mnt/data
 sudo sh -c "echo 'Hello from Kubernetes storage' > /mnt/data/index.html"
 cat /mnt/data/index.html
-exit # exit ssh
+exit
+# host terminal
 echo --- > lab10-2.yaml
 wget https://k8s.io/examples/pods/storage/pv-volume.yaml -O- >> lab10-2.yaml
 echo --- >> lab10-2.yaml
@@ -4011,7 +4416,11 @@ kubectl delete -f lab10-2.yaml
 
 For further learning, see [mounting the same persistentVolume in two places](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/#mounting-the-same-persistentvolume-in-two-places) and [access control](https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/#access-control)
 
+</div>
+
 <div style="page-break-after: always;"></div>
+
+<div id="task10-1">
 
 ### Task - Persistent volumes
 
@@ -4033,6 +4442,8 @@ In the `kid` Namespace (create if required), create a Deployment `webapp` with t
 </html>
 ```
 
+</div>
+
 <div style="page-break-after: always;"></div>
 
 ## 11. Variables, ConfigMaps and Secrets
@@ -4046,6 +4457,8 @@ The `kubectl create deploy` command does not currently support the `--env` optio
 > Note that doing `kubectl set env deploy --dry-run=client` will only work if the deployment is already created \
 > To generate a YAML file with variables via command-line, first `kubectl create deploy`, then `kubectl set env deploy --dry-run=client -o yaml` and edit to remove unnecessary metadata and statuses
 
+<div id="lab11-1">
+
 ### Lab 11.1. Deployment variables
 
 1. Create a `db` Deployment using `mysql` image
@@ -4057,6 +4470,10 @@ The `kubectl create deploy` command does not currently support the `--env` optio
 7. View more details of the Pod and note where env-var is specified
 8. Review the Pod in YAML form and note how the env-var is specified
 9. Delete created resources
+
+</div>
+
+<div id="soln-lab11-1">
 
 <details>
 <summary>lab11.1 solution</summary>
@@ -4080,6 +4497,8 @@ kubectl delete deploy,po db
 </details>
 
 > Note that you can [use Pod fields as env-vars](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/#use-pod-fields-as-values-for-environment-variables), as well as [use container fields as env-vars](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/#use-container-fields-as-values-for-environment-variables)
+
+</div>
 
 ### ConfigMaps
 
@@ -4108,6 +4527,8 @@ kubectl set env deploy web --keys=KEY1,KEY2 --from=configmap/mycm
 kubectl set env deploy web KEY1-
 ```
 
+<div id="lab11-2">
+
 ### Lab 11.2. ConfigMaps as environment variables
 
 1. Create a `file.env` file with the following content:
@@ -4133,6 +4554,10 @@ kubectl set env deploy web KEY1-
 11. Confirm Pod running or troubleshoot/fix any issues
 12. Connect a shell to the new Pod and run `printenv` to confirm env-vars
 13. Delete all created resources
+
+</div>
+
+<div id="soln-lab11-2">
 
 <details>
 <summary>lab11.2 solution</summary>
@@ -4168,6 +4593,10 @@ rm file.env
 ```
 </details>
 
+</div>
+
+<div id="lab11-3">
+
 ### Lab 11.3. Mounting ConfigMaps
 
 In the previous lab, only the Env-Var ConfigMap worked for our use-case. In this lab we will see how we can use the File ConfigMap.
@@ -4191,6 +4620,10 @@ You may also follow the [offical _add ConfigMap data to a Volume_ docs](https://
    - option `httpd` DocumentRoot - /usr/local/apache2/htdocs
 8. Connect a shell to the container and confirm your file is being served
 9. Delete created resources
+
+</div>
+
+<div id="soln-lab11-3">
 
 <details>
 <summary>lab11.3 solution</summary>
@@ -4260,6 +4693,8 @@ kubectl delete -f lab11-3.yml
 
 > Pay attention to the types of ConfigMaps, File vs Env-Var, and also note their YAML form differences
 
+</div>
+
 ### Secrets
 
 Secrets are similar to ConfigMaps but specifically intended to hold sensitive data such as passwords, auth tokens, etc. By default, Kubernetes Secrets are not encrypted but base64 encoded.
@@ -4305,6 +4740,8 @@ kubectl get serviceaccount mysa -o yaml
 
 > See the [Kubernetes JSONPath support docs](https://kubernetes.io/docs/reference/kubectl/jsonpath/) to learn more about using `jsonpath`
 
+<div id="lab11-4">
+
 ### Lab 11.4. Decoding secrets
 
 You may follow the [official _managing secrets using kubectl_ docs](https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kubectl/)
@@ -4312,6 +4749,10 @@ You may follow the [official _managing secrets using kubectl_ docs](https://kube
 1. Review the CoreDNS Pod in the `kube-system` namespace and determine its `serviceAccountName`
 2. Review the ServiceAccount and determine the name of the `Secret` in use
 3. View the contents of the `Secret` and decode the value of its keys: `ca.crt` `namespace` and `token`.
+
+</div>
+
+<div id="soln-lab11-4">
 
 <details>
 <summary>lab11.4 solution</summary>
@@ -4327,19 +4768,31 @@ kubectl -nkube-system get secret $SECRET_NAME -ojsonpath="{.data.token}" | base6
 ```
 </details>
 
+</div>
+
+<div id="lab11-5">
+
 ### Lab 11.5. Secrets as environment variables
 
 Repeat [lab 11.2](#lab112-configmaps-as-environment-variables) with secrets
 
 > See the [official _secrets as container env-vars_ docs](https://kubernetes.io/docs/concepts/configuration/secret/#use-case-as-container-environment-variables)
 
+</div>
+
+<div id="soln-lab11-5">
+
 <details>
 <summary>lab11.5 solution</summary>
   
 ```sh
-# very similar to configmap solution, create pull-request
+# very similar to configmap solution, accepting pull-requests
 ```
 </details>
+
+</div>
+
+<div id="lab11-6">
 
 ### Lab 11.6. Secrets as files
 
@@ -4347,13 +4800,21 @@ Repeat [lab 11.3](#lab113-mounting-configmaps) with secrets.
 
 > See the [official _using secrets as files_ docs](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod)
 
+</div>
+
+<div id="soln-lab11-6">
+
 <details>
 <summary>lab11.6 solution</summary>
   
 ```sh
-# very similar to configmap solution, create pull-request
+# very similar to configmap solution, accepting pull-requests
 ```
 </details>
+
+</div>
+
+<div id="lab11-7">
 
 ### Lab 11.7. Secrets as docker registry credentials
 
@@ -4364,15 +4825,23 @@ Repeat [lab 11.3](#lab113-mounting-configmaps) with secrets.
 
 > See the [official _create an `imagePullSecret`_ docs](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#create-an-imagepullsecret)
 
+</div>
+
+<div id="soln-lab11-7">
+
 <details>
 <summary>lab11.7 solution</summary>
   
 ```sh
-# one-line command can be found in `kubectl create secret -h` examples, create pull-request
+# one-line command can be found in `kubectl create secret -h` examples, accepting pull-requests
 ```
 </details>
 
+</div>
+
 <div style="page-break-after: always;"></div>
+
+<div id="task11-1">
 
 ### Task - ConfigMap and Secrets
 
@@ -4388,6 +4857,8 @@ DEPLOY_CITY=manchester
 DEPLOY_REGION=north-west
 DEPLOY_ENVIRONMENT=staging
 ```
+
+</div>
 
 <div style="page-break-after: always;"></div>
 
@@ -4430,6 +4901,8 @@ The kubelet can optionally perform and react to three kinds of probes on running
 
 > For more details, see [configuring Liveness, Readiness and Startup Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
 
+<div id="lab12-1">
+
 ### Lab 12.1. Liveness probe
 
 Many applications running for long periods of time eventually transition to broken states, and cannot recover except by being restarted. Kubernetes provides liveness probes to detect and remedy such situations. \
@@ -4455,6 +4928,10 @@ kubectl get events --watch
 2. Apply the manifest file to create the Deployment
 3. Review and monitor created Pod events for 3-5mins
 4. Delete created resources
+
+</div>
+
+<div id="soln-lab12-1">
 
 <details>
 <summary>lab12.1 solution</summary>
@@ -4488,6 +4965,8 @@ kubectl delete -f lab12-1.yml
 ```
 </details>
 
+</div>
+
 ### Configure probes
 
 Probes have a number of fields that you can use to more precisely control the behavior of liveness and readiness checks:
@@ -4497,6 +4976,8 @@ Probes have a number of fields that you can use to more precisely control the be
 - `timeoutSeconds`: Seconds after which the probe times out - default 1, minimum 1.
 - `successThreshold`: Number of consecutive successes after a failure for the probe to be considered successful - default 1, minimum 1, must be 1 for liveness/startup Probes
 - `failureThreshold`: Number of consecutive retries on failure before giving up, liveness probe restarts the container after giving up, readiness probe marks the Pod as Unready - defaults 3, minimum 1.
+
+<div id="lab12-2">
 
 ### Lab 12.2. Readiness probe
 
@@ -4528,6 +5009,10 @@ Sometimes, applications are temporarily unable to serve traffic, for example, a 
    - note that these changes trigger a rolling update - chainging parameters within `deploy.spec.template`
 9. Review more details of one of the Pod
 10. Delete created resources
+
+</div>
+
+<div id="soln-lab12-2">
 
 <details>
 <summary>lab 12.2 solution</summary>
@@ -4599,6 +5084,10 @@ kubectl delete -f lab12-2.yml
 ```
 </details>
 
+</div>
+
+<div id="lab12-3">
+
 ### Lab 12.3. Protect slow starting containers with startup probe
 
 Sometimes, you have to deal with legacy applications that might require additional startup time on first initialization. In such cases, it can be tricky to set up _liveness probe_ without compromising the fast response to deadlocks that motivated such a probe. The trick is to set up a _startup probe_ with the same command, HTTP or TCP check, with a `failureThreshold * periodSeconds` long enough to cover the worse case startup time.
@@ -4616,6 +5105,10 @@ Sometimes, you have to deal with legacy applications that might require addition
 4. List running Pods
 5. View more details of one of the Pods and confirm how Probe configuration appear
 6. Delete created resources
+
+</div>
+
+<div id="soln-lab12-3">
 
 <details>
 <summary>lab 12.3 solution</summary>
@@ -4662,56 +5155,119 @@ kubectl delete -f lab12-2.yml
 ```
 </details>
 
+</div>
+
+<div id="lab12-4">
+
 ### Lab 12.4. Blue/Green deployments
 
 [Blue/green deployment](https://kubernetes.io/blog/2018/04/30/zero-downtime-deployment-kubernetes-jenkins/#blue-green-deployment) is a update-strategy used to accomplish zero-downtime deployments. The current version application is marked blue and the new version application is marked green. In Kubernetes, blue/green deployment can be easily implemented with Services.
 
 <details>
-  <summary><b>blue/green update strategy</b></summary>
+  <summary>blue/green update strategy</summary>
   
   ![blue-green update strategy from https://engineering-skcc.github.io/performancetest/Cloud-%ED%99%98%EA%B2%BD-%EC%84%B1%EB%8A%A5%EB%B6%80%ED%95%98%ED%85%8C%EC%8A%A4%ED%8A%B8/](https://user-images.githubusercontent.com/17856665/185770858-83a088c2-4701-4fd6-943e-ebfb020aa498.gif)
 </details>
 
 1. Create a `blue` Deployment
    - three replicas
-   - image` nginx:1.19-alpine`
+   - image `nginx:1.19-alpine`
    - on the cluster Node, create an HTML document `/mnt/data/index.html` with any content
    - mount the `index.html` file to the DocumentRoot as a _HostPath_ volume
-   - _Pod Template_ have label `target=blue`
-2. Expose `blue` Deployment on port 80
+2. Expose `blue` Deployment on port 80 with Service name `bg-svc`
 3. Verify created resources and test access with `curl`
 4. Create a new `green` Deployment using [1] as base
    - three replicas
    - use a newer version of the image `nginx:1.21-alpine`
    - on the cluster Node, create a new HTML document `/mnt/data2/index.html` with different content
    - mount the `index.html` file to the DocumentRoot as a _HostPath_ volume
-   - _Pod Template_ have label `target=green`
 5. Verify created resources and test access with `curl`
-6. Edit the Service _Selector_ for `blue` deployment as `target=green` to redirect traffic to `green` Deployment
+6. Edit `bg-svc` Service _Selector_ as `app=green` to redirect traffic to `green` Deployment
 7. Confirm all working okay with `curl`
 8. Delete created resources
+
+</div>
+
+<div id="soln-lab12-4">
+
+<details>
+<summary>lab 12.4 solution</summary>
+
+```sh
+# host terminal
+minikube ssh
+# node terminal
+sudo mkdir /mnt/data /mnt/data2
+echo "This is blue deployment" | sudo tee /mnt/data/index.html
+echo "Green deployment" | sudo tee /mnt/data2/index.html
+exit
+# host terminal
+kubectl create deploy blue --image=nginx:1.19-alpine --replicas=3 --dry-run=client -oyaml>12-4.yml
+nano 12-4.yml # add hostpath volume and pod template label
+```
+
+```yaml
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: testvol
+      volumes:
+      - name: testvol
+        hostPath:
+          path: /mnt/data
+```
+
+```sh
+kubectl apply -f lab12-4.yml
+kubectl expose deploy blue --name=bg-svc --port=80
+kubectl get all,ep -owide
+kubectl run mypod --rm -it --image=nginx:alpine -- sh
+# container terminal
+curl bg-svc # This is blue deployment
+exit
+# host terminal
+cp lab12-4.yml lab12-4b.yml
+nano lab12-4b.yml # change `blue -> green`, hostpath `/mnt/data2`, image `nginx:1.21-alpine
+kubectl apply -f lab12-4b.yml
+kubectl edit svc bg-svc # change selector `blue -> green`
+kubectl run mypod --rm -it --image=nginx:alpine -- sh
+# container terminal
+curl bg-svc # Green deployment
+exit
+kubectl delete -f lab12-4.yml,lab12-4b.yml
+```
+
+</details>
+
+</div>
+
+<div id="lab12-5">
 
 ### Lab 12.5. Canary deployments
 
 Canary deployment is an update strategy where updates are deployed to a subset of users/servers (canary application) for testing prior to full deployment. This is a scenario where Labels are required to distinguish deployments by release or configuration.
 
 <details>
-  <summary><b>canary update strategy</b></summary>
+  <summary>canary update strategy</summary>
   
   ![canary update strategy from https://life.wongnai.com/project-ceylon-iii-argorollouts-55ec70110f0a](https://user-images.githubusercontent.com/17856665/185770905-7c3901ec-f97a-4046-8411-7a722b0601a4.png)
 </details>
 
 1. Create a webserver application
    - three replicas
-   - selector `updateType: canary`
+   - _Pod Template_ label `updateType=canary`
    - use image` nginx:1.19-alpine`
    - create an HTML document `index.html` with any content
    - mount the `index.html` file to the DocumentRoot as a _ConfigMap_ volume
-2. Expose the Deployment on port 80
+2. Expose the Deployment on port 80 with Service name `canary-svc`
 3. Verify created resources and test access with `curl`
 4. Create a new application using [1] as base
    - one replica
-   - selector `updateType: canary`
+   - _Pod Template_ label `updateType=canary`
    - use a newer version of the image `nginx:1.22-alpine`
    - create a new HTML document `index.html` with different content
    - mount the `index.html` file to the DocumentRoot as a _ConfigMap_ volume
@@ -4723,7 +5279,74 @@ Canary deployment is an update strategy where updates are deployed to a subset o
 
 > Scaling down to zero instead of deleting provides an easy option to revert changes when there are issues
 
+</div>
+
+<div id="soln-lab12-5">
+
+<details>
+<summary>lab 12.5 solution</summary>
+
+```sh
+# host terminal
+kubectl create cm cm-web1 --from-literal=index.html="This is current version"
+kubectl create deploy web1 --image=nginx:1.19-alpine --replicas=3 --dry-run=client -oyaml>12-5.yml
+nano 12-5.yml # add configmap volume and pod template label
+```
+
+```yaml
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      app: web1
+      updateType: canary
+  template:
+    metadata:
+      labels:
+        app: web1
+        updateType: canary
+    spec:
+      containers:
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: testvol
+      volumes:
+      - name: testvol
+        configMap:
+          name: cm-web1
+```
+
+```sh
+kubectl apply -f lab12-5.yml
+kubectl expose deploy web1 --name=canary-svc --port=80
+kubectl get all,ep -owide
+kubectl run mypod --rm -it --image=nginx:alpine -- sh
+# container terminal
+curl canary-svc # This is current version
+exit
+# host terminal
+cp lab12-5.yml lab12-5b.yml
+kubectl create cm cm-web2 --from-literal=index.html="New version"
+nano lab12-5b.yml # change `web1 -> web2`, image `nginx:1.22-alpine`, replicas 1, add pod template label
+kubectl apply -f lab12-5b.yml
+kubectl get all,ep -owide # more ip addresses added to endpoint
+kubectl run mypod --rm -it --image=nginx:alpine -- sh
+# container terminal
+watch "curl canary-svc" # both "New version" and "This is current version"
+kubectl scale deploy web2 --replicas=3
+kubectl get rs,po -owide
+kubectl scale deploy web1 --replicas=0
+kubectl get rs,po -owide
+kubectl delete -f lab12-5.yml,lab12-5b.yml
+```
+
+</details>
+
+</div>
+
 <div style="page-break-after: always;"></div>
+
+<div id="task12-1">
 
 ### Task - Probes
 
@@ -4738,6 +5361,10 @@ You do not need to test that the probes work, you only need to configure them. A
   printf '\nlab: lab environment setup in progress...\n'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"dam"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app":"legacy"},"name":"legacy","namespace":"dam"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"legacy"}},"template":{"metadata":{"labels":{"app":"legacy"}},"spec":{"containers":[{"args":["/server"],"image":"registry.k8s.io/liveness","name":"probes","ports":[{"containerPort":8080}]}],"restartPolicy":"OnFailure"}}}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
   ```
 - Command to destroy environment: `kubectl delete ns dam`
+
+</div>
+
+<div id="task12-2">
 
 ### Task - Zero Downtime Updates
 
@@ -4760,6 +5387,8 @@ Finally, create a new Deployment named `high-appv3` based on `high-app.json` fil
 - Command to destroy environment: `kubectl delete ns hog`
 
 <div style="page-break-after: always;"></div>
+
+</div>
 
 ## 13 K8s API
 
@@ -4838,10 +5467,12 @@ Two things are required to access a cluster - the **location** of the cluster an
 Run `kubectl config view` to see the location and credentials configured for `kubectl`.
 
 <details>
-  <summary><code><b>kubectl config view</b></code></summary>
+  <summary><code>kubectl config view</code></summary>
   
   ![image](https://user-images.githubusercontent.com/17856665/184899506-47878132-dc9b-4a6a-8491-080fe56c6261.png)
 </details>
+
+<div id="lab13-1">
 
 ### Lab 13.1. Using kubectl proxy to access the API
 
@@ -4857,6 +5488,8 @@ You may follow the [official _accessing the rest api_ docs](https://kubernetes.i
 6. Get details of a specific pod with `curl`
 7. Delete the pod with `curl`
 8. Confirm pod deletion
+
+</div>
 
 ### Checking API access
 
@@ -4884,6 +5517,8 @@ Just as user accounts identifies humans, a service account identifies processes 
   - default namespace `/var/run/secrets/kubernetes.io/serviceaccount/namespace`
 - You can opt out of automounting API credentials for a ServiceAccount by setting `automountServiceAccountToken: false` on the ServiceAccount. Note that the pod spec takes precedence over the service account if both specify a `automountServiceAccountToken` value
 
+<div id="lab13-2">
+
 ### Lab 13.2. Accessing the API without kubectl proxy
 
 This requires using the token of the default ServiceAccount. The token can be read directly (see [lab 11.4 - decoding secrets](#lab-114-decoding-secrets)), but the recommended way to get the token is via the [TokenRequest API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-request-v1/).
@@ -4894,8 +5529,12 @@ You may follow the [official _access the API **without** kubectl proxy_ docs](ht
 2. Wait for the token controller to populate the Secret with a token
 3. Use `curl` to access the API with the generated token as credentials
 
+</div>
+
+<div id="soln-lab13-2">
+
 <details>
-  <summary><b>lab 13.2 steps</b></summary>
+  <summary>lab 13.2 solution</summary>
 
 ```sh
 # request token
@@ -4920,6 +5559,10 @@ curl $APISERVER/api --header "Authorization: Bearer $TOKEN" --insecure
 
 > Using `curl` with the `--insecure` option [skips TLS certificate validation](https://curl.se/docs/sslcerts.html)
 
+</div>
+
+<div id="lab13-3">
+
 ### Lab 13.3. Accessing the API from inside a Pod
 
 You may follow the [official _access the API from within a Pod_ docs](https://kubernetes.io/docs/tasks/run-application/access-api-from-pod/#without-using-a-proxy).
@@ -4930,8 +5573,12 @@ You may follow the [official _access the API from within a Pod_ docs](https://ku
 2. Use `curl` to access the API at `kubernetes.default.svc/api` with the automounted ServiceAccount credentials (`token` and `certificate`)
 3. Can you access the Pods list at `kubernetes.default.svc/api/v1/namespaces/default/pods`?
 
+</div>
+
+<div id="soln-lab13-3">
+
 <details>
-  <summary><b>lab 13.3 steps</b></summary>
+  <summary>lab 13.3 solution</summary>
 
 ```sh
 # connect an interactive shell to a container within the Pod
@@ -4944,6 +5591,8 @@ curl --cacert $CERT_FILE --header "Authorization: Bearer $TOKEN" https://kuberne
 ```
 
 </details>
+
+</div>
 
 ### RBAC
 
@@ -4986,6 +5635,8 @@ kubectl create rolebinding $ROLE_BINDING_NAME --clusterrole=$CLUSTERROLE_NAME --
 kubectl create rolebinding $ROLE_BINDING_NAME --clusterrole=$CLUSTERROLE_NAME --serviceaccount=$NAMESPACE:default --namespace=$NAMESPACE
 ```
 
+<div id="lab13-4">
+
 ### Lab 13.4. Exploring RBAC
 
 In [lab 13.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were unable to access the PodList API at `kubernetes.default.svc/api/v1/namespaces/default/pods`. Lets apply the required permissions to make this work.
@@ -4998,8 +5649,10 @@ In [lab 13.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were una
 6. Can you access the API to get a specific Pod like the one you're running? Hint: Role permissions
 7. Can you use a deployment instead of a "naked" Pod?
 
+</div>
+
 <details>
-  <summary><b>lab 13.4 steps</b></summary>
+  <summary>lab 13.4 solution</summary>
 
 ```sh
 # create service account yaml
@@ -5046,11 +5699,17 @@ kubectl delete -f lab13-4.yaml
 
 </details>
 
+</div>
+
 <div style="page-break-after: always;"></div>
+
+<div id="task13-1">
 
 ### Task - Service account
 
-Coming soon.
+Coming soon, accepting pull-requests
+
+</div>
 
 <div style="page-break-after: always;"></div>
 
@@ -5100,6 +5759,8 @@ helm delete
 helm uninstall $RELEASE_NAME
 ```
 
+<div id="lab14-1">
+
 ### Lab 14.1. Explore Helm Charts
 
 1. [Install Helm](https://github.com/helm/helm#install)
@@ -5113,6 +5774,8 @@ helm uninstall $RELEASE_NAME
 9. View details of installed Chart
 10. View status of installed Chart
 11. Search for available Charts in added Helm repo
+
+</div>
 
 ### Helm templates
 
@@ -5137,6 +5800,8 @@ tar -xvf file.tgz -C /path/to/directory
 tar -tvf file.tar
 ```
 
+<div id="lab14-2">
+
 ### Lab 14.2. Customising Helm Charts
 
 1. Download a Chart template and extract the content to a specified directory
@@ -5146,6 +5811,8 @@ tar -tvf file.tar
 5. View resources created by the Helm Chart
 6. List installed Charts
 7. List installed Helm repos
+
+</div>
 
 ### Kustomize
 
@@ -5240,6 +5907,8 @@ We can take advantage of Kustomization's "composing and customising" feature to 
 
 </details>
 
+<div id="lab14-3">
+
 ### Lab 14.3. Kustomize resources
 
 1. Create a `service.yaml` resource file for a service
@@ -5247,6 +5916,8 @@ We can take advantage of Kustomization's "composing and customising" feature to 
 3. Create a `kustomization.yaml` file with name prefix/suffix and common labels for both resource files
 4. Apply the Kustomization file to create the resources
 5. Review resources created and confirm that the prefix/suffix and labels are applied
+
+</div>
 
 ### Custom Resource Definition (CRD)
 
@@ -5293,6 +5964,8 @@ spec:
     - ct # allow `crontab|ct` to match this resource on CLI
 ```
 
+<div id="lab14-4">
+
 ### Lab 14.4. Custom objects
 
 You can follow the [official CRD tutorial](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/).
@@ -5316,6 +5989,8 @@ You can follow the [official CRD tutorial](https://kubernetes.io/docs/tasks/exte
    - plural `/apis/<group>/<version>/<plural>`
 6. Clean up by deleting with the manifest files
 
+</div>
+
 ### Operator pattern
 
 [Operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) are software extensions to Kubernetes that make use of custom resources to manage applications and their components. The operator pattern captures how you can write code to automate a task beyond what Kubernetes itself provides.
@@ -5325,6 +6000,8 @@ Kubernetes' operator pattern concept lets you extend the cluster's behaviour wit
 Although, you can write your own operator, majority prefer to find ready-made operators on community websites like [OperatorHub.io](https://operatorhub.io/). Many Kubernetes solutions are provided as operators like [Prometheus](https://prometheus.io/) or Tigera (calico).
 
 > This lab requires the Calico plugin. You will need to delete and start a new cluster if your current one doesn't support Calico
+
+<div id="lab14-5">
 
 ### Lab 14.5. Operators
 
@@ -5359,6 +6036,8 @@ wget -qO- https://url/to/file | less # quiet mode
    - new namespaces
    - resources in the new namespaces (Calico Pods take awhile to enter `Running` status)
 
+</div>
+
 ### StatefulSets
 
 [StatefulSet](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/) is similar to Deployments but provides guarantees about the ordering and uniqueness of managed Pods. Unlike Deployments, StatefulSet Pods are not interchangeable: each has a persistent identifier and storage volume that it maintains across any rescheduling.
@@ -5380,6 +6059,8 @@ StatefulSets are valuable for applications that require one or more of the follo
 - To achieve ordered and graceful termination of Pods, scale the StatefulSet down to 0 prior to deletion
 - It's possible to get into a broken state that requires [manual repair](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#forced-rollback) when using [Rolling Updates](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#rolling-updates) with the default [Pod Management Policy](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies) (`OrderedReady`)
 
+<div id="lab14-6">
+
 ### Lab 14.6. Components of a StatefulSet
 
 See the [example manifest](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components)
@@ -5388,11 +6069,17 @@ See the [example manifest](https://kubernetes.io/docs/concepts/workloads/control
 2. Verify resources created and compare to a regular deployment
 3. Confirm persistent volume claims created
 
+</div>
+
 <div style="page-break-after: always;"></div>
+
+<div id="task14-1">
 
 ### Task - Helm
 
-Coming soon.
+Coming soon, accepting pull-requests
+
+</div>
 
 <div style="page-break-after: always;"></div>
 
@@ -5427,6 +6114,17 @@ As soon as your exam starts, you will want to setup `kubectl` and your chosen te
    printf "set tabsize 2\nset tabstospaces" > ~/.nanorc
    ```
 
+Questions use different Clusters and different Namespaces. Therefore, for each question:
+
+1. Switch to the Cluster for the question - command will be provided
+2. Create a variable `ns=$QUESTION_NAMESPACE` to make things easy for yourself
+3. Do not assume the default Namespace is `default`, always set and use your variable `ns=default`
+
+```sh
+# example using variable/alias
+k create deploy webapp --image=nginx:alpine $dr $ns > 2.yml`
+```
+
 ### Commandline copy-paste
 
 Remember that copy/paste works different in a terminal:
@@ -5438,7 +6136,7 @@ Remember that copy/paste works different in a terminal:
 
 Get familiar with your text editor to improve your speed:
 
-1. Use search and replace for bulk changes (`^C = Ctrl+C`, `M-C = Alt+C`)
+1. Use search and replace for bulk changes (on Windows, `^C = Ctrl+C` and `M-C = Alt+C`)
    - vim:
      1. `:s/foo/bar/g` - find each `foo` in current line and replace with `bar`
      2. `:s/foo/bar/g` - find each `foo` in all lines and replace with `bar`  
