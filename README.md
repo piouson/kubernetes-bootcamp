@@ -101,7 +101,7 @@ curl google.com
 </details>
 
 <details>
-  <summary><b>Ubuntu users</b></summary>
+  <summary>Ubuntu users</summary>
 
 Install Docker Engine on Ubuntu. This is also an alternative for Windows users on WSL2.
 
