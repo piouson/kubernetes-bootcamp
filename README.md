@@ -4,6 +4,8 @@ This course is a part of my cloud-native application developer bootcamp series. 
 
 <a href="https://github.com/sponsors/piouson" target="_blank"><img src="https://img.shields.io/static/v1?message=buy%20me%20coffee&logo=buymeacoffee&labelColor=2E0050&color=4B0083&logoColor=pink&label=%20&style=for-the-badge" alt="buy me coffee to sponsor this project"></a>
 
+<div style="page-break-after: always;"></div>
+
 ## Learning Outcomes
 
 In summary, you will be learning cloud-native application development, which is a modern approach to building and running software applications that exploits the flexibility, scalability, and resilience of cloud computing. Some highlights include:
@@ -21,28 +23,89 @@ In summary, you will be learning cloud-native application development, which is 
 
 </details>
 
+<div style="page-break-after: always;"></div>
+
 ## Requirements
 
 A Unix-based environment running docker (Docker Engine or Docker Desktop).
 
-- macOS [install Docker Desktop](https://docs.docker.com/desktop/install/mac-install/)
-- Windows [setup WSL2 development environment](https://docs.microsoft.com/en-us/windows/wsl/setup/environment), then:
-  - option 1 install Docker Engine in WSL2, see [Ubuntu install steps](#docker-engine-installation) below
-  - option 2 [install Docker Desktop with WSL2 backend](https://docs.docker.com/desktop/windows/wsl/) - [`winget install Docker.DockerDesktop`](https://docs.microsoft.com/en-us/windows/package-manager/winget/)
-  - if you are on a device with VPN and encounter WSL Internet issues, use [WSL VPN fix](https://github.com/sakai135/wsl-vpnkit)
-- preferably, have a command-line package manager for your operating system
-  - macOS use [Homebrew](https://brew.sh/)
-  - Windows use [winget](https://docs.microsoft.com/en-us/windows/package-manager/winget/)
+<details>
+<summary>macOS users</summary>
 
-> Docker Desktop for beginners, but certain network limitations may affect [ch8 labs](#8-networking) \
-> Docker Engine for experts but doesn't work on macOS
-
-### Docker engine installation
+```sh
+# 1. install xcode tools
+sudo xcode-select --install
+# 2. install homebrew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+# 3. install docker
+brew install --cask docker
+```
+</details>
 
 <details>
-  <summary><b>docker engine install steps on Ubuntu</b></summary>
+  <summary>Windows users</summary>
 
-- if using Windows/WSL2, be sure to [disable Docker Desktop integration with WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
+```sh
+# powershell as administrator
+# 1. install wsl2
+wsl --install
+# 2. install terminal
+winget install Microsoft.WindowsTerminal
+# 3. install docker
+winget install Docker.DockerDesktop
+# restart device and complete Ubuntu user setup
+```
+
+<details>
+  <summary>WSL Internet connection test</summary>
+
+After restart, [open Terminal and switch to Ubuntu](https://user-images.githubusercontent.com/17856665/192830999-f8f9c5af-8b4e-41c4-8f5e-c9c159fcf9ca.png)
+
+```sh
+# check for internet connection
+curl google.com
+# if connection fails, see `wsl2 vpn fix` below
+```
+
+> You can also [make Ubuntu your default Terminal profile](https://user-images.githubusercontent.com/17856665/192833271-5a3170a0-caf6-45bf-b378-ac6eb1f2dfbc.png)
+
+</details>
+
+<details>
+  <summary>WSL2 VPN fix</summary>
+
+If you're unable to access the Internet from WSL2 due to a VPN installed on your device, try below method
+
+```sh
+# powershell as administrator
+# 1. download vpnkit
+wget -o wsl-vpnkit.tar.gz https://github.com/sakai135/wsl-vpnkit/releases/latest/download/wsl-vpnkit.tar.gz
+# 2. add vpnkit as linux distro
+wsl --import wsl-vpnkit $env:USERPROFILE\wsl-vpnkit wsl-vpnkit.tar.gz --version 2
+wsl -d wsl-vpnkit
+# 3. switch to wsl2 ubuntu terminal
+wsl
+# 4. create an alias `vpnkit`
+printf '# vpnkit - fix vpn network issues\nalias vpnkit="wsl.exe -d wsl-vpnkit service wsl-vpnkit"' >> ~/.bashrc
+# 5. load the new alias
+exec bash
+# 6. start the vpnkit
+vpnkit start
+# 7. test internet connection
+curl google.com
+# note that you can stop the fix with `vpnkit stop`
+```
+
+</details>
+
+</details>
+
+<details>
+  <summary><b>Ubuntu users</b></summary>
+
+Install Docker Engine on Ubuntu. This is also an alternative for Windows users on WSL2.
+
+> if using Windows/WSL2, be sure to [disable Docker Desktop integration with WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
 
 ```sh
 # Windows/WSL2 prerequisites - enable `systemd` on WSL2
@@ -1546,7 +1609,7 @@ At the end of your task, copy the log file used by the logging container to dire
 
 - Command to setup environment:
   ```sh
-  echo '{"apiVersion":"v1","items":[{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"fox"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"ape"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"cow"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"box"},"name":"box","namespace":"ape"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"box"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"for-testing"},"name":"for-testing","namespace":"fox"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"for-testing"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"webserver"},"name":"webserver","namespace":"fox"},"spec":{"containers":[{"name":"server","image":"ngnx:1.20-alpine","volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]},{"name":"logger","image":"busybox:1.28","args":["/bin/sh","-c","while true; do  echo $(date) >> /usr/share/nginx/html/1.log;\n  sleep 30;\ndone\n"],"volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]}],"volumes":[{"name":"serverlog","emptyDir":{}}]}}],"metadata":{"resourceVersion":""},"kind":"List"}' | kubectl apply -f - >/dev/null
+  printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"v1","items":[{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"fox"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"ape"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"cow"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"box"},"name":"box","namespace":"ape"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"box"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"for-testing"},"name":"for-testing","namespace":"fox"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"for-testing"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"webserver"},"name":"webserver","namespace":"fox"},"spec":{"containers":[{"name":"server","image":"ngnx:1.20-alpine","volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]},{"name":"logger","image":"busybox:1.28","args":["/bin/sh","-c","while true; do  echo $(date) >> /usr/share/nginx/html/1.log;\n  sleep 30;\ndone\n"],"volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]}],"volumes":[{"name":"serverlog","emptyDir":{}}]}}],"metadata":{"resourceVersion":""},"kind":"List"}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
   ```
 - Command to destroy environment: `kubectl delete ns ape cow fox`
 
@@ -2789,17 +2852,13 @@ minikube addons disable metrics-server
 
 ### Task - Deployment
 
-Some bootcamp students have been messing with the `webapp` Deployment for the test environment's webpage in the `default` Namespace, leaving it broken. Please rollback the Deployment to the last fully functional version.
+Some bootcamp students have been messing with the `webapp` Deployment for the test environment's webpage in the `default` Namespace, leaving it broken. Please rollback the Deployment to the last fully functional version. Once on the fully functional version, update the Deployment to have a total of 10 Pods, and ensure that the total number of old and new Pods, during a rolling update, do not exceed 13 or go below 7.
 
-Once on the fully functional version, update the Deployment to have a total of 10 Pods, and ensure that the total number of old and new Pods, during a rolling update, do not exceed 13 or go below 7.
-
-Update the Deployment to `nginx:1.22-alpine` to confirm the Pod count stays within these thresholds. Then rollback the Deployment to the fully functional version.
-
-Before you leave, set the Replicas to 4, and just to be safe, Annotate all the Pods with `description="Bootcamp Test Env - Please Do Not Change Image!"`.
+Update the Deployment to `nginx:1.22-alpine` to confirm the Pod count stays within these thresholds. Then rollback the Deployment to the fully functional version. Before you leave, set the Replicas to 4, and just to be safe, Annotate all the Pods with `description="Bootcamp Test Env - Please Do Not Change Image!"`.
 
 - Command to setup environment:
   ```sh
-  printf '\nlab: environment setup in progress...'; echo '{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp"},"spec":{"replicas":2,"revisionHistoryLimit":15,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"volumes":[{"name":"varlog","emptyDir":{}}],"containers":[{"image":"nginx:1.12-alpine","name":"nginx","volumeMounts":[{"name":"varlog","mountPath":"/var/logs"}]}]}}}}' > k8s-task-6.yml; kubectl apply -f k8s-task-6.yml >/dev/null; cp k8s-task-6.yml k8s-task-6-bak.yml; sed -i -e 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 1; sed -i -e 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; sed -i -e 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 2; sed -i -e 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; kubectl apply -f k8s-task-6-bak.yml >/dev/null; sleep 4; kubectl rollout undo deploy webapp --to-revision=5 >/dev/null; kubectl delete $(kubectl get rs --sort-by=".spec.replicas" -oname | tail -n1) >/dev/null; rm k8s-task-6.yml k8s-task-6-bak.yml; echo 'lab: environment setup complete!'
+  printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp"},"spec":{"replicas":2,"revisionHistoryLimit":15,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"volumes":[{"name":"varlog","emptyDir":{}}],"containers":[{"image":"nginx:1.12-alpine","name":"nginx","volumeMounts":[{"name":"varlog","mountPath":"/var/logs"}]}]}}}}' > k8s-task-6.yml; kubectl apply -f k8s-task-6.yml >/dev/null; cp k8s-task-6.yml k8s-task-6-bak.yml; sed -i -e 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 1; sed -i -e 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; sed -i -e 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 2; sed -i -e 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; kubectl apply -f k8s-task-6-bak.yml >/dev/null; sleep 4; kubectl rollout undo deploy webapp --to-revision=5 >/dev/null; kubectl delete $(kubectl get rs --sort-by=".spec.replicas" -oname | tail -n1) >/dev/null; rm k8s-task-6.yml k8s-task-6-bak.yml; echo 'lab: environment setup complete!'
   ```
 - Command to destroy environment: `kubectl delete deploy webapp`
 
@@ -3242,7 +3301,7 @@ A bootcamp student is stuck on a _simple task_ and would appreciate your experti
 
 - Command to setup environment:
   ```sh
-  printf '\nlab: environment setup in progress...'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"bat"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"replicas":2,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"containers":[{"image":"gcr.io/google-samples/node-hello:1.0","name":"nginx"}]}}}},{"apiVersion":"v1","kind":"Service","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"webapp"}}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
+  printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"bat"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"replicas":2,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"containers":[{"image":"gcr.io/google-samples/node-hello:1.0","name":"nginx"}]}}}},{"apiVersion":"v1","kind":"Service","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"webapp"}}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
   ```
 - Command to destroy environment: `kubectl delete ns bat`
 
@@ -3794,7 +3853,7 @@ The application is meant to be accessible at `ckad-bootcamp.local`. Please debug
 
 - Command to setup environment:
   ```sh
-  printf '\nlab: environment setup in progress...'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"bat"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"replicas":2,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"containers":[{"image":"gcr.io/google-samples/node-hello:1.0","name":"nginx"}]}}}},{"apiVersion":"v1","kind":"Service","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"webapp"}}},{"kind":"Ingress","apiVersion":"networking.k8s.io/v1","metadata":{"name":"webapp","namespace":"bat"},"spec":{"ingressClassName":"ngnx","rules":[{"http":{"paths":[{"path":"/","pathType":"Prefix","backend":{"service":{"name":"webapp","port":{"number":80}}}}]}}]}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
+  printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"bat"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"replicas":2,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"containers":[{"image":"gcr.io/google-samples/node-hello:1.0","name":"nginx"}]}}}},{"apiVersion":"v1","kind":"Service","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"webapp"}}},{"kind":"Ingress","apiVersion":"networking.k8s.io/v1","metadata":{"name":"webapp","namespace":"bat"},"spec":{"ingressClassName":"ngnx","rules":[{"http":{"paths":[{"path":"/","pathType":"Prefix","backend":{"service":{"name":"webapp","port":{"number":80}}}}]}}]}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
   ```
 - Command to destroy environment: `kubectl delete ns dog`
 
@@ -4317,7 +4376,7 @@ Repeat [lab 11.3](#lab113-mounting-configmaps) with secrets.
 
 ### Task - ConfigMap and Secrets
 
-The latest Bootcamp cohort have requested a new database in the `rig` Namespace. This should be created as a single replica Deployment named `db` running the `mysql:8.0.22` image with container named `mysql`. The container should start with 64Mi memory and 0.25 CPU but should not exceed 256Mi memory and 0.5 CPU.
+The latest Bootcamp cohort have requested a new database in the `rig` Namespace. This should be created as a single replica Deployment named `db` running the `mysql:8.0.22` image with container named `mysql`. The container should start with 128Mi memory and 0.25 CPU but should not exceed 512Mi memory and 1 CPU.
 
 The Resource limit values should be available in the containers as env-vars `MY_CPU_LIMIT` and `MY_MEM_LIMIT` for the values of the cpu limit and memory limit respectively. The Pod IP address should also be available as env-var `MY_POD_IP` in the container.
 
@@ -4373,6 +4432,7 @@ The kubelet can optionally perform and react to three kinds of probes on running
 
 ### Lab 12.1. Liveness probe
 
+Many applications running for long periods of time eventually transition to broken states, and cannot recover except by being restarted. Kubernetes provides liveness probes to detect and remedy such situations. \
 You may follow the [official _define a liveness command_ tutorial](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-command) to complete this lab.
 
 ```sh
@@ -4384,20 +4444,23 @@ kubectl get events --field-selector=involvedObject.name=$RESOURCE_NAME
 kubectl get events --watch
 ```
 
-1. Create a Deployment `myapp` manifest file with the following:
+1. Using the official manifest file `pods/probe/exec-liveness.yaml` as base, create a Deployment `myapp` manifest file as follows:
    - busybox image
-   - commandline arguments `mkdir /tmp/healthy; sleep 20; rm -d /tmp/healthy; sleep 60; mkdir /tmp/healthy; sleep 600;`
-   - a `livenessProbe` that checks for the presence of `/tmp/healthy` directory
+   - commandline arguments `mkdir /tmp/healthy; sleep 30; rm -d /tmp/healthy; sleep 60; mkdir /tmp/healthy; sleep 600;`
+   - a _liveness probe_ that checks for the presence of `/tmp/healthy` directory
    - the Probe should be initiated 10secs after container starts
    - the Probe should perform the checks every 10secs
+   > the container creates a directory `/tmp/healthy` on startup, deletes the directory 30secs later, recreates the directory 60secs later \
+   > your goal is to monitor the Pod behaviour/statuses during these events, you can repeat this lab until you understand liveness probes
 2. Apply the manifest file to create the Deployment
 3. Review and monitor created Pod events for 3-5mins
+4. Delete created resources
 
 <details>
 <summary>lab12.1 solution</summary>
   
 ```sh
-kubectl create deploy myapp --image=busybox --dry-run=client -oyaml -- /bin/sh -c "touch /tmp/healthy; sleep 20; rm -f /tmp/healthy; sleep 60; touch /tmp/healthy; sleep 600;" >lab12-1.yml
+kubectl create deploy myapp --image=busybox --dry-run=client -oyaml -- /bin/sh -c "touch /tmp/healthy; sleep 30; rm -f /tmp/healthy; sleep 60; touch /tmp/healthy; sleep 600;" >lab12-1.yml
 wget -qO- https://k8s.io/examples/pods/probe/exec-liveness.yaml | less # copy the liveness probe section
 nano lab12-1.yml # paste, edit and fix indentation
 ```
@@ -4421,6 +4484,7 @@ spec:
 kubectl apply -f lab12-1.yml
 kubectl get po # find pod name
 kubectl get events --field-selector=involvedObject.name=$POD_NAME --watch
+kubectl delete -f lab12-1.yml
 ```
 </details>
 
@@ -4431,16 +4495,172 @@ Probes have a number of fields that you can use to more precisely control the be
 - `initialDelaySeconds`: Seconds to wait after container starts before initiating liveness/readiness probes - default 0, minimum 0.
 - `periodSeconds`: How often (in seconds) to perform the probe - default 10, minimum 1.
 - `timeoutSeconds`: Seconds after which the probe times out - default 1, minimum 1.
-- `successThreshold`: Consecutive successes after a failure for the probe to be considered successful - default 1, minimum 1, must be 1 for liveness/startup Probes
-- `failureThreshold`: Consecutive retries on failure before giving up, liveness probe restarts the container after giving up, readiness probe marks the Pod as Unready - defaults 3, minimum 1.
+- `successThreshold`: Number of consecutive successes after a failure for the probe to be considered successful - default 1, minimum 1, must be 1 for liveness/startup Probes
+- `failureThreshold`: Number of consecutive retries on failure before giving up, liveness probe restarts the container after giving up, readiness probe marks the Pod as Unready - defaults 3, minimum 1.
 
 ### Lab 12.2. Readiness probe
 
-Coming soon.
+Sometimes, applications are temporarily unable to serve traffic, for example, a third party service become unavailable, etc. In such cases, you don't want to kill the application, but you don't want to send it requests either. Kubernetes provides readiness probes to detect and mitigate these situations. Both _readiness probe_ and _liveness probe_ use similar configuration.
+
+1. Using the official manifest files `pods/probe/http-liveness.yaml` as base, create a Deployment `myapp` manifest file as follows:
+   - `nginx:1.22-alpine` image
+   - 2 replicas
+   - a _readiness probe_ that uses an HTTP GET request to check that the root endpoint `/` on port 80 returns a success status code
+   - the _readiness probe_ should be initiated 3secs after container starts, and perform the checks every 5secs
+   - a _liveness probe_ that uses an HTTP GET request to check that the root endpoint `/` on port 80 returns a success status code
+   - the _liveness probe_ should be initiated 8secs after the container is ready, and perform checks every 6secs
+2. Apply the manifest file to create the Deployment
+3. View more details of the Deployment and:
+   - confirm how Probe configuration appear, note values for `delay | timeout | period | success | failure`, how do you set these values?
+   - review Events for probe-related entries
+   - note that no Events generated when Probes successful
+4. List running Pods
+5. View more details of one of the Pods and:
+   - confirm both probes are configured
+   - review Events for probe-related entries
+6. Lets trigger a probe failure to confirm all works, edit the Deployment and change _readiness probe_ port to 8080
+7. Review more details of the Deployment and individual Pods and determine how Probe failures are recorded, on Deployment or Pod?
+8. Lets overload our Probe configuration, using official manifest `pods/probe/tcp-liveness-readiness.yaml` as example, edit the Deployment as follows:
+   - replace the _readiness probe_ with one that uses TCP socket to check that port 80 is open
+   - the _readiness probe_ should be initiated 5secs after container starts, and perform the checks every 10secs
+   - replace the _liveness probe_ with one that uses TCP socket to check that port 80 is open
+   - the _liveness probe_ should be initiated 15secs after the container starts, and perform checks every 10secs
+   - note that these changes trigger a rolling update - chainging parameters within `deploy.spec.template`
+9. Review more details of one of the Pod
+10. Delete created resources
+
+<details>
+<summary>lab 12.2 solution</summary>
+
+```sh
+kubectl create deploy myapp --image=nginx:1.22-alpine --replicas=2 --dry-run=client -oyaml > lab12-2.yml
+wget -qO- https://k8s.io/examples/pods/probe/http-liveness.yaml | less # copy probe section
+nano lab12-2.yml # paste, fix indentation, edit correctly
+```
+
+```yaml
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80 # change this to 8080 in later steps
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 8
+          periodSeconds: 6
+# etc
+```
+
+```sh
+kubectl apply -f lab12-2.yml
+kubectl describe deploy myapp # review `Pod Template > Containers` and Events
+kubectl get po
+kubectl describe po $POD_NAME # review Containers and Events
+KUBE_EDITOR=nano kubectl edit deploy myapp # change port to 8080 and save
+kubectl describe deploy myapp # only shows rollout events
+kubectl get po # get new pod names
+kubectl describe po $NEW_POD_NAME # review Containers and Events
+KUBE_EDITOR=nano kubectl edit deploy myapp # replace probes config with below
+```
+
+```yaml
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        readinessProbe:
+          tcpSocket:
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 10
+# etc
+```
+
+```sh
+kubectl get po # get new pod names
+kubectl describe po $ANOTHER_NEW_POD_NAME # review Containers and Events, no news is good news
+kubectl delete -f lab12-2.yml
+```
+</details>
 
 ### Lab 12.3. Protect slow starting containers with startup probe
 
-Coming soon.
+Sometimes, you have to deal with legacy applications that might require additional startup time on first initialization. In such cases, it can be tricky to set up _liveness probe_ without compromising the fast response to deadlocks that motivated such a probe. The trick is to set up a _startup probe_ with the same command, HTTP or TCP check, with a `failureThreshold * periodSeconds` long enough to cover the worse case startup time.
+
+1. Using the official manifest files `pods/probe/http-liveness.yaml` as base, create a Deployment `myapp` manifest file as follows:
+   - `nginx:1.22-alpine` image
+   - 2 replicas
+   - a _readiness probe_ that uses an HTTP GET request to check that the root endpoint `/` on port 80 returns a success status code
+   - the _readiness probe_ should be initiated 3secs after container starts, and perform the checks every 5secs
+   - a _liveness probe_ that uses an HTTP GET request to check that the root endpoint `/` on port 80 returns a success status code
+   - the _liveness probe_ should be initiated 8secs after the container is ready, and perform checks every 6secs
+   - a _startup probe_ with the same command as the _liveness probe_ but checks every 5secs up to a maximum of 3mins
+2. Apply the manifest file to create the Deployment
+3. View more details of the Deployment and confirm how all Probe configuration appear
+4. List running Pods
+5. View more details of one of the Pods and confirm how Probe configuration appear
+6. Delete created resources
+
+<details>
+<summary>lab 12.3 solution</summary>
+
+```sh
+kubectl create deploy myapp --image=nginx:1.22-alpine --replicas=2 --dry-run=client -oyaml > lab12-3.yml
+nano lab12-3.yml # add probes
+```
+
+```yaml
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 8
+          periodSeconds: 6
+        startupProbe:
+          httpGet:
+            path: /
+            port: 80
+          periodSeconds: 5
+          failureThreshold: 36 # 5secs x 36 = 3mins
+# etc
+```
+
+```sh
+kubectl apply -f lab12-3.yml
+kubectl describe deploy myapp
+kubectl get po
+kubectl describe po $POD_NAME
+kubectl delete -f lab12-2.yml
+```
+</details>
 
 ### Lab 12.4. Blue/Green deployments
 
@@ -4452,20 +4672,24 @@ Coming soon.
   ![blue-green update strategy from https://engineering-skcc.github.io/performancetest/Cloud-%ED%99%98%EA%B2%BD-%EC%84%B1%EB%8A%A5%EB%B6%80%ED%95%98%ED%85%8C%EC%8A%A4%ED%8A%B8/](https://user-images.githubusercontent.com/17856665/185770858-83a088c2-4701-4fd6-943e-ebfb020aa498.gif)
 </details>
 
-1. Create a webserver application (blue deployment)
+1. Create a `blue` Deployment
    - three replicas
-   - use an older version of the image
-   - mount the DocumentRoot `index.html` as volume
-2. Make the application accessible via an IP
+   - image` nginx:1.19-alpine`
+   - on the cluster Node, create an HTML document `/mnt/data/index.html` with any content
+   - mount the `index.html` file to the DocumentRoot as a _HostPath_ volume
+   - _Pod Template_ have label `target=blue`
+2. Expose `blue` Deployment on port 80
 3. Verify created resources and test access with `curl`
-4. Create a new application using [1] as base (green deployment)
+4. Create a new `green` Deployment using [1] as base
    - three replicas
-   - use a newer version of the image
-   - the landing page should look different from the webserver in [1]
-   - mount the DocumentRoot `index.html` as volume
+   - use a newer version of the image `nginx:1.21-alpine`
+   - on the cluster Node, create a new HTML document `/mnt/data2/index.html` with different content
+   - mount the `index.html` file to the DocumentRoot as a _HostPath_ volume
+   - _Pod Template_ have label `target=green`
 5. Verify created resources and test access with `curl`
-6. Make green deployment accessible via an IP by replacing the Service for blue deployment
+6. Edit the Service _Selector_ for `blue` deployment as `target=green` to redirect traffic to `green` Deployment
 7. Confirm all working okay with `curl`
+8. Delete created resources
 
 ### Lab 12.5. Canary deployments
 
@@ -4480,20 +4704,22 @@ Canary deployment is an update strategy where updates are deployed to a subset o
 1. Create a webserver application
    - three replicas
    - selector `updateType: canary`
-   - use an older version of the image
-   - mount the DocumentRoot `index.html` as volume
-2. Make the application accessible via an IP
+   - use image` nginx:1.19-alpine`
+   - create an HTML document `index.html` with any content
+   - mount the `index.html` file to the DocumentRoot as a _ConfigMap_ volume
+2. Expose the Deployment on port 80
 3. Verify created resources and test access with `curl`
 4. Create a new application using [1] as base
    - one replica
    - selector `updateType: canary`
-   - use a newer version of the image in [1]
-   - the landing page should look different from the webserver in [1]
-   - mount the DocumentRoot `index.html` as volume
+   - use a newer version of the image `nginx:1.22-alpine`
+   - create a new HTML document `index.html` with different content
+   - mount the `index.html` file to the DocumentRoot as a _ConfigMap_ volume
 5. Verify created resources and confirm the Service targets both webservers
 6. Run multiple `curl` requests to the IP in [2] and confirm access to both webservers
 7. Scale up the new webserver to three replicas and confirm all Pods running
 8. Scale down the old webserver to zero and confirm no Pods running
+9. Delete created resources
 
 > Scaling down to zero instead of deleting provides an easy option to revert changes when there are issues
 
@@ -4509,12 +4735,29 @@ You do not need to test that the probes work, you only need to configure them. A
 
 - Command to setup environment:
   ```sh
-  printf '\nlab: lab environment setup...'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"dam"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app":"legacy"},"name":"legacy","namespace":"dam"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"legacy"}},"template":{"metadata":{"labels":{"app":"legacy"}},"spec":{"containers":[{"args":["/server"],"image":"registry.k8s.io/liveness","name":"probes","ports":[{"containerPort":8080}]}],"restartPolicy":"OnFailure"}}}}]}' | kubectl apply -f - >/dev/null
+  printf '\nlab: lab environment setup in progress...\n'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"dam"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app":"legacy"},"name":"legacy","namespace":"dam"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"legacy"}},"template":{"metadata":{"labels":{"app":"legacy"}},"spec":{"containers":[{"args":["/server"],"image":"registry.k8s.io/liveness","name":"probes","ports":[{"containerPort":8080}]}],"restartPolicy":"OnFailure"}}}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
+  ```
 - Command to destroy environment: `kubectl delete ns dam`
 
-### Task - Canary deployment
+### Task - Zero Downtime Updates
 
-Coming soon.
+In the `hog` Namespace, you will find a Deployment named `high-app`, and a Service named `high-svc`. It is currently unknown if these resources are working together as expected. Make sure the Service is a _NodePort_ type exposed on TCP port 8080 and that you're able to reach the application via the _NodePort_.
+
+Create a single replica Deployment named `high-appv2` based on `high-app.json` file running `nginx:1.18-alpine`.
+
+- Update `high-appv2` Deployment such that 20% of all traffic going to existing `high-svc` Service is routed to `high-appv2`. The total Pods between `high-app` and `high-appv2` should be 5.
+- Next, update `high-app` and `high-appv2` Deployments such that 100% of all traffic going to `high-svc` Service is routed to `high-appv2`. The total Pods between `high-app` and `high-appv2` should be 5.
+
+Finally, create a new Deployment named `high-appv3` based on `high-app.json` file running `nginx:1.20-alpine` with 5 replicas and _Pod Template_ label `box: high-app-new`.
+
+- Update `high-svc` Service such that 100% of all incoming traffic is routed to `high-appv3`.
+- Since `high-appv2` Deployment will no longer be used, perform a cleanup to delete all Pods related to `high-appv2` only keeping the Deployment and ReplicaSet.
+
+- Command to setup environment (also creates `high-app.json` file):
+  ```sh
+  printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"hog"}},{"apiVersion":"v1","kind":"Service","metadata":{"labels":{"kit":"high-app"},"name":"high-svc","namespace":"hog"},"spec":{"ports":[{"port":8080,"protocol":"TCP","targetPort":8080}],"selector":{"box":"high-svc-child"}}}]}' | kubectl apply -f - >/dev/null; echo '{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"kit":"high-app"},"name":"high-app","namespace":"hog"},"spec":{"replicas":4,"selector":{"matchLabels":{"box":"high-app-child"}},"template":{"metadata":{"labels":{"box":"high-app-child"}},"spec":{"containers":[{"image":"nginx:1.15-alpine","name":"nginx","ports":[{"containerPort":80}]}]}}}}' > high-app.json; kubectl apply -f high-app.json  >/dev/null; echo 'lab: environment setup complete!';
+  ```
+- Command to destroy environment: `kubectl delete ns hog`
 
 <div style="page-break-after: always;"></div>
 
@@ -4590,7 +4833,7 @@ curl -XDELETE localhost:PORT/api/v1/namespaces/default/pods/$POD_NAME
 
 ### Directly accessing the REST API
 
-Two things are required to access a cluster - the **location** of the cluster and the **credentials** to access it. Thus far, we have used `kubectl` to access the API by running `kubectl` commands. The location and credentials that `kubectl` uses were automatically configured by Minikube during our [lab environment setup](#4-kubernetes-lab-environment).
+Two things are required to access a cluster - the **location** of the cluster and the **credentials** to access it. Thus far, we have used `kubectl` to access the API by running `kubectl` commands. The location and credentials that `kubectl` uses were automatically configured by Minikube during our [Minikube environment setup](#4-kubernetes-lab-environment).
 
 Run `kubectl config view` to see the location and credentials configured for `kubectl`.
 
