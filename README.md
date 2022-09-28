@@ -5398,8 +5398,68 @@ Coming soon.
 
 ## 15. Exam
 
-Final exam tips coming soon, mostly about text editor and aliases.
+In the CKAD exam, you are expected to solve about 15 questions in 2 hours. What makes this exam difficult is time required to verify all your answers. Just providing a solution to a question is not enough, you must always test that your solutions work as expected, otherwise, you are guaranteed to fail.
 
-You can simulate an exam by completing all the Tasks in 2hours.
+Please read the [kubectl cheat sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/) before taking the exam.
 
-[kubectl cheat sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
+### Exam simulation
+
+The _Tasks_ provided in this bootcamp are more difficult, and require more time to solve, than standard exam question. Therefore, you can simulate an exam by completing all _Tasks_ under 2 hours.
+
+In addition, after paying for the exam, you will be provided access to an exam simulation from [killer.sh](https://killer.sh/) which you can attempt twice. The simulation environment will be similar to the exam environment, and the questions are also similar in difficulty to exam questions. However, you will need to solve about 20 questions in the same time, which makes the simulation more difficult.
+
+If you are able to complete all the _Tasks_ from this bootcamp under 2 hours, you will find that you are also able to complete the exam simulation from [killer.sh](https://killer.sh/) under 2 hours. This is all the confidence you need to pass your CKAD exam, you really don't need anything else.
+
+### Environment setup
+
+As soon as your exam starts, you will want to setup `kubectl` and your chosen text editor as follows:
+
+1. Setup `kubectl`
+   ```sh
+   alias k=kubectl # this is usually preconfigured in exam
+   export dr="--dry-run=client -oyaml"
+   ```
+2. Setup text editor
+   ```sh
+   # vim
+   printf "set tabstop=2\nset shiftwidth=2\nset expandtab" > ~/.vimrc
+   # nano
+   printf "set tabsize 2\nset tabstospaces" > ~/.nanorc
+   ```
+
+### Commandline copy-paste
+
+Remember that copy/paste works different in a terminal:
+
+- Copy - right click on mouse or two finger tap on touchpad (or check your touchpad settings if different)
+- Paste - right click on mouse or two finger tap on touchpad
+
+### Text editor proficiency
+
+Get familiar with your text editor to improve your speed:
+
+1. Use search and replace for bulk changes (`^C = Ctrl+C`, `M-C = Alt+C`)
+   - vim:
+     1. `:s/foo/bar/g` - find each `foo` in current line and replace with `bar`
+     2. `:s/foo/bar/g` - find each `foo` in all lines and replace with `bar`  
+   - nano:
+     1. press keyboard `^\`
+     2. type search word and hit `Enter`
+     3. type replacement word and hit `Enter`
+     4. press `Y` to replace a match, `N` to skip a match, `A` to replace all matches
+2. Indent multiple lines using markers
+   - vim (indent size = `shiftwidth`):
+     1. move cursor to the start/end of lines
+     2. press keyboard `V` to enter visual mode
+     3. press arrow keys up/down/left/right to highlight text in arrow direction
+     4. to indent highlighted text forwards, press `>` to indent once, or `3>` to indent 3 times
+     5. to indent highlighted text backwards, press `<` to indent once, or `4<` to indent 4 times
+   - nano (indent size = `tabsize`):
+     1. move cursor to the start/end of lines
+     2. press keyboard `M-A` to set mark
+     3. press arrow up/down/left/right to highlight text in arrow direction
+     4. to indent highlighted text, press `TAB` to indent forwards or `SHIFT+TAB` to indent backwards
+     5. press keyboard `M-A` again to unset mark
+3. Undo/Redo
+   - vim: in normal mode `:undo` to undo last change, `^R` to redo
+   - nano: `M-U` to undo, `M-E` to redo
