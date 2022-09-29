@@ -8,7 +8,7 @@ Hi, I'm Pius Lawal, and this course is part of my cloud application developer bo
 
 ## Learning Outcomes
 
-In summary, you will be learning cloud application development, which is a modern approach to building and running software applications that exploits the flexibility, scalability, and resilience of cloud computing. Some highlights include:
+This bootcamp covers the [Certified Kubernetes Application Developer (CKAD)](https://training.linuxfoundation.org/certification/certified-kubernetes-application-developer-ckad/) exam curriculum plus more. In summary, you will be learning cloud application development, which is a modern approach to building and running software applications that exploits the flexibility, scalability, and resilience of cloud computing. Some highlights include:
 
 - proficiency working on the command-line
 - proficiency working with containers
@@ -16,10 +16,10 @@ In summary, you will be learning cloud application development, which is a moder
 - microservices architecture
 - devops with kubernetes
 
-There are _Tasks_ provided at the end of most chapters that are similar in difficulty to standard exam questions. However, the _Tasks_ have more content and thus require more time to solve, which makes them more difficult. Therefore, you know you are exam-ready if you can complete all 16 _Tasks_ under 2 hours.
+There are _Tasks_ provided at the end of most chapters with content designed to challenge your critical understanding, and troubleshooting strategy, of the core concepts in that chapter. These _Tasks_ are longer and require more time to solve than standard exam questions, which makes them more difficult. Therefore, you know you are exam-ready if you can complete all 16 _Tasks_ under 2 hours.
 
 <details>
-  <summary>CKAD exam objectives</summary>
+  <summary>CKAD exam curriculum</summary>
 
 <a target="_blank" width="100%" align="center" href="https://github.com/cncf/curriculum">![CKAD exam curriculum](https://user-images.githubusercontent.com/17856665/186679939-ea79ce57-f277-45c8-8d02-6595d02d9f85.png)</a>
 
@@ -162,6 +162,10 @@ docker run -it busybox
 docker run -it --rm busybox
 # run in detached mode
 docker run -d busybox
+# list running containers
+docker ps
+# list all containers
+docker ps -a
 # start a stopped container, see `docker container start --help`
 docker container start $CONTAINER_NAME_OR_ID
 # stop a running container, see `docker container stop --help`
@@ -6087,17 +6091,17 @@ Coming soon, accepting pull-requests
 
 ## 15. Exam
 
-In the CKAD exam, you are expected to solve about 15 questions in 2 hours. What makes this exam difficult is time required to verify all your answers. Just providing a solution to a question is not enough, you must always test that your solutions work as expected, otherwise, you are guaranteed to fail.
+In the [Certified Kubernetes Application Developer (CKAD)](https://training.linuxfoundation.org/certification/certified-kubernetes-application-developer-ckad/) exam, you are expected to solve about 15 questions in 2 hours. What makes this exam difficult is time required to verify all your answers. Just providing a solution to a question is not enough, you must always test that your solutions work as expected, otherwise, you are guaranteed to fail.
 
-Please read the [kubectl cheat sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/) before taking the exam.
+Please read through the [kubectl cheat sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/) before taking the exam.
 
 ### Exam simulation
 
 The _Tasks_ provided in this bootcamp require more time to solve than standard exam question, which makes them more difficult. Therefore, you can simulate an exam by completing all _Tasks_ under 2 hours.
 
-In addition, after paying for the exam, you will be provided access to an exam simulation from [killer.sh](https://killer.sh/) which you can attempt twice. The simulation environment will be similar to the exam environment, and the questions are also similar in difficulty to exam questions. However, you will need to solve about 20 questions in the same time, which makes the simulation more difficult.
+In addition, after paying for the exam, you will be provided access to an exam simulation from [Killer.sh](https://killer.sh/) which you can attempt twice. The simulation environment will be similar to the exam environment, and the questions are also similar in difficulty to exam questions. However, you will need to solve about 20 questions in the same time, which makes the simulation more difficult.
 
-If you are able to complete all the _Tasks_ from this bootcamp under 2 hours, you will find that you are also able to complete the exam simulation from [killer.sh](https://killer.sh/) under 2 hours. This is all the confidence you need to pass your CKAD exam, you really don't need anything else.
+If you are able to complete all 16 _Tasks_ under 2 hours, you will find that you are also able to complete the exam simulation from [Killer.sh](https://killer.sh/) under 2 hours. This is all the confidence you need to pass your CKAD exam, you really don't need anything else.
 
 ### Environment setup
 
