@@ -169,7 +169,7 @@ docker ps -a
 # start a stopped container, see `docker container start --help`
 docker container start $CONTAINER_NAME_OR_ID
 # stop a running container, see `docker container stop --help`
-docker container start $CONTAINER_NAME_OR_ID
+docker container stop $CONTAINER_NAME_OR_ID
 # restart a running container, see `docker container restart --help`
 docker container restart $CONTAINER_NAME_OR_ID
 # delete a stopped container, see `docker container rm --help`
