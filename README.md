@@ -16,7 +16,7 @@ In summary, you will be learning cloud application development, which is a moder
 - microservices architecture
 - devops with kubernetes
 
-There are _Tasks_ provided at the end of most chapters that are similar in difficulty to standard exam questions. However, the _Tasks_, have more content and thus require more time to solve, which makes them more difficult. Therefore, you will know you are ready for the exam if you can complete all 16 _Tasks_ under 2 hours.
+There are _Tasks_ provided at the end of most chapters that are similar in difficulty to standard exam questions. However, the _Tasks_ have more content and thus require more time to solve, which makes them more difficult. Therefore, you know you are exam-ready if you can complete all 16 _Tasks_ under 2 hours.
 
 <details>
   <summary>CKAD exam objectives</summary>
