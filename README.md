@@ -16,6 +16,8 @@ In summary, you will be learning cloud application development, which is a moder
 - microservices architecture
 - devops with kubernetes
 
+There are _Tasks_ provided at the end of most chapters that are similar in difficulty to standard exam questions. However, the _Tasks_, have more content and thus require more time to solve, which makes them more difficult. Therefore, you will know you are ready for the exam if you can complete all 16 _Tasks_ under 2 hours.
+
 <details>
   <summary>CKAD exam objectives</summary>
 
@@ -6091,7 +6093,7 @@ Please read the [kubectl cheat sheet](https://kubernetes.io/docs/reference/kubec
 
 ### Exam simulation
 
-The _Tasks_ provided in this bootcamp are more difficult, and require more time to solve, than standard exam question. Therefore, you can simulate an exam by completing all _Tasks_ under 2 hours.
+The _Tasks_ provided in this bootcamp require more time to solve than standard exam question, which makes them more difficult. Therefore, you can simulate an exam by completing all _Tasks_ under 2 hours.
 
 In addition, after paying for the exam, you will be provided access to an exam simulation from [killer.sh](https://killer.sh/) which you can attempt twice. The simulation environment will be similar to the exam environment, and the questions are also similar in difficulty to exam questions. However, you will need to solve about 20 questions in the same time, which makes the simulation more difficult.
 
@@ -6122,7 +6124,7 @@ Questions use different Clusters and different Namespaces. Therefore, for each q
 
 ```sh
 # example using variable/alias
-k create deploy webapp --image=nginx:alpine $dr $ns > 2.yml`
+k create deploy webapp --image=nginx:alpine $dr $ns > 2.yml
 ```
 
 ### Commandline copy-paste
