@@ -55,28 +55,20 @@ wsl --install
 winget install Microsoft.WindowsTerminal
 # 3. install docker
 winget install Docker.DockerDesktop
-# restart device and complete Ubuntu user setup
+# restart device
 ```
 
-<details>
-  <summary>WSL Internet connection test</summary>
+After device restart:
 
-After restart, [open Terminal and switch to Ubuntu](https://user-images.githubusercontent.com/17856665/192830999-f8f9c5af-8b4e-41c4-8f5e-c9c159fcf9ca.png)
-
-```sh
-# check for internet connection
-curl google.com
-# if connection fails, see `wsl2 vpn fix` below
-```
-
-> You can also [make Ubuntu your default Terminal profile](https://user-images.githubusercontent.com/17856665/192833271-5a3170a0-caf6-45bf-b378-ac6eb1f2dfbc.png)
-
-</details>
+- Complete Ubuntu user setup - Ubuntu terminal should auto-open
+- [enable Docker Desktop integration with WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
+- [open Terminal and switch to Ubuntu](https://user-images.githubusercontent.com/17856665/192830999-f8f9c5af-8b4e-41c4-8f5e-c9c159fcf9ca.png)
+- [make Ubuntu your default Terminal profile](https://user-images.githubusercontent.com/17856665/192833271-5a3170a0-caf6-45bf-b378-ac6eb1f2dfbc.png)
+- perform Internet connection test in WSL2 by running `curl google.com`
+- if connection fails with `Could not resolve host`, and you have a VPN program installed, see _WSL2 VPN fix_ below
 
 <details>
   <summary>WSL2 VPN fix</summary>
-
-If you're unable to access the Internet from WSL2 due to a VPN installed on your device, try below method
 
 ```sh
 # powershell as administrator
@@ -93,9 +85,9 @@ printf '# vpnkit - fix vpn network issues\nalias vpnkit="wsl.exe -d wsl-vpnkit s
 exec bash
 # 6. start the vpnkit
 vpnkit start
-# 7. test internet connection
+# 7. test internet connection again
 curl google.com
-# note that you can stop the fix with `vpnkit stop`
+# note that you can stop the fix with `vpnkit stop`, see https://github.com/sakai135/wsl-vpnkit
 ```
 
 </details>
@@ -103,9 +95,10 @@ curl google.com
 </details>
 
 <details>
-  <summary>Ubuntu users</summary>
+<summary>Ubuntu users</summary>
+<br />
 
-Install Docker Engine on Ubuntu. This is also an alternative for Windows users on WSL2.
+Install Docker Engine on Ubuntu. This is also an alternative for Windows users running WSL2.
 
 > if using Windows/WSL2, be sure to [disable Docker Desktop integration with WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
 
@@ -169,7 +162,7 @@ docker ps -a
 # start a stopped container, see `docker container start --help`
 docker container start $CONTAINER_NAME_OR_ID
 # stop a running container, see `docker container stop --help`
-docker container start $CONTAINER_NAME_OR_ID
+docker container stop $CONTAINER_NAME_OR_ID
 # restart a running container, see `docker container restart --help`
 docker container restart $CONTAINER_NAME_OR_ID
 # delete a stopped container, see `docker container rm --help`
