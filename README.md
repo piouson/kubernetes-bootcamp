@@ -4244,10 +4244,16 @@ The application is meant to be accessible at `ckad-bootcamp.local`. Please debug
 
 ### Task - Network policy
 
-Given several Pods in Namespaces `pup` and `cat`. Lock down the cluster as follows:
+Given several Pods in Namespaces `pup` and `cat`, create network policies as follows:
   - Pods in the same Namespace can communicate together
   - `webapp` Pod in the `pup` Namespace can communicate with `microservice` Pod in the `cat` Namespace
   - DNS resolution on UDP/TCP port 53 is allowed for all Pods in all Namespaces
+
+- Command to setup environment:
+  ```sh
+  printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"pup"}},{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"cat"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"server":"frontend"},"name":"webapp","namespace":"pup"},"spec":{"containers":[{"image":"nginx:1.22-alpine","name":"nginx"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"server":"backend"},"name":"microservice","namespace":"cat"},"spec":{"containers":[{"image":"node:16-alpine","name":"nodejs","args":["sleep","7200"]}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
+  ```
+- Command to destroy environment: `kubectl delete ns cat pup`
 
 </div>
 
