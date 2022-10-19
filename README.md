@@ -16,7 +16,30 @@ This bootcamp covers the [Certified Kubernetes Application Developer (CKAD)](htt
 - microservices architecture
 - devops with kubernetes
 
-There are _Tasks_ provided at the end of most chapters with content designed to challenge your critical understanding, and troubleshooting strategy, of the core concepts in that chapter. These _Tasks_ are longer and require more time to solve than standard exam questions, which makes them more difficult. Therefore, you know you are exam-ready if you can complete all 16 _Tasks_ under 2 hours.
+### Ace the CKAD Exam
+
+Passing the CKAD exam with confidence shouldn't be as vague as _practice practice practice_, nor as exhausting as a _200-hour video content_, nor as alarming as _procuring exam dumps_, nor as overwhelming as _click here and here and click this 100+ other links_, you get the gist.
+
+In this bootcamp, we help you prepare for the 2-hour CKAD exam with a simple 4-stage process:
+
+1. Learn the CKAD exam curriculum content
+2. Learn how to troubleshoot all the resources covered in the curriculum
+3. Familiarity with the exam-language and common exam tips
+4. Proficiency with `kubectl` and related CLI tools
+
+#### How will this work?
+
+Follow the _Labs_, that's all! No prior experience required and its okay if you're not confident on the command-line!
+
+Each chapter contains several **_Labs_** to help you slowly build confidence and proficiency around the concepts covered. There are _command snippet blocks_ provided to help you through the _Labs_ - use them if you're stuck on any _Lab_ and aren't yet confident using `help` on the terminal.
+
+There are **_Tasks_** provided at the end of most chapters with content designed to challenge your critical understanding and troubleshooting strategy of the core concepts in that chapter. These _Tasks_ are longer and require more time to solve than standard exam questions, which makes them more difficult. Therefore, you know you are exam-ready if you can complete all 16 _Tasks_ under 2 hours.
+
+#### I know Kubernetes already
+
+If you have completed a CKAD course prior, or use Kubernetes day-to-day, etc, and just wish to dive into _Exam Readiness Mode_, skip to [Ch15 - Exam tips](#15-exam).
+
+### Exam curriculum
 
 <details>
   <summary>CKAD exam curriculum</summary>
@@ -1780,7 +1803,10 @@ At the end of your task, copy the log file used by the logging container to dire
   ```sh
   printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"v1","items":[{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"fox"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"ape"}},{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"cow"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"box"},"name":"box","namespace":"ape"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"box"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"for-testing"},"name":"for-testing","namespace":"fox"},"spec":{"containers":[{"args":["sleep","3600"],"image":"busybox","name":"for-testing"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"run":"webserver"},"name":"webserver","namespace":"fox"},"spec":{"containers":[{"name":"server","image":"ngnx:1.20-alpine","volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]},{"name":"logger","image":"busybox:1.28","args":["/bin/sh","-c","while true; do  echo $(date) >> /usr/share/nginx/html/1.log;\n  sleep 30;\ndone\n"],"volumeMounts":[{"name":"serverlog","mountPath":"/usr/share/nginx/html"}]}],"volumes":[{"name":"serverlog","emptyDir":{}}]}}],"metadata":{"resourceVersion":""},"kind":"List"}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
   ```
-- Command to destroy environment: `kubectl delete ns ape cow fox`
+- Command to destroy environment:
+  ```sh
+  kubectl delete ns ape cow fox
+  ```
 
 </div>
 
@@ -3161,7 +3187,10 @@ Update the Deployment to `nginx:1.22-alpine` to confirm the Pod count stays with
   ```sh
   printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp"},"spec":{"replicas":2,"revisionHistoryLimit":15,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"volumes":[{"name":"varlog","emptyDir":{}}],"containers":[{"image":"nginx:1.12-alpine","name":"nginx","volumeMounts":[{"name":"varlog","mountPath":"/var/logs"}]}]}}}}' > k8s-task-6.yml; kubectl apply -f k8s-task-6.yml >/dev/null; cp k8s-task-6.yml k8s-task-6-bak.yml; sed -i -e 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.12-alpine/nginx:1.13alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 1; sed -i -e 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.13alpine/nginx:1.14-alpine/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; sed -i -e 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.14-alpine/nginx:1.15-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 2; sed -i -e 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i -e 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/nginx:1.15-alpine/ngnx:1.16-alpine/g' k8s-task-6.yml 2>/dev/null; sed -i '' 's/\/var\/logs/\/usr\/share\/nginx\/html/g' k8s-task-6.yml 2>/dev/null; kubectl apply -f k8s-task-6.yml >/dev/null; sleep 4; kubectl apply -f k8s-task-6-bak.yml >/dev/null; sleep 4; kubectl rollout undo deploy webapp --to-revision=5 >/dev/null; kubectl delete $(kubectl get rs --sort-by=".spec.replicas" -oname | tail -n1) >/dev/null; rm k8s-task-6.yml k8s-task-6-bak.yml; echo 'lab: environment setup complete!'
   ```
-- Command to destroy environment: `kubectl delete deploy webapp`
+- Command to destroy environment:
+  ```sh
+  kubectl delete deploy webapp
+  ```
 
 </div>
 
@@ -3636,7 +3665,10 @@ A bootcamp student is stuck on a _simple task_ and would appreciate your experti
   ```sh
   printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"bat"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"replicas":2,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"containers":[{"image":"gcr.io/google-samples/node-hello:1.0","name":"nginx"}]}}}},{"apiVersion":"v1","kind":"Service","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"webapp"}}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
   ```
-- Command to destroy environment: `kubectl delete ns bat`
+- Command to destroy environment
+  ```sh
+  kubectl delete ns bat
+  ```
 
 </div>
 
@@ -4236,7 +4268,10 @@ The application is meant to be accessible at `ckad-bootcamp.local`. Please debug
   ```sh
   printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"bat"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"replicas":2,"selector":{"matchLabels":{"appid":"webapp"}},"template":{"metadata":{"labels":{"appid":"webapp"}},"spec":{"containers":[{"image":"gcr.io/google-samples/node-hello:1.0","name":"nginx"}]}}}},{"apiVersion":"v1","kind":"Service","metadata":{"labels":{"appid":"webapp"},"name":"webapp","namespace":"bat"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"webapp"}}},{"kind":"Ingress","apiVersion":"networking.k8s.io/v1","metadata":{"name":"webapp","namespace":"bat"},"spec":{"ingressClassName":"ngnx","rules":[{"http":{"paths":[{"path":"/","pathType":"Prefix","backend":{"service":{"name":"webapp","port":{"number":80}}}}]}}]}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
   ```
-- Command to destroy environment: `kubectl delete ns dog`
+- Command to destroy environment:
+  ```sh
+  kubectl delete ns dog
+  ```
 
 </div>
 
@@ -4253,7 +4288,10 @@ Given several Pods in Namespaces `pup` and `cat`, create network policies as fol
   ```sh
   printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"pup"}},{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"cat"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"server":"frontend"},"name":"webapp","namespace":"pup"},"spec":{"containers":[{"image":"nginx:1.22-alpine","name":"nginx"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}},{"apiVersion":"v1","kind":"Pod","metadata":{"labels":{"server":"backend"},"name":"microservice","namespace":"cat"},"spec":{"containers":[{"image":"node:16-alpine","name":"nodejs","args":["sleep","7200"]}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always"}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
   ```
-- Command to destroy environment: `kubectl delete ns cat pup`
+- Command to destroy environment:
+  ```sh
+  kubectl delete ns cat pup
+  ```
 
 </div>
 
@@ -5365,7 +5403,10 @@ You do not need to test that the probes work, you only need to configure them. A
   ```sh
   printf '\nlab: lab environment setup in progress...\n'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"dam"}},{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app":"legacy"},"name":"legacy","namespace":"dam"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"legacy"}},"template":{"metadata":{"labels":{"app":"legacy"}},"spec":{"containers":[{"args":["/server"],"image":"registry.k8s.io/liveness","name":"probes","ports":[{"containerPort":8080}]}],"restartPolicy":"OnFailure"}}}}]}' | kubectl apply -f - >/dev/null; echo 'lab: environment setup complete!'
   ```
-- Command to destroy environment: `kubectl delete ns dam`
+- Command to destroy environment:
+  ```sh
+  kubectl delete ns dam
+  ```
 
 </div>
 
@@ -5389,7 +5430,10 @@ Finally, create a new Deployment named `high-appv3` based on `high-app.json` fil
   ```sh
   printf '\nlab: environment setup in progress...\n'; echo '{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"hog"}},{"apiVersion":"v1","kind":"Service","metadata":{"labels":{"kit":"high-app"},"name":"high-svc","namespace":"hog"},"spec":{"ports":[{"port":8080,"protocol":"TCP","targetPort":8080}],"selector":{"box":"high-svc-child"}}}]}' | kubectl apply -f - >/dev/null; echo '{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"kit":"high-app"},"name":"high-app","namespace":"hog"},"spec":{"replicas":4,"selector":{"matchLabels":{"box":"high-app-child"}},"template":{"metadata":{"labels":{"box":"high-app-child"}},"spec":{"containers":[{"image":"nginx:1.15-alpine","name":"nginx","ports":[{"containerPort":80}]}]}}}}' > high-app.json; kubectl apply -f high-app.json  >/dev/null; echo 'lab: environment setup complete!';
   ```
-- Command to destroy environment: `kubectl delete ns hog`
+- Command to destroy environment:
+  ```sh
+  kubectl delete ns hog
+  ```
 
 <div style="page-break-after: always;"></div>
 
@@ -6090,7 +6134,7 @@ Coming soon, accepting pull-requests
 
 ## 15. Exam
 
-In the [Certified Kubernetes Application Developer (CKAD)](https://training.linuxfoundation.org/certification/certified-kubernetes-application-developer-ckad/) exam, you are expected to solve about 15 questions in 2 hours. What makes this exam difficult is time required to verify all your answers. Just providing a solution to a question is not enough, you must always test that your solutions work as expected, otherwise, you are guaranteed to fail.
+In the [Certified Kubernetes Application Developer (CKAD)](https://training.linuxfoundation.org/certification/certified-kubernetes-application-developer-ckad/) exam, you are expected to solve about 15 questions in 2 hours. What makes this exam difficult is the time required to verify all your answers. Just providing a solution to a question is not enough, you must always test that your solutions work as expected, otherwise, you are guaranteed to fail.
 
 Please read through the [kubectl cheat sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/) before taking the exam.
 
@@ -6100,7 +6144,7 @@ The _Tasks_ provided in this bootcamp require more time to solve than standard e
 
 In addition, after paying for the exam, you will be provided access to an exam simulation from [Killer.sh](https://killer.sh/) which you can attempt twice. The simulation environment will be similar to the exam environment, and the questions are also similar in difficulty to exam questions. However, you will need to solve about 20 questions in the same time, which makes the simulation more difficult.
 
-If you are able to complete all 16 _Tasks_ under 2 hours, you will find that you are also able to complete the exam simulation from [Killer.sh](https://killer.sh/) under 2 hours. This is all the confidence you need to pass your CKAD exam, you really don't need anything else.
+If you are able to complete all 16 _Tasks_ provided here under 2 hours, you will find that you are also able to complete Killer exam simulation under 2 hours. This is all the confidence you need to pass your CKAD exam, you really don't need anything else.
 
 ### Environment setup
 
@@ -6121,8 +6165,8 @@ As soon as your exam starts, you will want to setup `kubectl` and your chosen te
 
 Questions use different Clusters and different Namespaces. Therefore, for each question:
 
-1. Switch to the Cluster for the question - command will be provided
-2. Create a variable `ns=$QUESTION_NAMESPACE` to make things easy for yourself
+1. Make sure you always run the command to switch to the Cluster for that question - command will be provided
+2. Create a variable for the question's Namespace `ns=$QUESTION_NAMESPACE` to make things easy for yourself
 3. Do not assume the default Namespace is `default`, always set and use your variable `ns=default`
 
 ```sh
@@ -6141,7 +6185,7 @@ Remember that copy/paste works different in a terminal:
 
 Get familiar with your text editor to improve your speed:
 
-1. Use search and replace for bulk changes (on Windows, `^C = Ctrl+C` and `M-C = Alt+C`)
+1. Use search and replace for bulk changes (assume `^C = Ctrl+C` and `M-C = Alt+C`)
    - vim:
      1. `:s/foo/bar/g` - find each `foo` in current line and replace with `bar`
      2. `:s/foo/bar/g` - find each `foo` in all lines and replace with `bar`  
@@ -6166,3 +6210,7 @@ Get familiar with your text editor to improve your speed:
 3. Undo/Redo
    - vim: in normal mode `:undo` to undo last change, `^R` to redo
    - nano: `M-U` to undo, `M-E` to redo
+
+This is not a bootcamp on `vim` or `nano`, there are more flashy magic you can achieve with these tools, especially `vim`, but the above should get you through CKAD!
+
+Best of luck :+1:
