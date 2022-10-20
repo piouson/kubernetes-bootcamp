@@ -18,26 +18,24 @@ This bootcamp covers the [Certified Kubernetes Application Developer (CKAD)](htt
 
 ### Ace the CKAD Exam
 
-Passing the CKAD exam with confidence shouldn't be as vague as _practice practice practice_, nor as exhausting as a _200-hour video content_, nor as alarming as _procuring exam dumps_, nor as overwhelming as _click here and here and click this 100+ other links_, you get the gist.
+Passing the CKAD exam with confidence should be a simple 4-stage process, all of which is covered in this bootcamp:
 
-In this bootcamp, we help you prepare for the 2-hour CKAD exam with a simple 4-stage process:
-
-1. Learn the CKAD exam curriculum content
+1. Learn the CKAD exam curriculum content by your preferred method
 2. Learn how to troubleshoot all the resources covered in the curriculum
 3. Familiarity with the exam-language and common exam tips
 4. Proficiency with `kubectl` and related CLI tools
 
-#### How will this work?
+### How will this work?
 
-Follow the _Labs_, that's all! No prior experience required and its okay if you're not confident on the command-line!
+Follow the _Labs_, that's all! No prior experience required and its okay if you're not confident on the command-line, yet!
 
 Each chapter contains several **_Labs_** to help you slowly build confidence and proficiency around the concepts covered. There are _command snippet blocks_ provided to help you through the _Labs_ - use them if you're stuck on any _Lab_ and aren't yet confident using `help` on the terminal.
 
 There are **_Tasks_** provided at the end of most chapters with content designed to challenge your critical understanding and troubleshooting strategy of the core concepts in that chapter. These _Tasks_ are longer and require more time to solve than standard exam questions, which makes them more difficult. Therefore, you know you are exam-ready if you can complete all 16 _Tasks_ under 2 hours.
 
-#### I know Kubernetes already
+### I know Kubernetes already?
 
-If you have completed a CKAD course prior, or use Kubernetes day-to-day, etc, and just wish to dive into _Exam Readiness Mode_, skip to [Ch15 - Exam tips](#15-exam).
+If you have completed [step [1] above](#ace-the-ckad-exam), for example, you have completed a CKAD course prior or use Kubernetes day-to-day, etc, and just wish to dive into _Exam Readiness Mode_, skip to [Ch15 - Exam tips](#15-exam).
 
 ### Exam curriculum
 
@@ -6145,6 +6143,10 @@ The _Tasks_ provided in this bootcamp require more time to solve than standard e
 In addition, after paying for the exam, you will be provided access to an exam simulation from [Killer.sh](https://killer.sh/) which you can attempt twice. The simulation environment will be similar to the exam environment, and the questions are also similar in difficulty to exam questions. However, you will need to solve about 20 questions in the same time, which makes the simulation more difficult.
 
 If you are able to complete all 16 _Tasks_ provided here under 2 hours, you will find that you are also able to complete Killer exam simulation under 2 hours. This is all the confidence you need to pass your CKAD exam, you really don't need anything else.
+
+Remember to use the rest of the tips below during your simulation!
+
+> Tasks: [Docker image](#task---docker-image) | [Pods](#task---pods) | [Pods II](#task---pods-ii) | [CronJobs](#task---cronjobs) | [Resources and Security Context](#task---resources-and-security-context) | [Deployment](#task---deployment) | [Service](#task---service) | [Service II](#task---service-ii) | [Ingress](#task---ingress) | [Network policy](#task---network-policy) | [Persistent volumes](#task---persistent-volumes) | [ConfigMap and Secrets](#task---configmap-and-secrets) | [Probes](#task---probes) | [Zero Downtime Updates](#task---zero-downtime-updates) | [Service account](#task---service-account) | [Helm](#task---helm)
 
 ### Environment setup
 
