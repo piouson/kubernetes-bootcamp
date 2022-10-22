@@ -6196,7 +6196,7 @@ Get familiar with your text editor to improve your speed:
      2. type search word and hit `Enter`
      3. type replacement word and hit `Enter`
      4. press `Y` to replace a match, `N` to skip a match, `A` to replace all matches
-2. Indent multiple lines using markers
+2. Indent multiple lines using markers - in many situations, you might want to copy Pod YAML into a Deployment YAML or vice-versa
    - vim (indent size = `shiftwidth`):
      1. move cursor to the start/end of lines
      2. press keyboard `V` to enter visual mode
@@ -6215,4 +6215,4 @@ Get familiar with your text editor to improve your speed:
 
 This is not a bootcamp on `vim` or `nano`, there are more flashy magic you can achieve with these tools, especially `vim`, but the above should get you through CKAD!
 
-Best of luck :+1: and remember to star [this repo](https://github.com/piouson/kubernetes-bootcamp) to say thank you!
+Best of luck :+1: and please star [this repo](https://github.com/piouson/kubernetes-bootcamp) to say thank you!
