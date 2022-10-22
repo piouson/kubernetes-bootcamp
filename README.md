@@ -399,7 +399,7 @@ docker rm box1 box2 box3
 > The `Entrypoint` of a container is [the init process](https://en.wikipedia.org/wiki/Init) and allows the container to run as an executable. Commands passed to a container are passed to the container's entrypoint process.
 >
 > Note that `docker` commands after `$IMAGE_NAME` are passed to the container's entrypoint as arguments. \
-> ❌ `docker run -it mysql -e MYSQL_PASSWORD=hello` will pass `-e MYSQL_PASSWORD=hello` to the container
+> ❌ `docker run -it mysql -e MYSQL_PASSWORD=hello` will pass `-e MYSQL_PASSWORD=hello` to the container \
 > ✔️ `docker run -it -e MYSQL_PASSWORD=hello mysql`
 
 </div>
@@ -6215,4 +6215,4 @@ Get familiar with your text editor to improve your speed:
 
 This is not a bootcamp on `vim` or `nano`, there are more flashy magic you can achieve with these tools, especially `vim`, but the above should get you through CKAD!
 
-Best of luck :+1:
+Best of luck :+1: and remember to star [this repo](https://github.com/piouson/kubernetes-bootcamp) to say thank you!
