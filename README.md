@@ -47,7 +47,7 @@ There are **_Tasks_** provided at the end of most chapters with content designed
 
 Nothing else, this bootcamp is an **All-In-One-Guide**! Simply working through this bootcamp will make you proficient with Kubernetes as well as prepare you for the CKAD exam!
 
-You should aim to finish the bootcamp at least once before beginning _Exam Readiness Mode_ - where you simulate the exam by completing all 16 _Tasks_ under 2 hours. This will help you identify your weak areas, then you simply repeat those chapters/sections, and make sure to review all links to resources from the official Kubernetes documentation, until you are confident.
+The _Exam Readiness Mode_, where you simulate the exam by completing all 16 _Tasks_ under 2 hours, will help you identify your weak areas. Then you simply repeat those chapters/sections, and make sure to review all links to resources from the official Kubernetes documentation, until you are confident.
 </details>
 
 <details>
