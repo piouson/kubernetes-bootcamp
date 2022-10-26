@@ -16,7 +16,7 @@ This bootcamp covers the [Certified Kubernetes Application Developer (CKAD)](htt
 - microservices architecture
 - devops with kubernetes
 
-### Ace the CKAD Exam
+## Ace the CKAD Exam
 
 Passing the CKAD exam with confidence should be a simple 4-stage process, all of which is covered in this bootcamp:
 
@@ -25,22 +25,52 @@ Passing the CKAD exam with confidence should be a simple 4-stage process, all of
 3. Familiarity with the exam-language and common exam tips
 4. Proficiency with `kubectl` and related CLI tools
 
-### How will this work?
+<div style="page-break-after: always;"></div>
 
-Follow the _Labs_, that's all! No prior experience required and its okay if you're not confident on the command-line, yet!
+## FAQs
+
+<details>
+<summary>How will this work?</summary>
+<br/>
+
+Follow the **_Labs_**, that's all! <br/>
+No prior experience required and its okay if you're not confident on the command-line, yet!
 
 Each chapter contains several **_Labs_** to help you slowly build confidence and proficiency around the concepts covered. There are _command snippet blocks_ provided to help you through the _Labs_ - use them if you're stuck on any _Lab_ and aren't yet confident using `help` on the terminal.
 
 There are **_Tasks_** provided at the end of most chapters with content designed to challenge your critical understanding and troubleshooting strategy of the core concepts in that chapter. These _Tasks_ are longer and require more time to solve than standard exam questions, which makes them more difficult. Therefore, you know you are exam-ready if you can complete all 16 _Tasks_ under 2 hours.
-
-### I know Kubernetes already?
-
-If you have completed [step [1] above](#ace-the-ckad-exam), for example, you have completed a CKAD course prior or use Kubernetes day-to-day, etc, and just wish to dive into _Exam Readiness Mode_, skip to [Ch15 - Exam tips](#15-exam).
-
-### Exam curriculum
+</details>
 
 <details>
-  <summary>CKAD exam curriculum</summary>
+<summary>What else do I need to pass CKAD?</summary>
+<br/>
+
+Nothing else! Simply working through this bootcamp and reviewing all links to resources from the official Kubernetes documentation will make you proficient with Kubernetes as well as prepare you for the CKAD exam!
+</details>
+
+<details>
+<summary>I know Kubernetes already?</summary>
+<br/>
+
+If you have completed [step [1] above](#ace-the-ckad-exam), for example, you have completed a CKAD course prior or use Kubernetes day-to-day, etc, and just wish to dive into _Exam Readiness Mode_, skip to [Ch15 - Exam tips](#15-exam).
+</details>
+
+<details>
+<summary>I know Docker already?</summary>
+<br/>
+
+Great! Then you can skip to [Chapter 2: Task - Docker image](#task---docker-image)
+</details>
+
+<details>
+<summary>I only want Kubernetes not CKAD?</summary>
+<br/>
+
+Hey! CKAD is entry-level Kubernetes and covers the basic features and core components of Kubernetes. This bootcamp covers everything you need from NOOB setup to mastery. Preparing for the CKAD exam is a structured approach to learning Kubernetes. When you finish this bootcamp, you may choose not to pay for and sit the exam, but you will have acquired the ability to pass regardless.
+</details>
+
+<details>
+<summary>CKAD exam curriculum?</summary>
 
 <a target="_blank" width="100%" align="center" href="https://github.com/cncf/curriculum">![CKAD exam curriculum](https://user-images.githubusercontent.com/17856665/186679939-ea79ce57-f277-45c8-8d02-6595d02d9f85.png)</a>
 
