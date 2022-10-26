@@ -45,7 +45,9 @@ There are **_Tasks_** provided at the end of most chapters with content designed
 <summary>What else do I need to pass CKAD?</summary>
 <br/>
 
-Nothing else! Simply working through this bootcamp and reviewing all links to resources from the official Kubernetes documentation will make you proficient with Kubernetes as well as prepare you for the CKAD exam!
+Nothing else, this bootcamp is an **All-In-One-Guide**! Simply working through this bootcamp will make you proficient with Kubernetes as well as prepare you for the CKAD exam!
+
+You should aim to finish the bootcamp at least once before beginning _Exam Readiness Mode_ - where you simulate the exam by completing all 16 _Tasks_ under 2 hours. This will help you identify your weak areas, then you simply repeat those chapters/sections, and make sure to review all links to resources from the official Kubernetes documentation, until you are confident.
 </details>
 
 <details>
@@ -71,6 +73,9 @@ Hey! CKAD is entry-level Kubernetes and covers the basic features and core compo
 
 <details>
 <summary>CKAD exam curriculum?</summary>
+<br/>
+
+In the CKAD exam, [you will have 2 hours to complete 15-20 performance-based questions](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad) around the areas below. 
 
 <a target="_blank" width="100%" align="center" href="https://github.com/cncf/curriculum">![CKAD exam curriculum](https://user-images.githubusercontent.com/17856665/186679939-ea79ce57-f277-45c8-8d02-6595d02d9f85.png)</a>
 
@@ -6243,6 +6248,40 @@ Get familiar with your text editor to improve your speed:
    - vim: in normal mode `:undo` to undo last change, `^R` to redo
    - nano: `M-U` to undo, `M-E` to redo
 
-This is not a bootcamp on `vim` or `nano`, there are more flashy magic you can achieve with these tools, especially `vim`, but the above should get you through CKAD!
+> This is not a bootcamp on `vim` or `nano`, there are more flashy magic you can achieve with these tools, especially `vim`, but the above should get you through CKAD!
+
+### Exam questions approach
+
+Do not begin your exam from Question 1! Each question has a _Task Weight_ and you should aim to complete higher score questions first.
+
+When your exam starts, and after going through the other setup above, you will want to **review all your questions** to create a _question-to-score-grid_ to help you decide the best order to answer them. See the scenarios below:
+
+```sh
+# scenario 1, 5-by-x grid to easily identify questions - lines ends in multiples of 5: Q5, Q10, Q15, etc
+4 4 4 8 4
+8 4 4 8 8
+4 8 8 8 8
+8
+# Start from Q9-Q16, then Q1-Q8
+```
+
+```sh
+# scenario 2, 5-by-x grid to easily identify questions - lines ends in multiples of 5: Q5, Q10, Q15, etc
+1 2 2 5 3
+7 4 4 5 4
+7 8 6 4 5
+6 4 4 9
+# Start from Q11-Q19, then Q4-Q10, then Q1-Q3
+```
+
+Store the grid in a Text Editor. When you encounter a troublesome question and its been more than 5mins without a clear idea of solution, update the question on the grid with an asterix and move on. Trust me, you do not want to waste additional 2mins on a question you will fail when you can answer another question in the same time!
+
+```sh
+# update troublesome questions with * and return to them after completing all other questions
+4 4 4 8 4
+8 4 4 8* 8
+4 8 8* 8 8
+8
+```
 
 Best of luck :+1: and please star [this repo](https://github.com/piouson/kubernetes-bootcamp) to say thank you!
