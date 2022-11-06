@@ -155,10 +155,10 @@ curl google.com
 </details>
 
 <details>
-<summary>Ubuntu users</summary>
+<summary>Debian users</summary>
 <br />
 
-Install Docker Engine on Ubuntu. This is also an alternative for Windows users running WSL2.
+Install Docker Engine on any Debian-based OS like Ubuntu or Raspberry Pi. This is also an alternative for Windows users running WSL2.
 
 > if using Windows/WSL2, be sure to [disable Docker Desktop integration with WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
 
