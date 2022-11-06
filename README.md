@@ -2,7 +2,7 @@
 
 Hi, I'm Pius Lawal, and this course is part of my **_Hybrid and Multi-Cloud Developer_** bootcamp series.
 
-A hybrid and multi-cloud skill is useful on-prem as well as on any cloud platform. You might learn these skills locally, or on a particular cloud platform, yet remain a ninja in any cloud environment 🥷 Docker is a popular example.
+A hybrid and multi-cloud skill is useful on-prem as well as on any cloud platform. You might learn these skills locally, or on a particular cloud platform, yet remain a ninja 🥷 in any cloud environment - Docker is a popular example.
 
 > Please remember to star [this repo](https://github.com/piouson/kubernetes-bootcamp) to say thank you!
 
