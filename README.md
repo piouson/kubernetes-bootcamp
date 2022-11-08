@@ -4,9 +4,13 @@ Hi, I'm Pius Lawal, and this course is part of my **_Hybrid and Multi-Cloud Deve
 
 A hybrid and multi-cloud skill is useful on-prem as well as on any cloud platform. You might learn these skills locally, or on a particular cloud platform, yet remain a ninja 🥷 in any cloud environment - Docker is a popular example.
 
-> Please remember to star [this repo](https://github.com/piouson/kubernetes-bootcamp) to say thank you!
-
-<a href="https://github.com/sponsors/piouson" target="_blank"><img src="https://img.shields.io/static/v1?message=buy%20me%20coffee&logo=buymeacoffee&labelColor=2E0050&color=4B0083&logoColor=pink&label=%20&style=for-the-badge" alt="buy me coffee to sponsor this project"></a>
+> If you like this project, but just don't have time to contribute, that's fine. There are other easy ways to support the project and show your appreciation:
+> - Star this project
+> - Tweet about it
+> - Reference this project in your own work
+> - Mention this project at local meetups and to your family/friends/colleagues
+> 
+>  <a href="https://github.com/sponsors/piouson" target="_blank"><img src="https://img.shields.io/static/v1?message=buy%20me%20coffee&logo=buymeacoffee&labelColor=2E0050&color=4B0083&logoColor=pink&label=%20&style=for-the-badge" alt="buy me coffee to sponsor this project"></a>
 
 <div style="page-break-after: always;"></div>
 
