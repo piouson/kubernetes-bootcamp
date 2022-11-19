@@ -20,7 +20,7 @@ This bootcamp covers the [Certified Kubernetes Application Developer (CKAD)](htt
 
 - proficiency working on the command-line
 - proficiency working with containers
-- proficiency working with infrastructure as code
+- proficiency working with kubernetes
 - microservices architecture
 - devops with kubernetes
 
