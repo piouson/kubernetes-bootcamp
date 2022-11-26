@@ -1903,7 +1903,7 @@ In the `rat` Namespace (create if required), create a Pod named `webapp` that ru
 The Pod should have an _Init Container_ named `web-init`, running `busybox:1.28` image, that creates a file in the same `emptyDir` volume, mounted to `/tempdir`, with below command:
 
 ```sh
-echo -e "server {\n\tlisten\t${NGINX_PORT};\n\n\tlocation / {\n\t\troot\t/usr/share/nginx/html;\n\t}\n}" > /tempdir/default.conf.template
+echo -e "server {\n\tlisten\t\${NGINX_PORT};\n\n\tlocation / {\n\t\troot\t/usr/share/nginx/html;\n\t}\n}" > /tempdir/default.conf.template
 ```
 
 </div>
