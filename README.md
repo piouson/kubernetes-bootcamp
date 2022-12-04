@@ -4219,13 +4219,13 @@ You may follow the [official declare network policy walkthrough](https://kuberne
 4. Expose the Deployment on port 80
 5. Review created resources and confirm pods running
 6. Create a busybox Pod and connect an interactive shell
-7. Run command in the Pod container `wget --spider --timeout=1 nginx`
+7. Run command in the Pod container `wget --spider --timeout=1 webapp`
 8. Limit access to the Service so that only Pods with label `tier=frontend` have access - see official manifest example `service/networking/nginx-policy.yaml`
 9. View more details of the _NetworkPolicy_ created 
 10. Create a busybox Pod and connect an interactive shell
-11. Run command in the Pod container `wget --spider --timeout=1 nginx`
+11. Run command in the Pod container `wget --spider --timeout=1 webapp`
 12. Create another busybox Pod with label `tier=frontend` and connect an interactive shell
-13. Run command in the Pod container `wget --spider --timeout=1 nginx`
+13. Run command in the Pod container `wget --spider --timeout=1 webapp`
 14. Delete created resources
 15. Revert to a cluster without Calico
 
