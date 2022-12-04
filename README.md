@@ -20,9 +20,9 @@ This bootcamp covers the [Certified Kubernetes Application Developer (CKAD)](htt
 
 - proficiency working on the command-line
 - proficiency working with containers
-- proficiency working with kubernetes
+- proficiency working with Kubernetes 
 - microservices architecture
-- devops with kubernetes
+- devops with Kubernetes 
 
 ## Ace the CKAD Exam
 
@@ -1336,7 +1336,7 @@ minikube delete
    export KUBE_EDITOR="nano" # use nano
    export KUBE_EDITOR="vim" # use vim
    ```
-6. Open the kubernetes dashboard with `minikube dashboard`
+6. Open the Kubernetes dashboard with `minikube dashboard`
 7. Use the Kubernetes Dashboard to deploy a webserver with three replicas
    - visit url provided in browser
    - click on top right plus "+" icon
@@ -4180,7 +4180,7 @@ minikube start --kubernetes-version=1.23.9 --cni=calico
 # verify calico plugin running, allow enough time (+5mins) for all pods to enter `running` status
 kubectl get pods -n kube-system --watch
 # create network policy
-kubectl apply -f /path/to/networlpolicy/manifest/file
+kubectl apply -f /path/to/networkpolicy/manifest/file
 # list network policies
 kubectl get networkpolicy
 # view more details of network policies `mynetpol`
@@ -4210,10 +4210,12 @@ spec:
 
 You may follow the [official declare network policy walkthrough](https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/)
 
-> Minikube Calico plugin might conflict with the rest of the labs, so disabled Calico addon after this lab \
-> Prepend `https://k8s.io/examples/` to any example files in the official docs to use the file locally
+> ⚠ A _Network Policy_ will have no effect without a _network provider with network policy support (e.g. Calico)_ \
+> ⚠ Minikube Calico plugin might conflict with future labs, so remember to disable Calico after this lab \
+> ℹ You can prepend `https://k8s.io/examples/` to example filepaths from the official docs to use the file locally
 
-1. Create a kubernetes cluster in minikube with Calico enabled
+1. Create a Kubernetes cluster in minikube with Calico enabled
+   - delete existing cluster, or create an additional cluster, if Calico is not enabled
 2. Confirm Calico is up and running
 3. Create a Deployment called `webapp` using image `httpd`
 4. Expose the Deployment on port 80
@@ -5510,7 +5512,7 @@ When you deploy Kubernetes, you get a cluster. See [Kubernetes cluster component
 Use `kubectl api-resources | less` for an overview of available API resources.
 
 - `APIVERSION`
-  - `v1` core kubernetes API group
+  - `v1` core Kubernetes API group
   - `apps/v1` first extension to the core group
   - during deprecation/transition, multiple versions of the same resource may be available, e.g. `policy/v1` and `policy/v1beta1`
 - `NAMESPACED` controls visibility
