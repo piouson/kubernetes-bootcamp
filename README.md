@@ -89,6 +89,16 @@ In the CKAD exam, [you will have 2 hours to complete 15-20 performance-based que
 
 </details>
 
+<details>
+<summary>Where is Table of Contents (TOC)?</summary>
+<br/>
+
+GitHub has native TOC support for markdown files with filtering built-in. The _TOC Header_ sticks to the top of the page as you scroll through the document.
+
+![image](https://user-images.githubusercontent.com/17856665/206180108-b5eed71b-3e48-4a58-ac80-05871f9adcec.png)
+
+</details>
+
 <div style="page-break-after: always;"></div>
 
 ## Requirements
