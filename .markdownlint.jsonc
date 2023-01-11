@@ -1,0 +1,8 @@
+{
+  "no-inline-html": false,
+  "line-length": false,
+  "list-marker-space": false,
+  "blanks-around-lists": false,
+  "blanks-around-fences": false,
+  "no-blanks-blockquote": false
+}

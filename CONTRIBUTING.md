@@ -7,8 +7,8 @@ Thank you for taking the time to contribute! ❤️
 > - Tweet about it
 > - Reference this project in your own work
 > - Mention this project at local meetups and to your family/friends/colleagues
-> 
->  <a href="https://github.com/sponsors/piouson" target="_blank"><img src="https://img.shields.io/static/v1?message=buy%20me%20coffee&logo=buymeacoffee&labelColor=2E0050&color=4B0083&logoColor=pink&label=%20&style=for-the-badge" alt="buy me coffee to sponsor this project"></a>
+>
+> <a href="https://github.com/sponsors/piouson" target="_blank"><img src="https://img.shields.io/static/v1?message=buy%20me%20coffee&logo=buymeacoffee&labelColor=2E0050&color=4B0083&logoColor=pink&label=%20&style=for-the-badge" alt="buy me coffee to sponsor this project"></a>
 
 ## I Have a Question
 
@@ -17,6 +17,7 @@ Thank you for taking the time to contribute! ❤️
 ## I Want To Contribute
 
 > ### Legal Notice
+>
 > When contributing to this project, you must agree that you have authored 100% of the content, that you have the necessary rights to the content and that the content you contribute may be provided under the project license.
 
 ### Suggesting Improvements and Fixes
