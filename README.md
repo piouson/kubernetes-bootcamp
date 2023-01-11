@@ -134,37 +134,45 @@ winget install Docker.DockerDesktop
 
 After device restart:
 
-- Complete Ubuntu user setup - Ubuntu terminal should auto-open
-- [enable Docker Desktop integration with WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
-- [open Terminal and switch to Ubuntu](https://user-images.githubusercontent.com/17856665/192830999-f8f9c5af-8b4e-41c4-8f5e-c9c159fcf9ca.png)
-- [make Ubuntu your default Terminal profile](https://user-images.githubusercontent.com/17856665/192833271-5a3170a0-caf6-45bf-b378-ac6eb1f2dfbc.png)
-- perform Internet connection test in WSL2 by running `curl google.com`
-- if connection fails with `Could not resolve host`, and you have a VPN program installed, see _WSL2 VPN fix_ below
+1. Complete Ubuntu user setup - Ubuntu terminal should auto-open
+2. [Enable `systemd`](https://devblogs.microsoft.com/commandline/systemd-support-is-now-available-in-wsl/) - run `sudo nano /etc/wsl.conf` and update file to:
+   ```sh
+   [boot]
+   systemd=true
+   ```
+3. [Enable Docker Desktop integration with WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
+4. [Open Terminal and switch to Ubuntu](https://user-images.githubusercontent.com/17856665/192830999-f8f9c5af-8b4e-41c4-8f5e-c9c159fcf9ca.png)
+5. [Make Ubuntu your default Terminal profile](https://user-images.githubusercontent.com/17856665/192833271-5a3170a0-caf6-45bf-b378-ac6eb1f2dfbc.png)
+6. Perform Internet connection test in WSL2 by running:
+   ```sh
+   curl google.com
+   ```
+   > 💡 If connection fails with `Could not resolve host`, and you have a VPN program installed, see _WSL2 VPN fix_ below
 
-<details>
-  <summary>WSL2 VPN fix</summary>
+    <details>
+      <summary>WSL2 VPN fix</summary>
 
-```sh
-# powershell as administrator
-# 1. download vpnkit
-wget -o wsl-vpnkit.tar.gz https://github.com/sakai135/wsl-vpnkit/releases/latest/download/wsl-vpnkit.tar.gz
-# 2. add vpnkit as linux distro
-wsl --import wsl-vpnkit $env:USERPROFILE\wsl-vpnkit wsl-vpnkit.tar.gz --version 2
-wsl -d wsl-vpnkit
-# 3. switch to wsl2 ubuntu terminal
-wsl
-# 4. create an alias `vpnkit`
-printf '# vpnkit - fix vpn network issues\nalias vpnkit="wsl.exe -d wsl-vpnkit service wsl-vpnkit"' >> ~/.bashrc
-# 5. load the new alias
-exec bash
-# 6. start the vpnkit
-vpnkit start
-# 7. test internet connection again
-curl google.com
-# note that you can stop the fix with `vpnkit stop`, see https://github.com/sakai135/wsl-vpnkit
-```
+    ```sh
+    # powershell as administrator
+    # 1. download vpnkit
+    wget -o wsl-vpnkit.tar.gz https://github.com/sakai135/wsl-vpnkit/releases/latest/download/wsl-vpnkit.tar.gz
+    # 2. add vpnkit as linux distro
+    wsl --import wsl-vpnkit $env:USERPROFILE\wsl-vpnkit wsl-vpnkit.tar.gz --version 2
+    wsl -d wsl-vpnkit
+    # 3. switch to wsl2 ubuntu terminal
+    wsl
+    # 4. create an alias `vpnkit`
+    printf '# vpnkit - fix vpn network issues\nalias vpnkit="wsl.exe -d wsl-vpnkit service wsl-vpnkit"' >> ~/.bashrc
+    # 5. load the new alias
+    exec bash
+    # 6. start the vpnkit
+    vpnkit start
+    # 7. test internet connection again
+    curl google.com
+    # note that you can stop the fix with `vpnkit stop`, see https://github.com/sakai135/wsl-vpnkit
+    ```
 
-</details>
+    </details>
 
 </details>
 
@@ -174,16 +182,11 @@ curl google.com
 
 Install Docker Engine on any Debian-based OS like Ubuntu or Raspberry Pi. This is also an alternative for Windows users running WSL2.
 
-> if using Windows/WSL2, be sure to [disable Docker Desktop integration with WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
+> 💡 If using WSL2, be sure to:
+> 1. Enable `systemd` - see the _Windows users_ section
+> 2. [Disable Docker Desktop integration with WSL2](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
 
 ```sh
-# Windows/WSL2 prerequisites - enable `systemd` on WSL2
-git clone https://github.com/DamionGans/ubuntu-wsl2-systemd-script.git
-cd ubuntu-wsl2-systemd-script/
-sudo bash ubuntu-wsl2-systemd-script.sh --force
-cd ../ && rm -rf ubuntu-wsl2-systemd-script/
-exec bash
-systemctl # long output confirms systemd up and running
 # 1. uninstall old docker versions
 sudo apt-get remove docker docker-engine docker.io containerd runc
 # 2. setup docker repository
