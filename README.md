@@ -9,8 +9,8 @@ A hybrid and multi-cloud skill is useful on-prem as well as on any cloud platfor
 > - Tweet about it
 > - Reference this project in your own work
 > - Mention this project at local meetups and to your family/friends/colleagues
-> 
->  <a href="https://github.com/sponsors/piouson" target="_blank"><img src="https://img.shields.io/static/v1?message=buy%20me%20coffee&logo=buymeacoffee&labelColor=2E0050&color=4B0083&logoColor=pink&label=%20&style=for-the-badge" alt="buy me coffee to sponsor this project"></a>
+>
+> <a href="https://github.com/sponsors/piouson" target="_blank"><img src="https://img.shields.io/static/v1?message=buy%20me%20coffee&logo=buymeacoffee&labelColor=2E0050&color=4B0083&logoColor=pink&label=%20&style=for-the-badge" alt="buy me coffee to sponsor this project"></a>
 
 <div style="page-break-after: always;"></div>
 
@@ -20,9 +20,9 @@ This bootcamp covers the [Certified Kubernetes Application Developer (CKAD)](htt
 
 - proficiency working on the command-line
 - proficiency working with containers
-- proficiency working with Kubernetes 
+- proficiency working with Kubernetes
 - microservices architecture
-- devops with Kubernetes 
+- devops with Kubernetes
 
 ## Ace the CKAD Exam
 
@@ -83,7 +83,7 @@ Hey! CKAD is entry-level Kubernetes and covers the basic features and core compo
 <summary>CKAD exam curriculum?</summary>
 <br/>
 
-In the CKAD exam, [you will have 2 hours to complete 15-20 performance-based questions](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad) around the areas below. 
+In the CKAD exam, [you will have 2 hours to complete 15-20 performance-based questions](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad) around the areas below.
 
 <a target="_blank" width="100%" align="center" href="https://github.com/cncf/curriculum">![CKAD exam curriculum](https://user-images.githubusercontent.com/17856665/186679939-ea79ce57-f277-45c8-8d02-6595d02d9f85.png)</a>
 
@@ -134,37 +134,45 @@ winget install Docker.DockerDesktop
 
 After device restart:
 
-- Complete Ubuntu user setup - Ubuntu terminal should auto-open
-- [enable Docker Desktop integration with WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
-- [open Terminal and switch to Ubuntu](https://user-images.githubusercontent.com/17856665/192830999-f8f9c5af-8b4e-41c4-8f5e-c9c159fcf9ca.png)
-- [make Ubuntu your default Terminal profile](https://user-images.githubusercontent.com/17856665/192833271-5a3170a0-caf6-45bf-b378-ac6eb1f2dfbc.png)
-- perform Internet connection test in WSL2 by running `curl google.com`
-- if connection fails with `Could not resolve host`, and you have a VPN program installed, see _WSL2 VPN fix_ below
+1. Complete Ubuntu user setup - Ubuntu terminal should auto-open
+2. [Enable `systemd`](https://devblogs.microsoft.com/commandline/systemd-support-is-now-available-in-wsl/) - run `sudo nano /etc/wsl.conf` and update file to:
+   ```sh
+   [boot]
+   systemd=true
+   ```
+3. [Enable Docker Desktop integration with WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
+4. [Open Terminal and switch to Ubuntu](https://user-images.githubusercontent.com/17856665/192830999-f8f9c5af-8b4e-41c4-8f5e-c9c159fcf9ca.png)
+5. [Make Ubuntu your default Terminal profile](https://user-images.githubusercontent.com/17856665/192833271-5a3170a0-caf6-45bf-b378-ac6eb1f2dfbc.png)
+6. Perform Internet connection test in WSL2 by running:
+   ```sh
+   curl google.com
+   ```
+   > 💡 If connection fails with `Could not resolve host`, and you have a VPN program installed, see _WSL2 VPN fix_ below
 
-<details>
-  <summary>WSL2 VPN fix</summary>
+    <details>
+      <summary>WSL2 VPN fix</summary>
 
-```sh
-# powershell as administrator
-# 1. download vpnkit
-wget -o wsl-vpnkit.tar.gz https://github.com/sakai135/wsl-vpnkit/releases/latest/download/wsl-vpnkit.tar.gz
-# 2. add vpnkit as linux distro
-wsl --import wsl-vpnkit $env:USERPROFILE\wsl-vpnkit wsl-vpnkit.tar.gz --version 2
-wsl -d wsl-vpnkit
-# 3. switch to wsl2 ubuntu terminal
-wsl
-# 4. create an alias `vpnkit`
-printf '# vpnkit - fix vpn network issues\nalias vpnkit="wsl.exe -d wsl-vpnkit service wsl-vpnkit"' >> ~/.bashrc
-# 5. load the new alias
-exec bash
-# 6. start the vpnkit
-vpnkit start
-# 7. test internet connection again
-curl google.com
-# note that you can stop the fix with `vpnkit stop`, see https://github.com/sakai135/wsl-vpnkit
-```
+    ```sh
+    # powershell as administrator
+    # 1. download vpnkit
+    wget -o wsl-vpnkit.tar.gz https://github.com/sakai135/wsl-vpnkit/releases/latest/download/wsl-vpnkit.tar.gz
+    # 2. add vpnkit as linux distro
+    wsl --import wsl-vpnkit $env:USERPROFILE\wsl-vpnkit wsl-vpnkit.tar.gz --version 2
+    wsl -d wsl-vpnkit
+    # 3. switch to wsl2 ubuntu terminal
+    wsl
+    # 4. create an alias `vpnkit`
+    printf '# vpnkit - fix vpn network issues\nalias vpnkit="wsl.exe -d wsl-vpnkit service wsl-vpnkit"' >> ~/.bashrc
+    # 5. load the new alias
+    exec bash
+    # 6. start the vpnkit
+    vpnkit start
+    # 7. test internet connection again
+    curl google.com
+    # note that you can stop the fix with `vpnkit stop`, see https://github.com/sakai135/wsl-vpnkit
+    ```
 
-</details>
+    </details>
 
 </details>
 
@@ -174,16 +182,11 @@ curl google.com
 
 Install Docker Engine on any Debian-based OS like Ubuntu or Raspberry Pi. This is also an alternative for Windows users running WSL2.
 
-> if using Windows/WSL2, be sure to [disable Docker Desktop integration with WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
+> 💡 If using WSL2, be sure to:
+> 1. Enable `systemd` - see the _Windows users_ section
+> 2. [Disable Docker Desktop integration with WSL2](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
 
 ```sh
-# Windows/WSL2 prerequisites - enable `systemd` on WSL2
-git clone https://github.com/DamionGans/ubuntu-wsl2-systemd-script.git
-cd ubuntu-wsl2-systemd-script/
-sudo bash ubuntu-wsl2-systemd-script.sh --force
-cd ../ && rm -rf ubuntu-wsl2-systemd-script/
-exec bash
-systemctl # long output confirms systemd up and running
 # 1. uninstall old docker versions
 sudo apt-get remove docker docker-engine docker.io containerd runc
 # 2. setup docker repository
@@ -494,7 +497,7 @@ docker image rm $IMAGE_ID
 2. Inspect the container (use `| less` to avoid console clutter) and review the `State` and `NetworkSettings` fields, quit with `q`
 3. Visit `http://$CONTAINER_IP_ADDRESS` in your browser (this may not work depending on your envrionment network settings)
 4. Run another `nginx` container with name `webserver` and exposed on port 80
-5. Visit http://localhost in your browser
+5. Visit [localhost](http://localhost) in your browser
 6. Delete the containers
 
 </div>
@@ -534,7 +537,7 @@ docker rm webserver
 2. Run any webserver containers on port 8080 and mount the `html` folder to the [DocumentRoot](https://serverfault.com/a/588388)
    - option `nginx` DocumentRoot - `/usr/share/nginx/html`
    - option `httpd` DocumentRoot - `/usr/local/apache2/htdocs`
-3. Visit http://localhost:8080
+3. Visit [localhost:8080](http://localhost:8080)
 4. List running containers
 5. List all containers
 6. Delete containers
@@ -843,7 +846,7 @@ See the [official language-specific getting started guides](https://docs.docker.
 3. Create a Dockerfile to containerise the project
 4. Build the Dockerfile
 5. Run a container from the image exposed on port 8080
-6. Confirm you can access the app on http://localhost:8080
+6. Confirm you can access the app on [localhost:8080](http://localhost:8080)
 
 </div>
 
@@ -898,7 +901,7 @@ Before we finally go into Kubernetes, it would be advantageous to have a basic u
 
 A _user identifier (UID)_ is a unique number assigned to each user. This is how the system identifies each user. The root user has UID of 0, UID 1-500 are often reserved for system users and UID for new users commonly start at 1000. UIDs are stored in the plain-text `/etc/passwd` file: each line represents a user account, and has seven fields delimited by colons `account:password:UID:GID:GECOS:directory:shell`.
 
-A _group identifier (GID)_ is similar to UIDs - used by the system to identify _groups_. A _group_ consists of several users and the root group has GID of 0. GIDs are stored in the plain-text `/etc/group` file: each line represents a group, and has four fields delimited by colons `group:password:GID:comma-separated-list-of-members`. An example of creating and assigning a group was covered in [step 4 - docker engine installation](#docker-engine-installation) where we created and assigned the `docker` group.
+A _group identifier (GID)_ is similar to UIDs - used by the system to identify _groups_. A _group_ consists of several users and the root group has GID of 0. GIDs are stored in the plain-text `/etc/group` file: each line represents a group, and has four fields delimited by colons `group:password:GID:comma-separated-list-of-members`. An example of creating and assigning a group was covered in [requirements - docker installation for debian users](#requirements) where we created and assigned the `docker` group.
 
 UIDs and GIDs are used to implement _Discretionary Access Control (DAC)_ in unix-based systems by assigning them to files and processes to denote ownership - _left at owner's discretion_. This can be seen by running `ls -l` or `ls -ln`: the output has seven fields delimited by spaces `file_permisions number_of_links user group size date_time_created file_or_folder_name`. See [unix file permissions](https://www.guru99.com/file-permissions.html) for more details.
 
@@ -1361,8 +1364,8 @@ minikube delete
    ```
 9. List Kubernetes clusters with `kubectl config get-contexts`
 10. If you have Kubernetes cluster from both Minikube and Docker Desktop, you can switch between them:
-   - Set Docker Desktop cluster as current cluster: `kubectl config set-context docker-desktop`
-   - Set Minikube cluster as current cluster: `kubectl config set-context minikube`
+- Set Docker Desktop cluster as current cluster: `kubectl config set-context docker-desktop`
+- Set Minikube cluster as current cluster: `kubectl config set-context minikube`
 
 </div>
 
@@ -1374,7 +1377,7 @@ minikube delete
 2. View resources
 3. Delete the Pod
 4. View resources
-5. Repeat [Lab 3.2](#lab-32-explore-kubernetes-api-resources-via-gcloud) in Minikube
+5. Repeat [Lab 3.2](#lab-32-explore-kubernetes-api-resources-via-google-cloud) in Minikube
 
 </div>
 
@@ -1446,9 +1449,9 @@ kubectl explain pod.spec | less
 5. Connect a shell to the Pod and confirm an application is exposed
    - By default, Nginx exposes applications on port 80
    - confirm exposed ports
-5. Delete the Pod
-6. Review the Pod spec
-7. Have a look at the Kubernetes API to determine when pods were introduced
+6. Delete the Pod
+7. Review the Pod spec
+8. Have a look at the Kubernetes API to determine when pods were introduced
 
 > Not all images expose their applications on port 80. Kubernetes doesn't have a native way to check ports exposed on running container, however, you can connect a shell to a Pod with `kubectl exec` and try one of `netstat -tulpn` or `ss -tulpn` in the container, if installed, to show open ports.
 
@@ -1932,7 +1935,7 @@ echo -e "server {\n\tlisten\t\${NGINX_PORT};\n\n\tlocation / {\n\t\troot\t/usr/s
   <details>
   <summary>hint 2</summary>
 
-  Did you set environment variable `NGINX_PORT=3005` in container `web`? See `kubectl run --help` for how to set an environment variable in a container. 
+  Did you set environment variable `NGINX_PORT=3005` in container `web`? See `kubectl run --help` for how to set an environment variable in a container.
   </details>
 
   <details>
@@ -2108,7 +2111,7 @@ kubectl port-forward mypod 8080:80 &
 1. Create a webserver Pod
 2. List created resources and determine Pod IP address
 3. Access the webserver with the IP address (you can use `curl`)
-4. Use port forwarding to access the webserver on http://localhost:5000
+4. Use port forwarding to access the webserver on <http://localhost:5000>
 5. Terminate port forwarding and delete created resources
 
 </div>
@@ -2307,12 +2310,12 @@ kubectl explain job.spec | less
 9. Delete all jobs created
 10. List jobs and pods
 11. Edit the manifest file and add the following:
-   - 5 pods successfully run the command
-   - pods are auto deleted after 30secs
+    - 5 pods successfully run the command
+    - pods are auto deleted after 30secs
 12. Apply the new manifest and:
-   - confirm the new changes work as expected
-   - note the total number of resources created
-   - note the behaviour after 30secs
+    - confirm the new changes work as expected
+    - note the total number of resources created
+    - note the behaviour after 30secs
 13. Delete created resources
 14. Review the Job spec to understand fields related to working with jobs
 15. Review the Kubernetes API Resources to determine when jobs was introduced
@@ -3259,7 +3262,7 @@ Update the Deployment to `nginx:1.22-alpine` to confirm the Pod count stays with
   <details>
   <summary>hint 2</summary>
 
-  You can reveal more resource details with `kubectl get -owide`. You might be able to find defective Pods/ReplicaSets quicker this way. 
+  You can reveal more resource details with `kubectl get -owide`. You might be able to find defective Pods/ReplicaSets quicker this way.
   </details>
 
   <details>
@@ -3295,7 +3298,7 @@ Update the Deployment to `nginx:1.22-alpine` to confirm the Pod count stays with
   <details>
   <summary>hint 8</summary>
 
-  You can update a Deployment's image quickly with `kubectl set image --help`. You're not required to count Pods during rolling update, all should be fine long as you have `maxSurge` and `maxUnavailable` set correctly. 
+  You can update a Deployment's image quickly with `kubectl set image --help`. You're not required to count Pods during rolling update, all should be fine long as you have `maxSurge` and `maxUnavailable` set correctly.
   </details>
 
   <details>
@@ -3428,13 +3431,13 @@ kubectl get pods -o wide
 13. Access the app by the Service: `curl $ClusterIP:$Port`
 14. Access the app by the Service from the container host: `minikube ssh` then `curl $ClusterIP:$Port`
 15. Run a `busybox` Pod with a shell connected interactively and perform the following commands:
-   - run `cat /etc/resolv.conf` and review the output
-   - run `nslookup webserver` (service name) and review the output
-   - what IPs and/or qualified names do these match?
+    - run `cat /etc/resolv.conf` and review the output
+    - run `nslookup webserver` (service name) and review the output
+    - what IPs and/or qualified names do these match?
 16. Run a temporary `nginx:alpine` Pod to query the Service by name:
-   - first run `kubectl run mypod --rm -it --image=nginx:alpine -- sh`
-   - then once in container, run `curl $SERVICE_NAME:$PORT`
-   - you should run `curl $SERVICE_NAME.$SERVICE_NAMESPACE:$PORT` if the Service and the temporary Pod are in separate Namespaces
+    - first run `kubectl run mypod --rm -it --image=nginx:alpine -- sh`
+    - then once in container, run `curl $SERVICE_NAME:$PORT`
+    - you should run `curl $SERVICE_NAME.$SERVICE_NAMESPACE:$PORT` if the Service and the temporary Pod are in separate Namespaces
 17. Delete created resources
 18. Explore the Service object and the Service spec
 
@@ -3514,8 +3517,7 @@ In this lab, we will implement a naive example of a _backend-frontend_ microserv
    - port 80
    - same name, Labels and Selectors as backend Deployment
 3. Confirm you can access the app by `$CLUSTER-IP` or `$SERVICE_NAME`
-4. Create an [nginx _server block_ config file `nginx/default.conf`]() to redirect traffic for the `/` route to the backend service
-
+4. Configure an [nginx upstream in `nginx/default.conf`](https://docs.nginx.com/nginx/admin-guide/load-balancer/dynamic-configuration-api/) to redirect traffic for the `/` route to the backend service
    ```sh
    # nginx/default.conf
    upstream backend-server {
@@ -3530,7 +3532,6 @@ In this lab, we will implement a naive example of a _backend-frontend_ microserv
        }
    }
    ```
-
 5. Create a simple Deployment, as our `frontend` app, with the following spec:
    - image `nginx`
    - name `frontend`
@@ -3892,8 +3893,8 @@ kubectl create ingress myingress --rule="api.domain.com/*=apiservice:80" --rule=
 8. Try to access both apps via URLs `curl $(minikube ip)/test` and `curl $(minikube ip)`
 9. Can you access both apps using HTTPS?
 10. Review the _ingress-nginx-controller_ by running: `kubectl get svc -n ingress-nginx`
-   - what is the _ingress-nginx-controller_ Service type?
-   - what are the ports related to HTTP `80` and HTTPS `443`?
+    - what is the _ingress-nginx-controller_ Service type?
+    - what are the ports related to HTTP `80` and HTTPS `443`?
 11. Can you access both apps via the _ingress-nginx-controller_ NodePorts for HTTP and HTTPS?
 12. Delete all created resources
 
@@ -4000,7 +4001,7 @@ kubectl delete ingress web-ing web2-ing
 13. View more details of the Ingress and review the notes under _Rules_
 14. Can you access `hello` via `curl $(minikube ip)/hello` or `myawesomesite.com/hello`?
 15. Add an entry to `/etc/hosts` that maps the minikube Node IP to an hostname `$(minikube ip) myawesomesite.com`
-16. Can you access `webapp` via `curl $(minikube ip)` or `myawesomesite.com` with HTTP and HTTPS 
+16. Can you access `webapp` via `curl $(minikube ip)` or `myawesomesite.com` with HTTP and HTTPS
 17. Can you access `hello` via `curl $(minikube ip)/hello` or `myawesomesite.com/hello` with HTTP and HTTPS
 18. Can you access `webapp` and `hello` on `myawesomesite.com` via the NodePorts specified by the `ingress-nginx-controller`, `webappsvc` and `hellosvc` Services?
 19. Delete created resources
@@ -4233,7 +4234,7 @@ You may follow the [official declare network policy walkthrough](https://kuberne
 6. Create a busybox Pod and connect an interactive shell
 7. Run command in the Pod container `wget --spider --timeout=1 webapp`
 8. Limit access to the Service so that only Pods with label `tier=frontend` have access - see official manifest example `service/networking/nginx-policy.yaml`
-9. View more details of the _NetworkPolicy_ created 
+9. View more details of the _NetworkPolicy_ created
 10. Create a busybox Pod and connect an interactive shell
 11. Run command in the Pod container `wget --spider --timeout=1 webapp`
 12. Create another busybox Pod with label `tier=frontend` and connect an interactive shell
@@ -4333,9 +4334,9 @@ The application is meant to be accessible at `ckad-bootcamp.local`. Please debug
 ### Task - Network policy
 
 Given several Pods in Namespaces `pup` and `cat`, create network policies as follows:
-  - Pods in the same Namespace can communicate together
-  - `webapp` Pod in the `pup` Namespace can communicate with `microservice` Pod in the `cat` Namespace
-  - DNS resolution on UDP/TCP port 53 is allowed for all Pods in all Namespaces
+- Pods in the same Namespace can communicate together
+- `webapp` Pod in the `pup` Namespace can communicate with `microservice` Pod in the `cat` Namespace
+- DNS resolution on UDP/TCP port 53 is allowed for all Pods in all Namespaces
 
 - Command to setup environment:
   ```sh
@@ -4646,7 +4647,7 @@ kubectl set env deploy web KEY1-
 8. Create a Deployment with two env-vars from the working ConfigMap
 9. Connect a shell to a Pod from the Deployment and run `printenv` to confirm env-vars
 10. Create a Pod with env-vars from the working ConfigMap
-   - how will you set the env-vars for the Pod?
+    - how will you set the env-vars for the Pod?
 11. Confirm Pod running or troubleshoot/fix any issues
 12. Connect a shell to the new Pod and run `printenv` to confirm env-vars
 13. Delete all created resources
@@ -4870,7 +4871,7 @@ kubectl -nkube-system get secret $SECRET_NAME -ojsonpath="{.data.token}" | base6
 
 ### Lab 11.5. Secrets as environment variables
 
-Repeat [lab 11.2](#lab112-configmaps-as-environment-variables) with secrets
+Repeat [lab 11.2](#lab-112-configmaps-as-environment-variables) with secrets
 
 > See the [official _secrets as container env-vars_ docs](https://kubernetes.io/docs/concepts/configuration/secret/#use-case-as-container-environment-variables)
 
@@ -4892,7 +4893,7 @@ Repeat [lab 11.2](#lab112-configmaps-as-environment-variables) with secrets
 
 ### Lab 11.6. Secrets as files
 
-Repeat [lab 11.3](#lab113-mounting-configmaps) with secrets.
+Repeat [lab 11.3](#lab-113-mounting-configmaps) with secrets.
 
 > See the [official _using secrets as files_ docs](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod)
 
@@ -5356,7 +5357,7 @@ Canary deployment is an update strategy where updates are deployed to a subset o
 1. Create a webserver application
    - three replicas
    - _Pod Template_ label `updateType=canary`
-   - use image` nginx:1.19-alpine`
+   - use image`nginx:1.19-alpine`
    - create an HTML document `index.html` with any content
    - mount the `index.html` file to the DocumentRoot as a _ConfigMap_ volume
 2. Expose the Deployment on port 80 with Service name `canary-svc`
@@ -5741,7 +5742,7 @@ kubectl create rolebinding $ROLE_BINDING_NAME --clusterrole=$CLUSTERROLE_NAME --
 
 ### Lab 13.4. Exploring RBAC
 
-In [lab 13.3](#lab-123-accessing-the-api-from-a-pod-without-kubectl) we were unable to access the PodList API at `kubernetes.default.svc/api/v1/namespaces/default/pods`. Lets apply the required permissions to make this work.
+In [lab 13.3](#lab-133-accessing-the-api-from-inside-a-pod) we were unable to access the PodList API at `kubernetes.default.svc/api/v1/namespaces/default/pods`. Lets apply the required permissions to make this work.
 
 1. Create a ServiceAccount and verify
 2. Create a Role with permissions to list pods and verify
@@ -6155,7 +6156,7 @@ StatefulSets are valuable for applications that require one or more of the follo
 
 #### Limitations of StatefulSets
 
-- Storage must either be provisioned by a [PersistentVolume Provisioner]() based on StorageClass, or pre-provisioned by an admin
+- Storage must either be provisioned by a [PersistentVolume Provisioner](https://github.com/kubernetes/examples/tree/master/staging/persistent-volume-provisioning/README.md) based on StorageClass, or pre-provisioned by an admin
 - To ensure data safety, deleting and/or scaling a StatefulSet down will not delete associated volumes
 - You are responsible for creating a [Headless Service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) to provide network access to the Pods
 - To achieve ordered and graceful termination of Pods, scale the StatefulSet down to 0 prior to deletion
