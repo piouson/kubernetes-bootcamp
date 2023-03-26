@@ -1262,8 +1262,6 @@ kubectl config use-context docker-desktop
 
 Minikube is the recommended Kubernetes solution for this course on a local lab environment. See the [official minikube installation docs](https://minikube.sigs.k8s.io/docs/start/).
 
-> [Kubernetes v1.24+ has deprecated docker as a container-runtime and now uses cri-o](https://kubernetes.io/blog/2020/12/02/dont-panic-kubernetes-and-docker/). Therefore, we use Kubernetes v1.23 to avoid installing cri-o and its dependencies.
-
 #### Install Minikube on macOS
 
 ```sh
@@ -1272,7 +1270,7 @@ curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-darwin
 sudo install minikube-darwin-amd64 /usr/local/bin/minikube
 rm minikube-darwin-amd64
 # 2. start a minikube cluster
-minikube start --kubernetes-version=1.23.9
+minikube start
 ```
 
 #### Install Minikube on Windows WSL2
@@ -1286,10 +1284,10 @@ rm minikube-linux-amd64
 # 2. install minikube prereqs - conntrack
 sudo apt install conntrack
 sudo sysctl fs.protected_regular=0
-# 3. start a minikube cluster
-minikube start --driver=docker --kubernetes-version=1.23.9
+# 3. start a minikube cluster with the latest kubernetes version and default docker driver
+minikube start
 # if [3] doesn't work, e.g. vpn issue, etc, try `--driver=none`
-# sudo minikube start --driver=none --kubernetes-version=1.23.9
+# sudo minikube start --driver=none
 # 4. change the owner of the .kube and .minikube directories
 sudo chown -R $USER $HOME/.kube $HOME/.minikube
 ```
@@ -4324,7 +4322,7 @@ The application is meant to be accessible at `ckad-bootcamp.local`. Please debug
   ```
 - Command to destroy environment:
   ```sh
-  kubectl delete ns dog
+  kubectl delete ns bat
   ```
 
 </div>
