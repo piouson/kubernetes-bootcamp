@@ -107,6 +107,7 @@ A Unix-based environment running docker (Docker Engine or Docker Desktop).
 
 <details>
 <summary>macOS users</summary>
+<br>
 
 ```sh
 # 1. install xcode tools
@@ -119,7 +120,8 @@ brew install --cask docker
 </details>
 
 <details>
-  <summary>Windows users</summary>
+<summary>Windows users</summary>
+<br>
 
 ```sh
 # powershell as administrator
@@ -135,10 +137,17 @@ winget install Docker.DockerDesktop
 After device restart:
 
 1. Complete Ubuntu user setup - Ubuntu terminal should auto-open
-2. [Enable `systemd`](https://devblogs.microsoft.com/commandline/systemd-support-is-now-available-in-wsl/) - run `sudo nano /etc/wsl.conf` and update file to:
+2. [Enable `systemd`](https://devblogs.microsoft.com/commandline/systemd-support-is-now-available-in-wsl/):
    ```sh
+   sudo nano /etc/wsl.conf
+   ```
+   ```sh
+   # /etc/wsl.conf
    [boot]
    systemd=true
+   ```
+   ```sh
+   wsl.exe --terminate Ubuntu
    ```
 3. [Enable Docker Desktop integration with WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
 4. [Open Terminal and switch to Ubuntu](https://user-images.githubusercontent.com/17856665/192830999-f8f9c5af-8b4e-41c4-8f5e-c9c159fcf9ca.png)
@@ -150,26 +159,23 @@ After device restart:
    > 💡 If connection fails with `Could not resolve host`, and you have a VPN program installed, see _WSL2 VPN fix_ below
 
     <details>
-      <summary>WSL2 VPN fix</summary>
+    <summary>WSL2 VPN fix</summary>
+    <br>
 
-    ```sh
+    See [wsl-vpnkit documentation](https://github.com/sakai135/wsl-vpnkit/#wsl-vpnkit) for more details.
+    ```powershell
     # powershell as administrator
-    # 1. download vpnkit
     wget -o wsl-vpnkit.tar.gz https://github.com/sakai135/wsl-vpnkit/releases/latest/download/wsl-vpnkit.tar.gz
-    # 2. add vpnkit as linux distro
     wsl --import wsl-vpnkit $env:USERPROFILE\wsl-vpnkit wsl-vpnkit.tar.gz --version 2
-    wsl -d wsl-vpnkit
-    # 3. switch to wsl2 ubuntu terminal
-    wsl
-    # 4. create an alias `vpnkit`
-    printf '# vpnkit - fix vpn network issues\nalias vpnkit="wsl.exe -d wsl-vpnkit service wsl-vpnkit"' >> ~/.bashrc
-    # 5. load the new alias
-    exec bash
-    # 6. start the vpnkit
-    vpnkit start
-    # 7. test internet connection again
+    ```
+    ```sh
+    # wsl2 ubuntu
+    wsl.exe -d wsl-vpnkit --cd /app cat /app/wsl-vpnkit.service | sudo tee /etc/systemd/system/wsl-vpnkit.service
+    sudo systemctl enable wsl-vpnkit
+    sudo systemctl start wsl-vpnkit
+    systemctl status wsl-vpnkit # should be Active
+    # test internet connection again
     curl google.com
-    # note that you can stop the fix with `vpnkit stop`, see https://github.com/sakai135/wsl-vpnkit
     ```
 
     </details>
@@ -177,14 +183,15 @@ After device restart:
 </details>
 
 <details>
-<summary>Debian users</summary>
+<summary>Debian users (and Windows without Docker Desktop)</summary>
 <br />
 
-Install Docker Engine on any Debian-based OS like Ubuntu or Raspberry Pi. This is also an alternative for Windows users running WSL2.
+See [Install Docker Engine documentation](https://docs.docker.com/engine/install) for more details and other distro steps. \
+This is also an alternative for Windows users running WSL2.
 
 > 💡 If using WSL2, be sure to:
 > 1. Enable `systemd` - see the _Windows users_ section
-> 2. [Disable Docker Desktop integration with WSL2](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
+> 2. If installed, [disable Docker Desktop integration with WSL2](https://docs.microsoft.com/en-us/windows/wsl/media/docker-dashboard.png)
 
 ```sh
 # 1. uninstall old docker versions
